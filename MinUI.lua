@@ -78,6 +78,7 @@ end
 local function updateUnitFrame(unitName)
 	-- get details
 	local details = Inspect.Unit.Detail(unitName)
+	local playerDetails = Inspect.Unit.Detail("player")
 
 	-- if we have anything
 	if details then
@@ -93,19 +94,17 @@ local function updateUnitFrame(unitName)
 		local powerRatio = 1
 		local powerPercent = 0
 		
+		-- player / class specific
 		local rogueComboPoints = 0
 		local warriorComboPoints = 0
 		local mageCharge = 0
 		
-		
 		if MinUI.playerCalling == "warrior" then
-			warriorComboPoints = details.combo
-		end
-		if MinUI.playerCalling == "mage" then
-			mageCharge = details.charge
-		end
-		if MinUI.playerCalling == "rogue" then
-			rogueComboPoints = details.combo
+			warriorComboPoints = playerDetails.combo
+		elseif MinUI.playerCalling == "mage" then
+			mageCharge = playerDetails.charge
+		elseif MinUI.playerCalling == "rogue" then
+			rogueComboPoints = playerDetails.combo
 		end
 		
 		-- updateUnitFrame based on class
@@ -152,11 +151,11 @@ local function updateUnitFrame(unitName)
 		MinUI.frames[unitName]["healthBar"]:SetWidth(MinUI.unitFrameBarWidth * healthRatio)
 		MinUI.frames[unitName]["powerBar"]:SetWidth(MinUI.unitFrameBarWidth * powerRatio)
 		
-		-- class specific frames
+		-- player class specific frames
 		if (MinUI.playerCalling == "rogue") then
 			if(MinUI.frames[unitName]["comboPointsBar"]) then
 				if (rogueComboPoints) then
-					debugPrint("combo points",rogueComboPoints ) 
+					debugPrint("combo points", rogueComboPoints ) 
 					local comboPointRatio = rogueComboPoints / 5
 					MinUI.frames["player.target"]["comboPointsBar"]:SetWidth(MinUI.unitFrameBarWidth * comboPointRatio)
 					MinUI.frames["player.target"]["comboPointsBar"]:SetHeight(MinUI.comboPointsBarHeight)
@@ -333,7 +332,7 @@ local function createUnitFrame(unitName)
 		comboPointsBar = UI.CreateFrame("Frame", "comboPointsBar", powerBar)
 		comboPointsBar:SetLayer(-1)
 		comboPointsBar:SetWidth(MinUI.unitFrameBarWidth)
-		comboPointsBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		comboPointsBar:SetBackgroundColor(1.0, 0.0, 0.0, 0.0)
 		comboPointsBar:SetHeight(MinUI.comboPointsBarHeight)
 		comboPointsBar:SetPoint("TOPLEFT", powerBar, "BOTTOMLEFT", 0, MinUI.unitFrameOffset)
 		unitFrameHeight = unitFrameHeight + MinUI.comboPointsBarHeight + MinUI.unitFrameOffset
@@ -385,7 +384,7 @@ local function createUnitFrame(unitName)
 	
 	--Gumaden's Movement Code
     function unitFrame.Event:LeftDown()
-		print("frame clicked", unitName)
+		debugPrint("frame clicked", unitName)
 		self.MouseDown = true
 		mouseData = Inspect.Mouse()
 		self.MyStartX = unitFrame:GetLeft()
