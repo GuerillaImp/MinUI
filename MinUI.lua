@@ -10,15 +10,19 @@ MinUI.context = UI.CreateContext("MinUIContext")
 MinUI.frames = {}
 
 -- Values that Control the Way Things Look
+-- frames
 MinUI.unitFrameBarWidth = 250
 MinUI.unitFrameBarHeight = 25
 MinUI.unitFrameOffset = 2
 MinUI.unitFrameWidth = MinUI.unitFrameBarWidth + (MinUI.unitFrameOffset*2)
 MinUI.unitFrameHeight = (MinUI.unitFrameBarHeight*2) + (MinUI.unitFrameOffset*3)
+-- buffs
+MinUI.playersBuffsOnly = true
+MinUI.showTargetUnitFrameDebuffsOnly = true
 
 -- Buff Control
 MinUI.resyncBuffs = false
-MinUI.playersBuffsOnly = true
+
 
 -- spam control
 MinUI.debugging = false
@@ -28,9 +32,9 @@ MinUI.debugging = false
 -- Unit Frame Functions
 --
 -----------------------------------------------------------------------------------------------------------------------------
-local function debugPrint(text)
+local function debugPrint(...)
 	if( MinUI.debugging == true) then
-		print(text)
+		print(...)
 	end
 end
  
@@ -79,13 +83,24 @@ local function updateUnitFrame(unitName)
 		local powerRatio = 1
 		local powerPercent = 0
 		
+		local rogueComboPoints = 0
+		local warriorComboPoints = 0
+		local mageCharge = 0
+		
 		-- updateUnitFrame based on class
 		if calling == "rogue" then
 			power = details.energy
 			powerMax = details.energyMax
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
-		elseif calling == "mage" or calling == "cleric" then
+			rogueComboPoints = details.combo
+		elseif calling == "mage" then
+			power = details.mana
+			powerMax = details.manaMax
+			powerRatio = power/powerMax
+			powerPercent = math.floor(powerRatio * 100)
+			mageCharge = details.charge
+		elseif calling == "cleric" then
 			power = details.mana
 			powerMax = details.manaMax
 			powerRatio = power/powerMax
@@ -95,6 +110,7 @@ local function updateUnitFrame(unitName)
 			powerMax = 100
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
+			warriorComboPoints = details.combo
 		end
 		
 		local name = details.name
@@ -117,6 +133,16 @@ local function updateUnitFrame(unitName)
 		MinUI.frames[unitName]["unitTextShadow"]:SetText(unitText)
 		MinUI.frames[unitName]["healthBar"]:SetWidth(MinUI.unitFrameBarWidth * healthRatio)
 		MinUI.frames[unitName]["powerBar"]:SetWidth(MinUI.unitFrameBarWidth * powerRatio)
+		
+		-- class specific frames
+		--if calling == "rogue" then
+		--	debugPrint("combo points",rogueComboPoints )
+		--	MinUI.frames[unitName]["comboPoints"]:SetText(string.format("%s/%s", rogueComboPoints, 5))
+		--	MinUI.frames[unitName]["comboPoints"]:SetWidth(MinUI.frames[unitName]["comboPoints"]:GetFullWidth())
+		--	MinUI.frames[unitName]["comboPoints"]:SetHeight(MinUI.frames[unitName]["comboPoints"]:GetFullHeight())
+		--end
+		
+		
 		
 		-- health color
 		if healthPercent >= 50 then
@@ -166,13 +192,13 @@ local function createUnitFrame(unitName)
 		return
 	end
 	
-	-- get for setting up combo points/etc when required details
+	-- class colours etc eventualy?
 	local details = Inspect.Unit.Detail(unitName)
 	local calling 
 	if details then
 		calling = details.calling
 	else
-		calling = "no_target"
+		calling = "no_calling"
 	end
 	
 	local unitFrame = UI.CreateFrame("Frame", "unitFrame", MinUI.context)
@@ -180,10 +206,12 @@ local function createUnitFrame(unitName)
 	local healthText = UI.CreateFrame("Text", "healthText", healthBar)
 	local healthTextShadow = UI.CreateFrame("Text", "healthText", healthBar)
 	local powerBar = UI.CreateFrame("Frame", "powerBar", unitFrame)
-	local powerText = UI.CreateFrame("Text", "powerTExt", powerBar)
-	local powerTextShadow = UI.CreateFrame("Text", "powerTExt", powerBar)
+	local powerText = UI.CreateFrame("Text", "powerText", powerBar)
+	local powerTextShadow = UI.CreateFrame("Text", "powerTextShadow", powerBar)
 	local unitText = UI.CreateFrame("Text", "unitText", unitFrame)
 	local unitTextShadow = UI.CreateFrame("Text", "unitTextShadow", unitFrame)
+	--local comboPoints = UI.CreateFrame("Text", "comboPoints", MinUI.context)
+	local mageCharge = UI.CreateFrame("Text", "mageCharge", MinUI.context)
 	
 	-- center new frame
 	unitFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0.0, 0.0)
@@ -208,6 +236,14 @@ local function createUnitFrame(unitName)
 	healthTextShadow:SetFontColor(0, 0, 0, 1)
 	healthTextShadow:SetWidth(MinUI.unitFrameBarWidth)
 	healthTextShadow:SetHeight(MinUI.unitFrameBarHeight)
+	
+	-- Attach combo points to Left side
+	--comboPoints:SetFontSize(32)
+	--comboPoints:SetFontColor(0, 1, 1, 0.5)
+	--comboPoints:SetPoint("CENTER", UIParent, "CENTER", 100, 100)
+	--comboPoints:SetLayer(1)
+	--comboPoints:SetWidth(comboPoints:GetFullWidth())
+	--comboPoints:SetHeight(comboPoints:GetFullHeight())
 	
 	-- MinUI.frames[unitName]["unitFrame"] for power
 	powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, MinUI.unitFrameOffset)
@@ -256,7 +292,7 @@ local function createUnitFrame(unitName)
 	unitFrame:SetHeight(MinUI.unitFrameHeight)
 	unitFrame:SetWidth(MinUI.unitFrameWidth)
 	
-	--Gumaden
+	--Gumaden's Movement Code
     function unitFrame.Event:LeftDown()
 		self.MouseDown = true
 		mouseData = Inspect.Mouse()
@@ -289,7 +325,7 @@ local function createUnitFrame(unitName)
 			unitFrame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
 		end
 	end
-	-- Gumaden End
+	--Gumaden's Movement Code END
 	
 	-- save the frame
 	MinUI.frames[unitName] = {}
@@ -302,6 +338,7 @@ local function createUnitFrame(unitName)
 	MinUI.frames[unitName]["powerTextShadow"] = powerTextShadow
 	MinUI.frames[unitName]["unitText"] = unitText
 	MinUI.frames[unitName]["unitTextShadow"] = unitTextShadow
+	--MinUI.frames[unitName]["comboPoints"] = comboPoints
 	MinUI.frames[unitName]["activeBuffBars"] = {}
 	MinUI.frames[unitName]["zombieBuffBars"] = {}
 	MinUI.frames[unitName]["lastAttach"] = nil
@@ -341,14 +378,11 @@ local function addBuffBar(unitName, buff, time)
 		bar.solid = UI.CreateFrame("Frame", "Solid", bar)
 		bar.solid:SetLayer(-1)  -- Put it behind every other element.
 		
-		bar.text:SetText("")
+		bar.text:SetText("???")
 		bar.text:SetFontSize(14)
 		bar.text:SetHeight(bar.text:GetFullHeight())
 		bar:SetHeight(bar.text:GetFullHeight())
 		bar.solid:SetHeight(bar.text:GetFullHeight())
-
-		--bar.text:SetText("test")
-		 -- Set an initial height. We'll be overriding this, we just want to make sure it works.
 
 		bar.icon:SetPoint("TOPLEFT", bar, "TOPLEFT") -- The icon is pinned to the top-left corner of the bar.
 		bar.icon:SetPoint("BOTTOM", bar, "BOTTOM") -- Vertically, it always fills the entire bar.
@@ -479,48 +513,63 @@ local function addBuffBar(unitName, buff, time)
 	MinUI.frames[unitName]["lastAttach"] = bar
 end
 
--- refresh bars
-local function refresh(time)
-	-- check all the frames we have
-	for unitName, value in pairs(MinUI.frames) do
-		local bufflist = Inspect.Buff.List(unitName)
-		-- If we don't get anything, then we don't currently have information about the player.
-		-- This may happen when the player is logging in or teleporting long distances.
-		if bufflist then  
-			local buffdetails = Inspect.Buff.Detail(unitName, bufflist)
-			resetBuffBars(unitName)
-			
-			-- We want to order buffs by their time remaining
-			-- splitting apart buffs and debuffs.
-			local bbars = {}
-			for id, buff in pairs(buffdetails) do
-			buff.id = id  -- Make a copy of the ID, because we'll need it
-			table.insert(bbars, buff)
-			end
+-- 
+local function addBuffsToUnitFrame(unitName, time)
+	-- inspect buffs for unitName
+	local bufflist = Inspect.Buff.List(unitName)
+	-- If we don't get anything, then we don't currently have information about the player.
+	-- This may happen when the player is logging in or teleporting long distances.
+	if bufflist then  
+		local buffdetails = Inspect.Buff.Detail(unitName, bufflist)
+		resetBuffBars(unitName)
+		
+		-- We want to order buffs by their time remaining
+		-- splitting apart buffs and debuffs.
+		local bbars = {}
+		for id, buff in pairs(buffdetails) do
+		buff.id = id  -- Make a copy of the ID, because we'll need it
+		table.insert(bbars, buff)
+		end
 
-			-- sort on time
-			table.sort(
-				bbars, function (a, b)
-					if a.debuff ~= b.debuff then
-					  return b.debuff
-					end
-					
-					if a.duration and b.duration then return a.remaining > b.remaining end
-					if not a.duration and not b.duration then return false end
-					return not a.duration
+		-- sort on time
+		table.sort(
+			bbars, function (a, b)
+				if a.debuff ~= b.debuff then
+				  return b.debuff
 				end
-			)
-			
-			-- Now that we have the ordering, we just add the bars one at a time. Done!
-			for k, buff in ipairs(bbars) do
-				if(MinUI.playersBuffsOnly == true) then
-					if (buff.caster == Inspect.Unit.Lookup("player")) then
-						addBuffBar(unitName, buff, time)
-					end
-				else
+				
+				if a.duration and b.duration then return a.remaining > b.remaining end
+				if not a.duration and not b.duration then return false end
+				return not a.duration
+			end
+		)
+		
+		-- Now that we have the ordering, we just add the bars one at a time. Done!
+		for k, buff in ipairs(bbars) do
+			-- if only showing player buffs/debuffs...
+			if(MinUI.playersBuffsOnly == true) then
+				if (buff.caster == Inspect.Unit.Lookup("player")) then
 					addBuffBar(unitName, buff, time)
 				end
+			else
+				addBuffBar(unitName, buff, time)
 			end
+		end
+	end
+end
+
+-- refresh bars
+local function refresh(time)
+	-- to show debuf bars on target frame only
+	if (MinUI.showTargetUnitFrameDebuffsOnly == true) then
+		if (MinUI.frames["player.target"]) then
+			addBuffsToUnitFrame("player.target", time)
+		end
+	-- otherwise add buffs to everyone
+	else
+		-- check all the frames we have / add buffs as required
+		for unitName, value in pairs(MinUI.frames) do
+			addBuffsToUnitFrame(unitName, time)
 		end
 	end
 end
@@ -584,11 +633,12 @@ local function init()
 	createUnitFrame("player.pet")
 	createUnitFrame("player.target")
 	createUnitFrame("player.target.target")
+	
 
 	moveUnitFrame("player",500,600)
 	moveUnitFrame("player.pet",500 -  MinUI.unitFrameWidth - 10,600)
-	moveUnitFrame("player.target",1100,600)
-	moveUnitFrame("player.target.target",1100 + MinUI.unitFrameWidth + 10,600)
+	moveUnitFrame("player.target",1200,600)
+	moveUnitFrame("player.target.target",1200 + MinUI.unitFrameWidth + 10,600)
 
 	--
 	-- add event hookss
@@ -610,6 +660,8 @@ local function init()
 	
 	-- make buffs resync
 	updateUnitFrames()
+	showUnitFrame("player") -- not sure why this doesn't just happen :/
+	
 	MinUI.resyncBuffs = true
 end
 
