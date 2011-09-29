@@ -5,14 +5,14 @@
 Identifier = "MinUI"
 
 -- Each addon needs a human-readable name. Languages are not currently supported but they will be soon.
-Name = "Minimalist UI for Rift"
+Name = "Minimalist UnitFrames for Rift."
 
 -- It's recommended that you include a description, author, and website. These aren't required but they will be shown to users when enabling your addon.
-Description = "Eventually, this will be a minimalist Rift User Interface addon set"
+Description = "Minimalist UnitFrames for Rift."
 Author = "Grantus"
 
 -- You may want to include a version string for your addon as well.
-Version = "0.0.4"
+Version = "0.0.5"
 
 -- An email is required. Trion may use this email to contact you about your addon, so please make sure it's valid.
 Email = "grantus@gmail.com"
@@ -28,4 +28,6 @@ RunOnStartup = {
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
+	MinUIFramePlacement = "character",
+	MinUIConfig = "character"
 }

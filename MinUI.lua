@@ -21,6 +21,9 @@ MinUI.playerCalling = "unknown"
 MinUI.playerDetailsKnown = false
 MinUI.initialised = false
 
+-- Frame Movement toggle
+MinUI.unitFramesLocked = true
+
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- Unit Frame Functions
@@ -42,7 +45,7 @@ local function hideUnitFrame(unitName)
 	MinUI.frames[unitName]["unitFrame"]:SetVisible(false)
 end
 
-local function moveUnitFrame(unitName, x, y)
+local function setUnitFrameLocation(unitName, x, y)
 	MinUI.frames[unitName]["unitFrame"]:SetPoint("TOPLEFT", UIParent, "TOPLEFT", x,y )
 end
 
@@ -60,12 +63,11 @@ local function resetBuffBars(unitName)
 	MinUI.frames[unitName]["lastAttach"] = nil
 end
 
--- updateUnitFrame the given unitName
-local function updateUnitFrame(unitName)
-	-- get details
-	local details = Inspect.Unit.Detail(unitName)
-	local playerDetails = Inspect.Unit.Detail("player")
 
+-- update with details given
+local function setFrameDetails(unitName, details)
+	local playerDetails = Inspect.Unit.Detail("player")
+	
 	-- if we have anything
 	if details then
 		local unitCalling = details.calling
@@ -221,8 +223,21 @@ local function updateUnitFrame(unitName)
 		end
 		MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 		MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
-		
 	end
+end
+
+
+-- updateUnitFrame the given unitName
+local function updateUnitFrame(unitName)
+	-- get details
+	local details = Inspect.Unit.Detail(unitName)
+	setFrameDetails(unitName, details)
+end
+
+-- enable me to click on the player / party members to target
+local function setUnitFrameTarget(unitName, targetUnitName)
+	local details = Inspect.Unit.Detail(targetUnitName)
+	setFrameDetails(unitName, details)
 end
 
 
@@ -341,9 +356,9 @@ local function createUnitFrame(unitName)
 		mageChargeBar:SetPoint("TOPLEFT", powerBar, "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
 		
 		mageChargeText = UI.CreateFrame("Text", "mageChargeText", mageChargeBar)
-		mageChargeText:SetFontSize(10)
+		mageChargeText:SetFontSize(12)
 		mageChargeText:SetLayer(2)
-		mageChargeText:SetPoint("CENTERRIGHT", mageChargeBar, "CENTERRIGHT", 0, 0)
+		mageChargeText:SetPoint("CENTERLEFT", mageChargeBar, "CENTERLEFT", 0, 0)
 		mageChargeText:SetWidth(mageChargeText:GetFullWidth())
 		mageChargeText:SetHeight(mageChargeText:GetFullWidth())
 		
@@ -371,21 +386,30 @@ local function createUnitFrame(unitName)
 	--Gumaden's Movement Code
     function unitFrame.Event:LeftDown()
 		debugPrint("frame clicked", unitName)
-		self.MouseDown = true
-		mouseData = Inspect.Mouse()
-		self.MyStartX = unitFrame:GetLeft()
-		self.MyStartY = unitFrame:GetTop()
-		self.StartX = mouseData.x - self.MyStartX
-		self.StartY = mouseData.y - self.MyStartY
-		tempX = unitFrame:GetLeft()
-		tempY = unitFrame:GetTop()
-		tempW = unitFrame:GetWidth()
-		tempH =	unitFrame:GetHeight()
-		unitFrame:ClearAll()
-		unitFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", tempX, tempY)
-		unitFrame:SetWidth(tempW)
-		unitFrame:SetHeight(tempH)
-		self:SetBackgroundColor(0.3,0.0,0.0,0.5)
+		-- XXX can't actually "set" the current target from what I can gather
+		--if(unitName == "player") then
+		--	print("clicky")
+		--	setUnitFrameTarget("player.target", "player")
+		--	setUnitFrameTarget("player.target.target", "player")
+		--end
+				
+		if(MinUI.unitFramesLocked == false) then
+			self.MouseDown = true
+			mouseData = Inspect.Mouse()
+			self.MyStartX = unitFrame:GetLeft()
+			self.MyStartY = unitFrame:GetTop()
+			self.StartX = mouseData.x - self.MyStartX
+			self.StartY = mouseData.y - self.MyStartY
+			tempX = unitFrame:GetLeft()
+			tempY = unitFrame:GetTop()
+			tempW = unitFrame:GetWidth()
+			tempH =	unitFrame:GetHeight()
+			unitFrame:ClearAll()
+			unitFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", tempX, tempY)
+			unitFrame:SetWidth(tempW)
+			unitFrame:SetHeight(tempH)
+			self:SetBackgroundColor(0.3,0.0,0.0,0.5)
+		end
 	end
 	function unitFrame.Event:MouseMove()
 		if self.MouseDown then
@@ -400,6 +424,10 @@ local function createUnitFrame(unitName)
 		if self.MouseDown then
 			self.MouseDown = false
 			unitFrame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+						
+			-- store frame placement in saved var
+			MinUIFramePlacement[unitName].x = unitFrame:GetLeft()
+			MinUIFramePlacement[unitName].y = unitFrame:GetTop()
 		end
 	end
 	--Gumaden's Movement Code END
@@ -496,12 +524,12 @@ local function addBuffBar(unitName, buff, time)
 			self:SetHeight(self.text:GetFullHeight())
 			self.solid:SetHeight(self.text:GetFullHeight())
 		  else
-			-- Buffs are smaller and blue-themed.
+			-- Buffs are blue-themed.
 			self:SetBackgroundColor(0.2, 0.2, 0.6, 0.3)
 			self.solid:SetBackgroundColor(0.2, 0.2, 0.6)
 			if (buff.caster == Inspect.Unit.Lookup("player")) then
-				self.text:SetFontSize(12)
-				self.timer:SetFontSize(12)
+				self.text:SetFontSize(14)
+				self.timer:SetFontSize(14)
 			else
 				self.text:SetFontSize(10)
 				self.timer:SetFontSize(10)
@@ -701,22 +729,28 @@ local function getPlayerDetails()
 	debugPrint ("player calling is... ", MinUI.playerCalling)
 end
 
+-- load settings
+local function loadSavedFrameLocations()
+	setUnitFrameLocation("player", MinUIFramePlacement["player"].x, MinUIFramePlacement["player"].y)
+	setUnitFrameLocation("player.pet", MinUIFramePlacement["player.pet"].x, MinUIFramePlacement["player.pet"].y)
+	setUnitFrameLocation("player.target", MinUIFramePlacement["player.target"].x, MinUIFramePlacement["player.target"].y)
+	setUnitFrameLocation("player.target.target", MinUIFramePlacement["player.target.target"].x, MinUIFramePlacement["player.target.target"].y)
+end
+
 -- setup frames
 local function initialiseFrames()
+	debugPrint("initialising frames")
+
 	createUnitFrame("player")
 	createUnitFrame("player.pet")
 	createUnitFrame("player.target")
 	createUnitFrame("player.target.target")
-
-	local unitFrameWidth = MinUIConfig.unitFrameBarWidth + (MinUIConfig.unitFrameOffset*2)
-	moveUnitFrame("player",500,600)
-	moveUnitFrame("player.pet",500 -  unitFrameWidth - 10,600)
-	moveUnitFrame("player.target",1200,600)
-	moveUnitFrame("player.target.target",1200 + unitFrameWidth + 10,600)
-
+	
+	-- load saved settings
+	loadSavedFrameLocations()
+	
 	-- updates the unit frame details
 	updateUnitFrames()
-	--showUnitFrame("player") -- not sure why this doesn't just happen :/
 end
 
 -- resync bars / tick
@@ -755,6 +789,85 @@ local function targetChanged()
 	MinUI.resyncBuffs = true
 end
 
+-- lock frames
+local function lockFrames()
+	print("Frames Locked")
+	MinUI.unitFramesLocked = true
+end
+-- unlock frames
+local function unlockFrames()
+	print("Frames UnLocked")
+	MinUI.unitFramesLocked = false
+end
+
+local function resetFrames()
+	print("Frames Reset")
+	MinUI.unitFramesLocked = false
+	
+	-- reset positioning
+	MinUIFramePlacement = {
+		["player"] = {x = 10, y = 450},
+		["player.pet"] = {x = 10, y = 570},
+		["player.target"] = {x = 280, y = 450},
+		["player.target.target"] = {x = 550, y = 450}
+	}
+	
+	loadSavedFrameLocations()
+end
+
+-- addon has loaded
+local function addonLoaded(addon)
+	if(addon == "MinUI") then
+		print("MinUI 0.0.6 - development")
+		print("MinUI UnitFrames Loaded.")
+		print("/muilock and /muiunlock unlocks and locks the frames for movement.")
+		print("/muireset resets the frames to their default positions.")
+		print("/muidps shows all debuffs on the player and shows player only debuffs on the target.")
+		print("/muiheals shows player only buffs on the target frames in addition to showing all debuffs.")
+		print("Enjoy")
+	end
+end
+
+-- dps mode settings
+local function setToDpsMode()
+	print("DPS/Tank Mode")
+	MinUIConfig = {
+		unitFrameBarWidth = 250,
+		unitFrameBarHeight = 25,
+		unitFrameOffset = 2,
+		comboPointsBarHeight = 5,
+		mageChargeBarHeight = 15,
+		-- frames configured to show player cast debuffs
+		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
+		-- frames configured to show all debuffs
+		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show all buffs
+		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show player buffs only
+		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  }
+	}
+end
+
+-- heals mode settings
+local function setToHealsMode()
+	print("Heals Mode")
+	MinUIConfig = {
+		unitFrameBarWidth = 250,
+		unitFrameBarHeight = 25,
+		unitFrameOffset = 2,
+		comboPointsBarHeight = 5,
+		mageChargeBarHeight = 15,
+		-- frames configured to show player cast debuffs
+		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show all debuffs
+		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
+		-- frames configured to show all buffs
+		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show player buffs only
+		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true  }
+	}
+end
+
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -772,10 +885,19 @@ local function startup()
 	table.insert(Event.Unit.Detail.Energy, {updateUnitFrames, "MinUI", "updateUnitFrames"})
 	table.insert(Event.Ability.Target, {targetChanged, "MinUI", "updateUnitFrames"})
 
+	
 	-- Buffs
 	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
+	
+	table.insert(Event.Addon.Load.End, {addonLoaded, "MinUI", "addonLoaded"})
+
+	table.insert(Command.Slash.Register("muilock"), {lockFrames, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muiunlock"), {unlockFrames, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muireset"), {resetFrames, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muidps"), {setToDpsMode, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muiheals"), {setToHealsMode, "MinUI", "Slash command"})
 
 	-- Our update event
 	table.insert(Event.System.Update.Begin, {tick, "MinUI", "refresh"})
