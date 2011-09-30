@@ -7,10 +7,12 @@
 -- Default Frame Settings (Can be configured per-character through in game commands kinda)
 MinUIConfig = {
 	unitFrameBarWidth = 250,
-	unitFrameBarHeight = 25,
-	unitFrameOffset = 2,
-	comboPointsBarHeight = 5,
+	unitFrameBarHeight = 20,
+	unitFrameOffset = 3,
+	comboPointsBarHeight = 7,
 	mageChargeBarHeight = 15,
+	-- enabled frames
+	-- framesEnabled = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }
 	-- frames configured to show player cast debuffs
 	showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
 	-- frames configured to show all debuffs
@@ -18,7 +20,12 @@ MinUIConfig = {
 	-- frames configured to show all buffs
 	showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
 	-- frames configured to show player buffs only
-	showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  }
+	showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+	-- configuration for what bars are shown on what unit frame
+	showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
+	showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
+	showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
+	showComboBox = false
 }
 
 -- Default Frame Placement Values (Can be configured per-character by dragging the frames around)

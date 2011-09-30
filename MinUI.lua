@@ -65,16 +65,18 @@ end
 
 
 -- update with details given
-local function setFrameDetails(unitName, details)
+local function setFrameDetails(unitName, unitDetails)
 	local playerDetails = Inspect.Unit.Detail("player")
 	
 	-- if we have anything
-	if details then
-		local unitCalling = details.calling
-		local health = details.health
-		local healthMax = details.healthMax
+	if unitDetails then
+		local unitCalling = unitDetails.calling
+		local health = unitDetails.health
+		local healthMax = unitDetails.healthMax
 		local healthRatio = health/healthMax
 		local healthPercent = math.floor(healthRatio * 100)
+		
+	
 		
 		-- init power vars
 		local power = 0
@@ -97,58 +99,93 @@ local function setFrameDetails(unitName, details)
 		
 		-- updateUnitFrame based on class
 		if unitCalling == "rogue" then
-			power = details.energy
-			powerMax = details.energyMax
+			power = unitDetails.energy
+			powerMax = unitDetails.energyMax
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
 		elseif unitCalling == "mage" then
-			power = details.mana
-			powerMax = details.manaMax
+			power = unitDetails.mana
+			powerMax = unitDetails.manaMax
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
 		elseif unitCalling == "cleric" then
-			power = details.mana
-			powerMax = details.manaMax
+			power = unitDetails.mana
+			powerMax = unitDetails.manaMax
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
 		elseif unitCalling == "warrior" then
-			power = details.power
+			power = unitDetails.power
 			powerMax = 100
 			powerRatio = power/powerMax
 			powerPercent = math.floor(powerRatio * 100)
 		end
 		
-		local name = details.name
-		local level = details.level
-		local unitText = name .. " - Lv " .. level .. " "
+		local name = unitDetails.name
+		local level = unitDetails.level
+		local guild = unitDetails.guild
+		local unitText = name .. " "
 		
-		if unitCalling then
-			unitText = unitText .. " (" .. unitCalling .. ")"
+		if guild then
+			unitText = unitText .. "<" .. guild .. ">"
 		end
 		
-		local powerText = string.format("%s/%s (%s%%)", power, powerMax, powerPercent)
-		local healthText = string.format("%s/%s (%s%%)", health, healthMax, healthPercent)
+		unitText = unitText .. " " .. level .. " "
 		
-		-- updateUnitFrame texts
-		MinUI.frames[unitName]["healthText"]:SetText(healthText)
-		MinUI.frames[unitName]["healthTextShadow"]:SetText(healthText)
-		MinUI.frames[unitName]["powerText"]:SetText(powerText)
-		MinUI.frames[unitName]["powerTextShadow"]:SetText(powerText)
-		MinUI.frames[unitName]["unitText"]:SetText(unitText)
-		MinUI.frames[unitName]["unitTextShadow"]:SetText(unitText)
-		MinUI.frames[unitName]["healthBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * healthRatio)
-		MinUI.frames[unitName]["powerBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * powerRatio)
+		if unitCalling then
+			unitText = unitText .. " " .. unitCalling .. ""
+		end
 		
-		-- player class specific frames
+		
+		-- Update Unit Frame Values
+		if(MinUIConfig.showHealthBar[unitName]) then
+			local healthText = string.format("%s/%s (%s%%)", health, healthMax, healthPercent)
+			MinUI.frames[unitName]["healthText"]:SetText(healthText)
+			MinUI.frames[unitName]["healthTextShadow"]:SetText(healthText)
+			MinUI.frames[unitName]["healthBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * healthRatio)
+		end
+		if(MinUIConfig.showPowerBar[unitName]) then
+			local powerText = string.format("%s/%s (%s%%)", power, powerMax, powerPercent)
+			MinUI.frames[unitName]["powerText"]:SetText(powerText)
+			MinUI.frames[unitName]["powerTextShadow"]:SetText(powerText)		
+			MinUI.frames[unitName]["powerBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * powerRatio)
+		end
+		if(MinUIConfig.showUnitText[unitName]) then
+		
+			MinUI.frames[unitName]["unitText"]:SetText(unitText)
+			
+			if(unitDetails.relation == "friendly") then
+				MinUI.frames[unitName]["unitText"]:SetFontColor(0, 0.9, 0, 1)
+			elseif(unitDetails.relation == "hostile") then
+				MinUI.frames[unitName]["unitText"]:SetFontColor(0.9, 0, 0, 1)
+			else
+				MinUI.frames[unitName]["unitText"]:SetFontColor(0.9, 0.9, 0.0, 1)
+			end
+			
+			MinUI.frames[unitName]["unitTextShadow"]:SetText(unitText)
+			MinUI.frames[unitName]["unitText"]:SetHeight( MinUI.frames[unitName]["unitText"]:GetFullHeight() )
+			MinUI.frames[unitName]["unitTextShadow"]:SetHeight( MinUI.frames[unitName]["unitText"]:GetFullHeight() )
+			MinUI.frames[unitName]["unitText"]:SetWidth( MinUI.frames[unitName]["unitText"]:GetFullWidth() )
+			MinUI.frames[unitName]["unitTextShadow"]:SetWidth( MinUI.frames[unitName]["unitText"]:GetFullWidth() )
+		end
+		
+		-- Player Calling Specific Frames
 		if (MinUI.playerCalling == "rogue") then
 			if(MinUI.frames[unitName]["comboPointsBar"]) then
 				if (rogueComboPoints) then
 					debugPrint("combo points", rogueComboPoints ) 
 					local comboPointRatio = rogueComboPoints / 5
-					MinUI.frames["player.target"]["comboPointsBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * comboPointRatio)
-					MinUI.frames["player.target"]["comboPointsBar"]:SetHeight(MinUIConfig.comboPointsBarHeight)
-					MinUI.frames["player.target"]["comboPointsBar"]:SetBackgroundColor(1.0, 0.75, 0.14, 1.0)
-					MinUI.frames["player.target"]["comboPointsBar"]:SetPoint("TOPLEFT", MinUI.frames["player.target"]["powerBar"], "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
+					if (MinUIConfig.showComboBox) then
+						MinUI.frames["player.target"]["comboPointsBoxText"]:SetText(string.format("%s", rogueComboPoints))
+						MinUI.frames["player.target"]["comboPointsBoxText"]:SetWidth(MinUI.frames["player.target"]["comboPointsBoxText"]:GetFullWidth() + MinUIConfig.unitFrameOffset )
+						MinUI.frames["player.target"]["comboPointsBoxText"]:SetHeight(MinUI.frames["player.target"]["comboPointsBoxText"]:GetFullHeight()+ MinUIConfig.unitFrameOffset)
+						MinUI.frames["player.target"]["comboPointsBox"]:SetWidth(MinUI.frames["player.target"]["comboPointsBoxText"]:GetFullWidth()+ MinUIConfig.unitFrameOffset)
+						MinUI.frames["player.target"]["comboPointsBox"]:SetHeight(MinUI.frames["player.target"]["comboPointsBoxText"]:GetFullHeight()+ MinUIConfig.unitFrameOffset)
+					else
+						MinUI.frames["player.target"]["comboPointsBar"]:SetWidth(MinUIConfig.unitFrameBarWidth * comboPointRatio)
+						MinUI.frames["player.target"]["comboPointsBar"]:SetHeight(MinUIConfig.comboPointsBarHeight)
+						MinUI.frames["player.target"]["comboPointsBar"]:SetBackgroundColor(1.0, 0.75, 0.14, 1.0)
+						MinUI.frames["player.target"]["comboPointsBar"]:SetPoint("TOPLEFT", MinUI.frames["player.target"]["powerBar"], "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
+					end
 				end
 			end
 		elseif (MinUI.playerCalling == "warrior") then
@@ -180,64 +217,82 @@ local function setFrameDetails(unitName, details)
 			end
 		end
 
-		-- health color
-		if healthPercent >= 50 then
-			MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.0, 0.3, 0.0, 1.0)
-		elseif healthPercent < 50 and healthPercent >= 25 then
-			MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.3, 0.3, 0.0, 1.0)
-		elseif healthPercent < 25 then
-			MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.3, 0.0, 0.0, 1.0)
+		-- Health Bar Colours
+		if(MinUIConfig.showHealthBar[unitName]) then
+			if healthPercent >= 50 then
+				MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.0, 0.3, 0.0, 1.0)
+			elseif healthPercent < 50 and healthPercent >= 25 then
+				MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.3, 0.3, 0.0, 1.0)
+			elseif healthPercent < 25 then
+				MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.3, 0.0, 0.0, 1.0)
+			end
 		end
 		
-		-- colour based on class
-		if unitCalling == "rogue" then
-			MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.3, 0.0, 0.3, 1.0)
-		elseif unitCalling == "mage" or unitCalling == "cleric" then
-			MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.3, 1.0)
-		elseif unitCalling == "warrior" then
-			MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.3, 0.0, 0.0, 1.0)
-		else
-			MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		-- Power Bar Colours
+		if(MinUIConfig.showPowerBar[unitName]) then
+			if unitCalling == "rogue" then
+				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.3, 0.0, 0.3, 1.0)
+			elseif unitCalling == "mage" or unitCalling == "cleric" then
+				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.3, 1.0)
+			elseif unitCalling == "warrior" then
+				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.3, 0.0, 0.0, 1.0)
+			else
+				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+			end
 		end
 		
 		showUnitFrame(unitName)
+	-- else we have nothing about that frame (deselected or server isn't giving us info)
 	else
-		debugPrint("no details for ", unitName, " so hiding for now")
+		debugPrint("no unitDetails for ", unitName, " so hiding for now")
 		hideUnitFrame(unitName)
 		resetBuffBars(unitName)
-		MinUI.frames[unitName]["healthText"]:SetText("")
-		MinUI.frames[unitName]["healthTextShadow"]:SetText("")
-		MinUI.frames[unitName]["powerText"]:SetText("")
-		MinUI.frames[unitName]["powerTextShadow"]:SetText("")
-		MinUI.frames[unitName]["unitText"]:SetText("")
-		MinUI.frames[unitName]["unitTextShadow"]:SetText("")
-		MinUI.frames[unitName]["healthBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
-		MinUI.frames[unitName]["powerBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
+		
+		if(MinUIConfig.showHealthBar[unitName]) then
+			MinUI.frames[unitName]["healthText"]:SetText("")
+			MinUI.frames[unitName]["healthTextShadow"]:SetText("")
+			MinUI.frames[unitName]["healthBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
+			MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		end
+		
+		if(MinUIConfig.showPowerBar[unitName]) then
+			MinUI.frames[unitName]["powerText"]:SetText("")
+			MinUI.frames[unitName]["powerTextShadow"]:SetText("")
+			MinUI.frames[unitName]["powerBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
+			MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		end
+		
+		if(MinUIConfig.showUnitText[unitName]) then
+			MinUI.frames[unitName]["unitText"]:SetText("")
+			MinUI.frames[unitName]["unitTextShadow"]:SetText("")
+		end
+
 		if(MinUI.frames[unitName]["comboPointsBar"]) then
 			MinUI.frames[unitName]["comboPointsBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
 			MinUI.frames[unitName]["comboPointsBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 		end
+		
 		if(MinUI.frames[unitName]["warriorComboPointsBar"]) then
 			MinUI.frames[unitName]["warriorComboPointsBar"]:SetWidth(MinUIConfig.unitFrameBarWidth)
 			MinUI.frames[unitName]["warriorComboPointsBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 		end
-		MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
-		MinUI.frames[unitName]["healthBar"]:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		
+		
 	end
 end
 
 
 -- updateUnitFrame the given unitName
 local function updateUnitFrame(unitName)
-	-- get details
-	local details = Inspect.Unit.Detail(unitName)
-	setFrameDetails(unitName, details)
+	-- get unitDetails
+	local unitDetails = Inspect.Unit.Detail(unitName)
+	setFrameDetails(unitName, unitDetails)
 end
 
 -- enable me to click on the player / party members to target
 local function setUnitFrameTarget(unitName, targetUnitName)
-	local details = Inspect.Unit.Detail(targetUnitName)
-	setFrameDetails(unitName, details)
+	local unitDetails = Inspect.Unit.Detail(targetUnitName)
+	setFrameDetails(unitName, unitDetails)
 end
 
 
@@ -245,84 +300,125 @@ end
 local function createUnitFrame(unitName)
 	debugPrint("creating frame ... ", unitName)
 	
+	-- dont create frame twice
 	if ( MinUI.frames[unitName] ) then
 		debugPrint("unit frame already exists, not creating")
 		return
 	end
 	
 	-- use this for class colour text and other items eventually
-	local details = Inspect.Unit.Detail(unitName)
+	local unitDetails = Inspect.Unit.Detail(unitName)
 	local unitCalling 
-	if details then
-		unitCalling = details.calling
+	if unitDetails then
+		unitCalling = unitDetails.calling
 	else
 		unitCalling = "no_calling"
 	end
 	
+	--  Main Unit Frame
 	local unitFrame = UI.CreateFrame("Frame", "unitFrame", MinUI.context)
-	local healthBar = UI.CreateFrame("Frame", "healthBar", unitFrame)
-	local healthText = UI.CreateFrame("Text", "healthText", healthBar)
-	local healthTextShadow = UI.CreateFrame("Text", "healthText", healthBar)
-	local powerBar = UI.CreateFrame("Frame", "powerBar", healthBar)
-	local powerText = UI.CreateFrame("Text", "powerText", powerBar)
-	local powerTextShadow = UI.CreateFrame("Text", "powerTextShadow", powerBar)
-	local unitText = UI.CreateFrame("Text", "unitText", unitFrame)
-	local unitTextShadow = UI.CreateFrame("Text", "unitTextShadow", unitFrame)
-	-- class specific
+	unitFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0.0, 0.0)
+	unitFrame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+	local unitFrameWidth = MinUIConfig.unitFrameBarWidth + (MinUIConfig.unitFrameOffset*2)	
+	local unitFrameHeight = 0
+	
+	-- Health Bar
+	local healthBar = nil
+	local healthText = nil
+	local healthTextShadow = nil
+	
+
+	if ( MinUIConfig.showHealthBar[unitName] ) then
+		healthBar = UI.CreateFrame("Frame", "healthBar", unitFrame)
+		healthText = UI.CreateFrame("Text", "healthText", healthBar)
+		healthTextShadow = UI.CreateFrame("Text", "healthText", healthBar)
+		
+		healthBar:SetPoint("TOPLEFT", unitFrame, "TOPLEFT", MinUIConfig.unitFrameOffset, MinUIConfig.unitFrameOffset)
+		healthBar:SetVisible(true)
+		healthBar:SetBackgroundColor(0.0, 0.3, 0.0, 1.0)
+		healthBar:SetLayer(-1)
+		healthBar:SetWidth(MinUIConfig.unitFrameBarWidth)
+		healthBar:SetHeight(MinUIConfig.unitFrameBarHeight)
+
+		healthText:SetFontSize(14)
+		healthText:SetPoint("CENTERLEFT", healthBar, "CENTERLEFT", 0, 0)
+		healthText:SetLayer(2)
+		healthText:SetWidth(MinUIConfig.unitFrameBarWidth)
+		healthText:SetHeight(MinUIConfig.unitFrameBarHeight)
+		healthTextShadow:SetFontSize(14)
+		healthTextShadow:SetPoint("CENTERLEFT", healthBar, "CENTERLEFT", 1, 1)
+		healthTextShadow:SetLayer(1)
+		healthTextShadow:SetFontColor(0, 0, 0, 1)
+		healthTextShadow:SetWidth(MinUIConfig.unitFrameBarWidth)
+		healthTextShadow:SetHeight(MinUIConfig.unitFrameBarHeight)
+		
+		unitFrameHeight = unitFrameHeight + MinUIConfig.unitFrameBarHeight + MinUIConfig.unitFrameOffset
+	end
+	
+	-- Power Bar
+	local powerBar = nil
+	local powerText = nil
+	local powerTextShadow = nil
+	if ( MinUIConfig.showPowerBar[unitName] ) then
+		powerBar = UI.CreateFrame("Frame", "powerBar", healthBar)
+		powerText = UI.CreateFrame("Text", "powerText", powerBar)
+		powerTextShadow = UI.CreateFrame("Text", "powerTextShadow", powerBar)
+		
+		powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
+		powerBar:SetVisible(true)
+		powerBar:SetLayer(2)
+		powerBar:SetWidth(MinUIConfig.unitFrameBarWidth)
+		powerBar:SetHeight(MinUIConfig.unitFrameBarHeight)
+		powerBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		
+		powerText:SetFontSize(14)
+		powerText:SetPoint("CENTERLEFT", powerBar, "CENTERLEFT", 0, 0)
+		powerText:SetLayer(4)
+		powerText:SetWidth(MinUIConfig.unitFrameBarWidth)
+		powerText:SetHeight(MinUIConfig.unitFrameBarHeight)
+		powerTextShadow:SetFontSize(14)
+		powerTextShadow:SetPoint("CENTERLEFT", powerBar, "CENTERLEFT", 1, 1)
+		powerTextShadow:SetLayer(3)
+		powerTextShadow:SetFontColor(0, 0, 0, 1)
+		powerTextShadow:SetWidth(MinUIConfig.unitFrameBarWidth)
+		powerTextShadow:SetHeight(MinUIConfig.unitFrameBarHeight)
+		
+		unitFrameHeight = unitFrameHeight + MinUIConfig.unitFrameBarHeight + MinUIConfig.unitFrameOffset
+	end
+	
+	-- Unit Text
+	local unitText = nil
+	local unitTextShadow = nil
+	if ( MinUIConfig.showUnitText[unitName] ) then
+		unitText = UI.CreateFrame("Text", "unitText", unitFrame)
+		unitTextShadow = UI.CreateFrame("Text", "unitTextShadow", unitFrame)
+		
+		unitText:SetFontSize(14)
+		unitText:SetLayer(2)
+		unitTextShadow:SetFontSize(14)
+		unitTextShadow:SetLayer(1)
+		unitTextShadow:SetFontColor(0, 0, 0, 1)
+		
+		unitText:SetText("???")
+		unitTextShadow:SetText("???")
+		
+		unitText:SetHeight( unitText:GetFullHeight() )
+		unitTextShadow:SetHeight( unitText:GetFullHeight() )
+		unitText:SetWidth( unitText:GetFullWidth() )
+		unitTextShadow:SetWidth( unitText:GetFullWidth() )
+		unitText:SetPoint("BOTTOMLEFT", unitFrame, "BOTTOMLEFT", MinUIConfig.unitFrameOffset, -MinUIConfig.unitFrameOffset)
+		unitTextShadow:SetPoint("BOTTOMLEFT", unitFrame, "BOTTOMLEFT", MinUIConfig.unitFrameOffset+1, -MinUIConfig.unitFrameOffset+1)
+		
+		unitFrameHeight = unitFrameHeight + unitText:GetFullHeight() 
+	end
+	
+	-- Calling specific components
 	local comboPointsBar = nil
+	local comboPointsBox = nil
+	local comboPointBoxText = nil
 	local warriorComboPointsBar = nil
 	local mageChargeBar = nil
 	local mageChargeText = nil
-	
-	
-	-- center new frame
-	unitFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0.0, 0.0)
-	unitFrame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
-	
-	-- MinUI.frames[unitName]["unitFrame"] for health
-	healthBar:SetPoint("TOPLEFT", unitFrame, "TOPLEFT", MinUIConfig.unitFrameOffset, MinUIConfig.unitFrameOffset)
-	healthBar:SetVisible(true)
-	healthBar:SetBackgroundColor(0.0, 0.3, 0.0, 1.0)
-	healthBar:SetLayer(-1)
-	healthBar:SetWidth(MinUIConfig.unitFrameBarWidth)
-	healthBar:SetHeight(MinUIConfig.unitFrameBarHeight)
-	
-	healthText:SetFontSize(14)
-	healthText:SetPoint("CENTERLEFT", healthBar, "CENTERLEFT", 0, 0)
-	healthText:SetLayer(2)
-	healthText:SetWidth(MinUIConfig.unitFrameBarWidth)
-	healthText:SetHeight(MinUIConfig.unitFrameBarHeight)
-	healthTextShadow:SetFontSize(14)
-	healthTextShadow:SetPoint("CENTERLEFT", healthBar, "CENTERLEFT", 1, 1)
-	healthTextShadow:SetLayer(1)
-	healthTextShadow:SetFontColor(0, 0, 0, 1)
-	healthTextShadow:SetWidth(MinUIConfig.unitFrameBarWidth)
-	healthTextShadow:SetHeight(MinUIConfig.unitFrameBarHeight)
-
-	
-	-- MinUI.frames[unitName]["unitFrame"] for power
-	powerBar:SetPoint("TOPLEFT", healthBar, "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
-	powerBar:SetVisible(true)
-	powerBar:SetLayer(-1)
-	powerBar:SetWidth(MinUIConfig.unitFrameBarWidth)
-	powerBar:SetHeight(MinUIConfig.unitFrameBarHeight)
-	powerBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
-	
-	powerText:SetFontSize(14)
-	powerText:SetPoint("CENTERLEFT", powerBar, "CENTERLEFT", 0, 0)
-	powerText:SetLayer(2)
-	powerText:SetWidth(MinUIConfig.unitFrameBarWidth)
-	powerText:SetHeight(MinUIConfig.unitFrameBarHeight)
-	powerTextShadow:SetFontSize(14)
-	powerTextShadow:SetPoint("CENTERLEFT", powerBar, "CENTERLEFT", 1, 1)
-	powerTextShadow:SetLayer(1)
-	powerTextShadow:SetFontColor(0, 0, 0, 1)
-	powerTextShadow:SetWidth(MinUIConfig.unitFrameBarWidth)
-	powerTextShadow:SetHeight(MinUIConfig.unitFrameBarHeight)
-	
-	-- calculate width / height up to here, add more as required
-	local unitFrameWidth = MinUIConfig.unitFrameBarWidth + (MinUIConfig.unitFrameOffset*2)
-	local unitFrameHeight = (MinUIConfig.unitFrameBarHeight*2) + (MinUIConfig.unitFrameOffset*3)
 	
 	--
 	-- Class specific stuff
@@ -330,13 +426,33 @@ local function createUnitFrame(unitName)
 	
 	-- Attach combo points to underneath target's powerbar if player is rogue and we are creating the target frame
 	if (MinUI.playerCalling == "rogue" and unitName == "player.target") then
-		comboPointsBar = UI.CreateFrame("Frame", "comboPointsBar", powerBar)
-		comboPointsBar:SetLayer(-1)
-		comboPointsBar:SetWidth(MinUIConfig.unitFrameBarWidth)
-		comboPointsBar:SetBackgroundColor(1.0, 0.0, 0.0, 0.0)
-		comboPointsBar:SetHeight(MinUIConfig.comboPointsBarHeight)
-		comboPointsBar:SetPoint("TOPLEFT", powerBar, "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
-		unitFrameHeight = unitFrameHeight + MinUIConfig.comboPointsBarHeight + MinUIConfig.unitFrameOffset
+		if (MinUIConfig.showComboBox) then
+			comboPointsBox = UI.CreateFrame("Frame", "comboPointsBox", unitFrame)
+			comboPointsBox:SetPoint("CENTER", UIParent, "CENTER",0 , 0)
+			comboPointsBox:SetLayer(-1)
+			comboPointsBox:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+			
+			comboPointsBoxText = UI.CreateFrame("Text", "comboPointsBox", comboPointsBox)
+			comboPointsBoxText:SetLayer(1)
+			comboPointsBoxText:SetFontSize(36)
+			comboPointsBoxText:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+			comboPointsBoxText:SetPoint("CENTER", comboPointsBox, "CENTER", 0, 0)
+			comboPointsBoxText:SetText("?")
+			
+			comboPointsBoxText:SetWidth(comboPointsBoxText:GetFullWidth() + MinUIConfig.unitFrameOffset )
+			comboPointsBoxText:SetHeight(comboPointsBoxText:GetFullHeight()+ MinUIConfig.unitFrameOffset)
+			comboPointsBox:SetWidth(comboPointsBoxText:GetFullWidth()+ MinUIConfig.unitFrameOffset)
+			comboPointsBox:SetHeight(comboPointsBoxText:GetFullHeight()+ MinUIConfig.unitFrameOffset)
+		else
+			comboPointsBar = UI.CreateFrame("Frame", "comboPointsBar", powerBar)
+			comboPointsBar:SetLayer(-1)
+			comboPointsBar:SetWidth(MinUIConfig.unitFrameBarWidth)
+			comboPointsBar:SetBackgroundColor(1.0, 0.0, 0.0, 0.0)
+			comboPointsBar:SetHeight(MinUIConfig.comboPointsBarHeight)
+			comboPointsBar:SetPoint("TOPLEFT", powerBar, "BOTTOMLEFT", 0, MinUIConfig.unitFrameOffset)
+			
+			unitFrameHeight = unitFrameHeight + MinUIConfig.comboPointsBarHeight + MinUIConfig.unitFrameOffset
+		end
 	-- Attach warrior combo points to underneath players powerbar since they are persistent
 	elseif (MinUI.playerCalling == "warrior" and unitName == "player") then
 		warriorComboPointsBar = UI.CreateFrame("Frame", "warriorComboPointsBar", powerBar)
@@ -365,20 +481,7 @@ local function createUnitFrame(unitName)
 		unitFrameHeight = unitFrameHeight + MinUIConfig.mageChargeBarHeight + MinUIConfig.unitFrameOffset
 	end
 	
-	-- MinUI.frames[unitName]["unitFrame"] for name	
-	unitText:SetFontSize(14)
-	unitText:SetPoint("TOPCENTER", unitFrame, "BOTTOMCENTER", 0, 0)
-	unitText:SetLayer(2)
-	unitText:SetWidth(MinUIConfig.unitFrameBarWidth)
-	unitText:SetHeight(MinUIConfig.unitFrameBarHeight)
-	unitTextShadow:SetFontSize(14)
-	unitTextShadow:SetPoint("TOPCENTER", unitFrame, "BOTTOMCENTER", 1, 1)
-	unitTextShadow:SetLayer(1)
-	unitTextShadow:SetFontColor(0, 0, 0, 1)
-	unitTextShadow:SetWidth(MinUIConfig.unitFrameBarWidth)
-	unitTextShadow:SetHeight(MinUIConfig.unitFrameBarHeight)
-	
-
+	unitFrameHeight = unitFrameHeight + MinUIConfig.unitFrameOffset
 	unitFrame:SetHeight(unitFrameHeight)
 	unitFrame:SetWidth(unitFrameWidth)
 
@@ -444,6 +547,8 @@ local function createUnitFrame(unitName)
 	MinUI.frames[unitName]["unitText"] = unitText
 	MinUI.frames[unitName]["unitTextShadow"] = unitTextShadow
 	MinUI.frames[unitName]["comboPointsBar"] = comboPointsBar
+	MinUI.frames[unitName]["comboPointsBox"] = comboPointsBox
+	MinUI.frames[unitName]["comboPointsBoxText"] = comboPointsBoxText
 	MinUI.frames[unitName]["warriorComboPointsBar"] = warriorComboPointsBar
 	MinUI.frames[unitName]["mageChargeBar"] = mageChargeBar
 	MinUI.frames[unitName]["mageChargeText"] = mageChargeText
@@ -671,8 +776,6 @@ local function addBuffsToUnitFrame(unitName, time)
 		debugPrint("show all buffs", MinUIConfig.showAllBuffs[unitName])
 		debugPrint("show player cast DEbuffs only?", MinUIConfig.showPlayerDebuffsOnly[unitName])
 		debugPrint("show all DEbuffs?", MinUIConfig.showAllDebuffs[unitName])
-
-		
 		
 		-- Now that we have the ordering, we just add the bars one at a time. Done!
 		for k, buff in ipairs(bbars) do
@@ -815,6 +918,32 @@ local function resetFrames()
 	loadSavedFrameLocations()
 end
 
+-- reset everything to default
+local function resetAll()
+	MinUIConfig = {
+		unitFrameBarWidth = 250,
+		unitFrameBarHeight = 20,
+		unitFrameOffset = 3,
+		comboPointsBarHeight = 7,
+		mageChargeBarHeight = 15,
+		-- enabled frames
+		-- framesEnabled = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }
+		-- frames configured to show player cast debuffs
+		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
+		-- frames configured to show all debuffs
+		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show all buffs
+		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- frames configured to show player buffs only
+		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- configuration for what bars are shown on what unit frame
+		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
+		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
+		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
+		showComboBox = false
+	}
+end
+
 -- addon has loaded
 local function addonLoaded(addon)
 	if(addon == "MinUI") then
@@ -844,7 +973,12 @@ local function setToDpsMode()
 		-- frames configured to show all buffs
 		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
 		-- frames configured to show player buffs only
-		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  }
+		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
+		-- configuration for what bars are shown on what unit frame
+		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
+		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
+		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
+		showComboBox = false
 	}
 end
 
@@ -864,10 +998,23 @@ local function setToHealsMode()
 		-- frames configured to show all buffs
 		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
 		-- frames configured to show player buffs only
-		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true  }
+		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true  },
+		-- configuration for what bars are shown on what unit frame
+		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
+		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
+		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
+		showComboBox = false
 	}
 end
 
+local function muicombobox()
+	MinUIConfig.showComboBox = false
+end
+
+local function muiConfig(commandline)
+	local values = split(commandline," ")
+	
+end
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -898,6 +1045,11 @@ local function startup()
 	table.insert(Command.Slash.Register("muireset"), {resetFrames, "MinUI", "Slash command"})
 	table.insert(Command.Slash.Register("muidps"), {setToDpsMode, "MinUI", "Slash command"})
 	table.insert(Command.Slash.Register("muiheals"), {setToHealsMode, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muiresetall"), {resetAll, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("muicombobox"), {muicombobox, "MinUI", "Slash command"})
+	
+	table.insert(Command.Slash.Register("mui"), {muiConfig, "MinUI", "Slash command"})
+	
 
 	-- Our update event
 	table.insert(Event.System.Update.Begin, {tick, "MinUI", "refresh"})
