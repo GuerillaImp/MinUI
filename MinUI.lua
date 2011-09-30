@@ -1,3 +1,7 @@
+--
+-- MinUI UnitFrames by Grantus
+--
+
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- MinUI Global Settings/Values
@@ -13,30 +17,16 @@ MinUI.frames = {}
 -- Buff Control
 MinUI.resyncBuffs = false
 
--- Spam Control
-MinUI.debugging = false
-
 -- Player Calling / Initialisation
 MinUI.playerCalling = "unknown"
 MinUI.playerDetailsKnown = false
 MinUI.initialised = false
-
--- Frame Movement toggle
-MinUI.unitFramesLocked = true
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- Unit Frame Functions
 --
 -----------------------------------------------------------------------------------------------------------------------------
-
--- utility print function that can be disabled
-local function debugPrint(...)
-	if( MinUI.debugging == true) then
-		print(...)
-	end
-end
- 
 local function showUnitFrame(unitName)
 	MinUI.frames[unitName]["unitFrame"]:SetVisible(true)
 end
@@ -496,7 +486,7 @@ local function createUnitFrame(unitName)
 		--	setUnitFrameTarget("player.target.target", "player")
 		--end
 				
-		if(MinUI.unitFramesLocked == false) then
+		if(MinUIConfig.unitFramesLocked == false) then
 			self.MouseDown = true
 			mouseData = Inspect.Mouse()
 			self.MyStartX = unitFrame:GetLeft()
@@ -832,18 +822,23 @@ local function getPlayerDetails()
 	debugPrint ("player calling is... ", MinUI.playerCalling)
 end
 
--- load settings
-local function loadSavedFrameLocations()
+
+--
+-- Restore Layout Settings from Config Saved Vars
+--
+function loadSavedFrameLocations()
 	setUnitFrameLocation("player", MinUIFramePlacement["player"].x, MinUIFramePlacement["player"].y)
 	setUnitFrameLocation("player.pet", MinUIFramePlacement["player.pet"].x, MinUIFramePlacement["player.pet"].y)
 	setUnitFrameLocation("player.target", MinUIFramePlacement["player.target"].x, MinUIFramePlacement["player.target"].y)
 	setUnitFrameLocation("player.target.target", MinUIFramePlacement["player.target.target"].x, MinUIFramePlacement["player.target.target"].y)
 end
 
--- setup frames
+--
+-- Initialise Enabled Frames
+--
 local function initialiseFrames()
 	debugPrint("initialising frames")
-
+	
 	createUnitFrame("player")
 	createUnitFrame("player.pet")
 	createUnitFrame("player.target")
@@ -856,13 +851,15 @@ local function initialiseFrames()
 	updateUnitFrames()
 end
 
--- resync bars / tick
-local function tick()
-	-- try and get calling until we do
+--
+-- Main Event Update Loop
+--
+local function updateLoop()
+	-- Poll for player calling until we get one
 	if (MinUI.playerDetailsKnown == false) then
 		getPlayerDetails()
 	else
-		-- once we get the players calling initialise the frames
+		-- Once we get the player's calling initialise the frames
 		if (MinUI.initialised == false) then
 			initialiseFrames()
 			MinUI.resyncBuffs = true
@@ -873,147 +870,80 @@ local function tick()
 			refresh(Inspect.Time.Frame())
 			MinUI.resyncBuffs = false
 		else
-		-- Just do a tick refresh
+		-- Just do a Tick on the bar
 		local time = Inspect.Time.Frame()
 			for unitName, value in pairs(MinUI.frames) do
-				for _, v in ipairs(MinUI.frames[unitName]["activeBuffBars"]) do
-					v:Tick(time)
+				for _, bar in ipairs(MinUI.frames[unitName]["activeBuffBars"]) do
+					bar:Tick(time)
 				end
 			end
 		end
 	end
 end
 
-
--- target changed
+--
+-- Target Changed Event Handler
+--
 local function targetChanged()
 	debugPrint("target changed")
 	updateUnitFrames()
 	MinUI.resyncBuffs = true
 end
 
--- lock frames
-local function lockFrames()
-	print("Frames Locked")
-	MinUI.unitFramesLocked = true
-end
--- unlock frames
-local function unlockFrames()
-	print("Frames UnLocked")
-	MinUI.unitFramesLocked = false
-end
-
-local function resetFrames()
-	print("Frames Reset")
-	MinUI.unitFramesLocked = false
-	
-	-- reset positioning
-	MinUIFramePlacement = {
-		["player"] = {x = 10, y = 450},
-		["player.pet"] = {x = 10, y = 570},
-		["player.target"] = {x = 280, y = 450},
-		["player.target.target"] = {x = 550, y = 450}
-	}
-	
-	loadSavedFrameLocations()
-end
-
--- reset everything to default
-local function resetAll()
-	MinUIConfig = {
-		unitFrameBarWidth = 250,
-		unitFrameBarHeight = 20,
-		unitFrameOffset = 3,
-		comboPointsBarHeight = 7,
-		mageChargeBarHeight = 15,
-		-- enabled frames
-		-- framesEnabled = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }
-		-- frames configured to show player cast debuffs
-		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
-		-- frames configured to show all debuffs
-		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show all buffs
-		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show player buffs only
-		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- configuration for what bars are shown on what unit frame
-		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
-		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
-		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
-		showComboBox = false
-	}
-end
-
--- addon has loaded
+--
+-- Addon Loaded
+--
 local function addonLoaded(addon)
 	if(addon == "MinUI") then
 		print("MinUI 0.0.6 - development")
-		print("MinUI UnitFrames Loaded.")
-		print("/muilock and /muiunlock unlocks and locks the frames for movement.")
-		print("/muireset resets the frames to their default positions.")
-		print("/muidps shows all debuffs on the player and shows player only debuffs on the target.")
-		print("/muiheals shows player only buffs on the target frames in addition to showing all debuffs.")
-		print("Enjoy")
+		print("UnitFrames loaded, type /mui for help")
 	end
 end
 
--- dps mode settings
-local function setToDpsMode()
-	print("DPS/Tank Mode")
-	MinUIConfig = {
-		unitFrameBarWidth = 250,
-		unitFrameBarHeight = 25,
-		unitFrameOffset = 2,
-		comboPointsBarHeight = 5,
-		mageChargeBarHeight = 15,
-		-- frames configured to show player cast debuffs
-		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
-		-- frames configured to show all debuffs
-		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show all buffs
-		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show player buffs only
-		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- configuration for what bars are shown on what unit frame
-		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
-		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
-		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
-		showComboBox = false
-	}
-end
-
--- heals mode settings
-local function setToHealsMode()
-	print("Heals Mode")
-	MinUIConfig = {
-		unitFrameBarWidth = 250,
-		unitFrameBarHeight = 25,
-		unitFrameOffset = 2,
-		comboPointsBarHeight = 5,
-		mageChargeBarHeight = 15,
-		-- frames configured to show player cast debuffs
-		showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show all debuffs
-		showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
-		-- frames configured to show all buffs
-		showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-		-- frames configured to show player buffs only
-		showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true  },
-		-- configuration for what bars are shown on what unit frame
-		showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
-		showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
-		showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
-		showComboBox = false
-	}
-end
-
-local function muicombobox()
-	MinUIConfig.showComboBox = false
-end
-
-local function muiConfig(commandline)
-	local values = split(commandline," ")
+--
+-- Configuration Interface
+--
+local function muiCommandInterface(commandline)
+	local tokenCount = 0
+	local command = nil
 	
+	-- iterate tokens in command line
+	for token in string.gmatch(commandline, "[^%s]+") do
+		tokenCount = tokenCount + 1
+		
+		-- handle commands (should always be first token)
+		if(tokenCount == 1) then
+			-- lock frames
+			if(token == "lock") then
+				lockFrames()
+			-- unlock frames
+			elseif(token == "unlock") then
+				unlockFrames()
+			-- reset all settings to defaults
+			elseif(token == "resetall") then
+				resetAll()
+			-- print frame current settings
+			elseif(token == "print") then
+				command = token
+			-- unknown command
+			else
+				printHelpText()
+			end
+		end
+		
+		-- handle frame name (second token) given to the command
+		if (command) then
+			if(tokenCount == 2) then
+				if (command == "print") then
+					showCurrentSettings(token)
+				end
+			end
+		end
+	end
+	
+	if (tokenCount == 0) then
+		printHelpText()
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -1038,21 +968,15 @@ local function startup()
 	table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	
+	-- Say hello 
 	table.insert(Event.Addon.Load.End, {addonLoaded, "MinUI", "addonLoaded"})
 
-	table.insert(Command.Slash.Register("muilock"), {lockFrames, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muiunlock"), {unlockFrames, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muireset"), {resetFrames, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muidps"), {setToDpsMode, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muiheals"), {setToHealsMode, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muiresetall"), {resetAll, "MinUI", "Slash command"})
-	table.insert(Command.Slash.Register("muicombobox"), {muicombobox, "MinUI", "Slash command"})
-	
-	table.insert(Command.Slash.Register("mui"), {muiConfig, "MinUI", "Slash command"})
+	-- Handle User Customisation
+	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
 	
 
 	-- Our update event
-	table.insert(Event.System.Update.Begin, {tick, "MinUI", "refresh"})
+	table.insert(Event.System.Update.Begin, {updateLoop, "MinUI", "refresh"})
 end
 
 startup()
