@@ -2,6 +2,17 @@
 -- MinUI UnitFrames by Grantus
 --
 
+
+--[[
+*TODO*
+	* Convert UnitFrame's to class based format (if possible)
+	* Add Textures for default colours
+	* Add config GUI
+	* Add Vitality Number
+	* Add Planar Charge Number
+]]
+
+
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- MinUI Global Settings/Values
@@ -21,6 +32,23 @@ MinUI.resyncBuffs = false
 MinUI.playerCalling = "unknown"
 MinUI.playerDetailsKnown = false
 MinUI.initialised = false
+
+
+--
+-- New OO style Frames :-)
+--
+pframe = UnitFrame.new( "player", 260, 40, MinUI.context, 500,500 )
+pframe:addUnitBar( "health", 250, 20, "healthy", 12, "TOPLEFT", "TOPLEFT", pframe.frame, 5, 5)
+pframe:addUnitBar( "energy", 250, 20, "rogue_energy", 12, "TOPLEFT", "BOTTOMLEFT", pframe:getUnitBar( "health" ).bar, 0, 5 )
+pframe:setUFrameVisible(true)
+
+
+tFrame = UnitFrame.new( "player.target", 260, 40, MinUI.context, 780,500 )
+tFrame:addUnitBar( "health", 250, 20, "healthy", 12, "TOPLEFT", "TOPLEFT", tFrame.frame, 5, 5)
+tFrame:addUnitBar( "energy", 250, 20, "rogue_energy", 12, "TOPLEFT", "BOTTOMLEFT", tFrame:getUnitBar( "health" ).bar, 0, 5 )
+tFrame:setUFrameVisible(false)
+
+
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -66,8 +94,7 @@ local function setFrameDetails(unitName, unitDetails)
 		local healthRatio = health/healthMax
 		local healthPercent = math.floor(healthRatio * 100)
 		
-	
-		
+
 		-- init power vars
 		local power = 0
 		local powerMax = 0
@@ -222,6 +249,8 @@ local function setFrameDetails(unitName, unitDetails)
 		if(MinUIConfig.showPowerBar[unitName]) then
 			if unitCalling == "rogue" then
 				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.3, 0.0, 0.3, 1.0)
+				
+				MinUI.frames[unitName]["powerBar"]:SetTexture("MinUI","rogue_energy.tga")
 			elseif unitCalling == "mage" or unitCalling == "cleric" then
 				MinUI.frames[unitName]["powerBar"]:SetBackgroundColor(0.0, 0.0, 0.3, 1.0)
 			elseif unitCalling == "warrior" then
@@ -319,7 +348,8 @@ local function createUnitFrame(unitName)
 	
 
 	if ( MinUIConfig.showHealthBar[unitName] ) then
-		healthBar = UI.CreateFrame("Frame", "healthBar", unitFrame)
+		healthBar = UI.CreateFrame("Texture", "healthBar", unitFrame)
+		healthBar:SetTexture("MinUI","healthy.tga")
 		healthText = UI.CreateFrame("Text", "healthText", healthBar)
 		healthTextShadow = UI.CreateFrame("Text", "healthText", healthBar)
 		
@@ -350,7 +380,7 @@ local function createUnitFrame(unitName)
 	local powerText = nil
 	local powerTextShadow = nil
 	if ( MinUIConfig.showPowerBar[unitName] ) then
-		powerBar = UI.CreateFrame("Frame", "powerBar", healthBar)
+		powerBar = UI.CreateFrame("Texture", "powerBar", healthBar)
 		powerText = UI.CreateFrame("Text", "powerText", powerBar)
 		powerTextShadow = UI.CreateFrame("Text", "powerTextShadow", powerBar)
 		
@@ -433,6 +463,7 @@ local function createUnitFrame(unitName)
 			comboPointsBoxText:SetHeight(comboPointsBoxText:GetFullHeight()+ MinUIConfig.unitFrameOffset)
 			comboPointsBox:SetWidth(comboPointsBoxText:GetFullWidth()+ MinUIConfig.unitFrameOffset)
 			comboPointsBox:SetHeight(comboPointsBoxText:GetFullHeight()+ MinUIConfig.unitFrameOffset)
+			
 		else
 			comboPointsBar = UI.CreateFrame("Frame", "comboPointsBar", powerBar)
 			comboPointsBar:SetLayer(-1)
@@ -837,18 +868,18 @@ end
 -- Initialise Enabled Frames
 --
 local function initialiseFrames()
-	debugPrint("initialising frames")
+	--debugPrint("initialising frames")
 	
-	createUnitFrame("player")
-	createUnitFrame("player.pet")
-	createUnitFrame("player.target")
-	createUnitFrame("player.target.target")
+	--createUnitFrame("player")
+	--createUnitFrame("player.pet")
+	--createUnitFrame("player.target")
+	--createUnitFrame("player.target.target")
 	
 	-- load saved settings
-	loadSavedFrameLocations()
+	--loadSavedFrameLocations()
 	
 	-- updates the unit frame details
-	updateUnitFrames()
+	--updateUnitFrames()
 end
 
 --
@@ -952,14 +983,21 @@ end
 --
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
+
+
+	
+
+
+	
 	--
 	-- event hooks
 	--
 	
 	-- UnitFrames
-	table.insert(Event.Unit.Detail.Health, {updateUnitFrames, "MinUI", "updateUnitFrames"})
-	table.insert(Event.Unit.Detail.Mana, {updateUnitFrames, "MinUI", "updateUnitFrames"})
-	table.insert(Event.Unit.Detail.Energy, {updateUnitFrames, "MinUI", "updateUnitFrames"})
+	
+	--table.insert(Event.Unit.Detail.Health, {updateUnitFrames, "MinUI", "updateUnitHealth"})
+	--table.insert(Event.Unit.Detail.Mana, {updateUnitFrames, "MinUI", "updateUnitFrames"})
+	--table.insert(Event.Unit.Detail.Energy, {updateUnitFrames, "MinUI", "updateUnitFrames"})
 	table.insert(Event.Ability.Target, {targetChanged, "MinUI", "updateUnitFrames"})
 
 	
