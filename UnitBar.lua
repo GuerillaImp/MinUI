@@ -33,6 +33,7 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
 	uBar.texture = texture
+	uBar.visible = true
 	
 	-- create the bar
 	uBar.bar = UI.CreateFrame("Texture", name, parentItem)
@@ -43,7 +44,7 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	uBar.bar:SetWidth(uBar.width)
 	uBar.bar:SetHeight(uBar.height)
 	uBar.bar:SetLayer(2)
-	uBar.bar:SetVisible(true)
+	uBar.bar:SetVisible(uBar.visible)
 	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
 	-- create the text
@@ -58,31 +59,58 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	return uBar
 end
 
+
+function UnitBar:isUBarVisible()
+	return self.visible
+end
+
+function UnitBar:getUBarOffsetY()
+	return self.offsetY
+end
+
+--
 -- set text
+--
 function UnitBar:setUBarText(text)
 	self.text:SetText(text)
 end
 
+--
 -- set height
+--
 function UnitBar:setUBarHeight(height)
 	self.height = height
 	self.bar:SetHeight(self.height)
 end
 
+--
 -- get height
+--
 function UnitBar:getUBarHeight()
 	return self.height
 end
 
+--
 -- set width
+--
 function UnitBar:setUBarWidth(width)
 	self.width = width
 	self.bar:SetWidth(self.width)
 end
 
+--
 -- get width
+--
 function UnitBar:getUBarWidth()
 	return self.width
+end
+
+--
+-- Toggle Bar Visibility
+--
+function UnitBar:setUBarVisible(toggle)
+	self.visible = toggle
+	self.bar:SetVisible(self.visible)
 end
 
 --
