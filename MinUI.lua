@@ -80,29 +80,52 @@ local function createUnitFrames()
 	--
 	local playerFrame = UnitFrame.new( "player", 260, 40, MinUI.context, 500,500 )
 	playerFrame:setUFrameCalling(MinUI.playerCalling)
-	playerFrame:enableBar( "health", true )
-	playerFrame:enableBar( "resources", true )
-	playerFrame:init()
+	playerFrame:enableBar( 1, "health" )
+	playerFrame:enableBar( 2, "resources" )
+	-- If we Have a Warrior
+	if ( MinUI.playerCalling == "warrior" ) then
+		playerFrame:enableBar( "comboPointsBar", 3 )
+	end
+	if ( MinUI.playerCalling == "mage" ) then
+		playerFrame:enableBar( "charge", 3 )
+	end
+	playerFrame:createEnabledBars()
+	playerFrame:setUFrameVisible(true)
 
 	local targetFrame = UnitFrame.new( "player.target", 260, 40, MinUI.context, 780,500 )
-	targetFrame:enableBar( "health", true )
-	targetFrame:enableBar( "resources", true )
-	targetFrame:init()
-	targetFrame:setUFrameVisible( false )
+	targetFrame:enableBar( 1, "health" )
+	targetFrame:enableBar( 2, "resources" )
+	-- If we Have a Rogue
+	if ( MinUI.playerCalling == "rogue" ) then
+		targetFrame:enableBar( 3, "comboPointsBar" )
+	end
+	targetFrame:enableBar( 4, "text")
+	targetFrame:createEnabledBars()
+	targetFrame:showText ("name")
+	targetFrame:showText ("level")
+	targetFrame:showText ("guild")
+	--targetFrame:showText ("calling")
+	
 	
 	local totFrame = UnitFrame.new( "player.target.target", 260, 40, MinUI.context, 1080,500 )
-	totFrame:enableBar( "health", true )
-	totFrame:init()
+	totFrame:enableBar( 1, "health" )
+	totFrame:enableBar( 2, "text" )
+	totFrame:createEnabledBars()
+	totFrame:showText ("name")
 	totFrame:setUFrameVisible( false )
 	
 	local focusFrame = UnitFrame.new( "focus", 260, 40, MinUI.context, 1380,500 )
-	focusFrame:enableBar( "health", true )
-	focusFrame:init()
+	focusFrame:enableBar( 1, "health" )
+	focusFrame:enableBar( 2, "text" )
+	focusFrame:createEnabledBars()
+	focusFrame:showText ("name")
 	focusFrame:setUFrameVisible( false )
 	
 	local petFrame = UnitFrame.new( "player.pet", 260, 40, MinUI.context, 200,500 )
-	petFrame:enableBar( "health", true )
-	petFrame:init()
+	petFrame:enableBar( 1, "health" )
+	petFrame:enableBar( 2, "text" )
+	petFrame:createEnabledBars()
+	petFrame:showText ("name")
 	petFrame:setUFrameVisible( false )
 	
 	-- Store the frames
@@ -162,10 +185,7 @@ end
 --
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
-
- --createUnitFrames()
-
-
+	--createUnitFrames()
 	--
 	-- event hooks
 	--

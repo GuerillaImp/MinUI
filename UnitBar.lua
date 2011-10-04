@@ -1,6 +1,16 @@
 -----------------------------------------------------------------------------------------------------------------------------
 --
--- A Bar Class
+-- A UnitBar Class
+--
+-- This basic unit bar has a solid bar, width, and text items.
+--
+-- Other items such as ComboPointsBar and UnitText "kinda" implement this as an interface by providing:
+-- function XXX:isUBarEnabled()
+-- function XXX:setUBarEnabled( toggle )
+-- function XXX:getUBarHeight()
+-- function XXX:getUBarOffsetY()  
+--
+-- These functions enable the UnitFrame to transparently add them as "bars" and resize accordingly
 --
 ----------------------------------------------------------------------------------------------------------------------------- 
 UnitBar = {}
@@ -23,6 +33,7 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	local uBar = {}             		-- our new object
 	setmetatable(uBar, UnitBar)      	-- make UnitBar handle lookup
 	
+
 	-- store values for the bar
 	uBar.width = width
 	uBar.height = height
@@ -32,13 +43,11 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.parentItem = parentItem
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
-	--uBar.texture = texture
-	uBar.enabled = false
+	uBar.enabled = false -- TODO phase this out kinda useless
 	uBar.color = {}
-	
+
 	-- create the bar
 	uBar.bar = UI.CreateFrame("Frame", name, parentItem)
-	--uBar.bar:SetTexture("MinUI",texture .. ".tga")
 	uBar.bar:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.bar:SetWidth(uBar.width)
 	uBar.bar:SetHeight(uBar.height)
@@ -54,6 +63,8 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.text:SetLayer(2)
 	uBar.text:SetVisible(true)
 	uBar.text:SetFontSize(fontSize)
+	
+
 	
 	return uBar
 end
