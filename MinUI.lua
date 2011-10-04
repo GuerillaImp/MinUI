@@ -37,7 +37,7 @@ MinUI.initialised = false
 
 --
 -- Target Changed
---
+--[[
 local function targetChanged()
 	--print("Target Changed")
 	
@@ -49,7 +49,7 @@ local function targetChanged()
 			unitFrame:update()
 		end
 	end
-end
+end]]
 
 --
 -- Inspect player for calling, sometimes this returns nil (when loading or porting)
@@ -84,10 +84,11 @@ local function createUnitFrames()
 	playerFrame:enableBar( 2, "resources" )
 	-- If we Have a Warrior
 	if ( MinUI.playerCalling == "warrior" ) then
-		playerFrame:enableBar( "comboPointsBar", 3 )
+		playerFrame:enableBar( 3, "comboPointsBar" )
 	end
 	if ( MinUI.playerCalling == "mage" ) then
-		playerFrame:enableBar( "charge", 3 )
+		--print("creating charge bar")
+		playerFrame:enableBar( 3, "charge" )
 	end
 	playerFrame:createEnabledBars()
 	playerFrame:setUFrameVisible(true)
@@ -104,7 +105,11 @@ local function createUnitFrames()
 	targetFrame:showText ("name")
 	targetFrame:showText ("level")
 	targetFrame:showText ("guild")
-	--targetFrame:showText ("calling")
+	
+	-- add buffs with 30 seconds or less duration max, by the player, that are debuffs, above
+	--targetFrame:addBuffBars( "debuffs", "player", 30, "above",0,-5 )
+	-- show all buffs with 30seconds or less duration max, below
+	--targetFrame:addBuffBars( "buffs", "all", 30, "below",0,5 )
 	
 	
 	local totFrame = UnitFrame.new( "player.target.target", 260, 40, MinUI.context, 1080,500 )
@@ -153,28 +158,23 @@ local function update()
 			MinUI.resyncBuffs = true
 			MinUI.initialised = true
 		end
-		
+				
+		-- A buff recalculation has been queued, so go ahead and recalculate.
+		if MinUI.resyncBuffs then
+			for unitName, unitFrame in pairs(MinUI.frames) do
+				unitFrame:refreshBuffBars(Inspect.Time.Frame())
+			end
+			MinUI.resyncBuffs = false
+		end
+				
 		-- update cause the unit frames to ensure they are all up to date every frame
 		-- this isn't the best way of doing this but for now it will do
 		for unitName, unitFrame in pairs(MinUI.frames) do
-			unitFrame:update() 
+			unitFrame:update()
+			unitFrame:tickBuffBars(Inspect.Time.Frame())
 		end
 		
-		--[[
-		if MinUI.resyncBuffs then
-			-- A recalculation has been queued, so go ahead and recalculate.
-			refresh(Inspect.Time.Frame())
-			MinUI.resyncBuffs = false
-		else
-		-- Just do a Tick on the bar
-		local time = Inspect.Time.Frame()
-			for unitName, value in pairs(MinUI.frames) do
-				for _, bar in ipairs(MinUI.frames[unitName]["activeBuffBars"]) do
-					bar:Tick(time)
-				end
-			end
-		end
-		]]
+		
 	end
 end
 
@@ -190,14 +190,12 @@ local function startup()
 	-- event hooks
 	--
 	
-	-- Target Change
-	--table.insert(Event.Ability.Target, {targetChanged, "MinUI", "updateUnitFrames"})
-
+	table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	
 	-- Buffs
-	--table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-	--table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-	--table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
+	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
+	table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
+	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 
 	-- Handle User Customisation
 	-- table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})

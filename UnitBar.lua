@@ -109,7 +109,7 @@ end
 -- set text
 --
 function UnitBar:setUBarText(text)
-	--debugPrint "setting ubartext"
+	--print "setting ubartext"
 	self.text:SetText(text)
 end
 

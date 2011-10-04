@@ -28,6 +28,13 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.calling = nil
 	uFrame.visible = false
 	
+	-- buffbars
+	uFrame.buffs = nil -- TODO
+	uFrame.debuffs = nil -- TODO
+	
+	-- castbar
+	uFrame.castbar = nil -- TODO
+	
 	-- the next "thing" a UnitBar (or equivillent) should anchor on
 	uFrame.nextAnchor = nil
 	
@@ -122,9 +129,67 @@ function UnitFrame:update ( )
 			if(barType == "text") then
 				self.bars["text"]:updateTextItems()
 			end
+			if(barType == "charge") then
+				self:updateChargeBar()
+			end
 		end
 	else
 		self:setUFrameVisible(false)
+		--self:resetBuffBars()
+	end
+end
+
+
+--
+-- Add Buff Bars to the UnitFrame
+--
+-- buffType == buff/debuff
+-- visibilityOptions == player/all/curable
+-- lengthThreshold == max time (i.e 30 secs or less)
+--
+--
+function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location, offsetX, offsetY )
+	local bbars = nil
+	if( location == "above") then
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", 250, 12, "BOTTOMCENTER", "TOPCENTER", self.frame, offsetX, offsetY )
+	elseif ( location == "below") then
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", 250, 12, "TOPCENTER", "BOTTOMCENTER", self.frame, offsetX, offsetY )
+	end
+	
+	-- store frame
+	if (buffType == "buffs")then
+		self.buffs = bbars
+	elseif (buffType == "debuffs")then
+		self.debuffs = bbars
+	end
+	
+	-- TODO: add more positions if requested
+end
+
+function UnitFrame:resetBuffBars()
+	if(self.buffs) then
+		self.buffs:resetBuffBars(time)
+	end
+	if(self.debuffs)  then
+		self.debuffs:resetBuffBars(time)
+	end
+end
+
+function UnitFrame:refreshBuffBars(time)
+	if(self.buffs) then
+		self.buffs:update(time)
+	end
+	if(self.debuffs)  then
+		self.debuffs:update(time)
+	end
+end
+
+function UnitFrame:tickBuffBars(time)
+	if(self.buffs) then
+		self.buffs:tickBars(time)
+	end
+	if(self.debuffs)  then
+		self.debuffs:tickBars(time)
 	end
 end
 
@@ -163,7 +228,7 @@ function UnitFrame:updateHealth( )
 				local healthRatio = health/healthMax
 				local healthPercent = math.floor(healthRatio * 100)
 				
-				local healthText = string.format("%s/%s (%s%%)", health, healthMax, healthPercent)
+				local healthText = string.format("%s/%s", health, healthMax)
 				bar:setUBarText(healthText)
 				bar:setUBarWidthRatio(healthRatio)
 				
@@ -173,6 +238,32 @@ function UnitFrame:updateHealth( )
 		end
 	end
 end
+
+--
+-- Update the Charge Bar of this Unit Frame
+--
+function UnitFrame:updateChargeBar( )
+	-- dont update invisible frames
+	if ( self.visible ) then
+		local bar = self.bars["charge"]
+		-- if this frame has a charge bar
+		if (bar) then
+			local unitDetails = Inspect.Unit.Detail(self.unitName)
+			if (unitDetails) then
+				local charge = unitDetails.charge
+				local chargeMax = 100 -- TODO: can mages go over 100 charge?
+				local chargeRatio = charge/chargeMax
+				local chargePercent = math.floor(chargeRatio * 100)
+				
+				local chargeText = string.format("%s/%s", charge,chargeMax)
+				--print(chargeText)
+				bar:setUBarText(chargeText)
+				bar:setUBarWidthRatio(chargeRatio)
+			end
+		end
+	end
+end
+
 
 --
 -- Update the Resources Bar of this Unit Frame
@@ -191,7 +282,7 @@ function UnitFrame:updateResources( )
 					local energyRatio = energy/energyMax
 					local energyPercent = math.floor(energyRatio * 100)
 					
-					local energyText = string.format("%s/%s (%s%%)", energy, energyMax, energyPercent)
+					local energyText = string.format("%s/%s)", energy, energyMax)
 					bar:setUBarText(energyText)
 					bar:setUBarWidthRatio(energyRatio)
 				elseif(self.calling == "warrior") then
@@ -200,7 +291,7 @@ function UnitFrame:updateResources( )
 					local powerRatio = power/powerMax
 					local powerPercent = math.floor(powerRatio * 100)
 
-					local powerText = string.format("%s/%s (%s%%)", power, powerMax, powerPercent)
+					local powerText = string.format("%s/%s", power, powerMax)
 					bar:setUBarText(powerText)
 					bar:setUBarWidthRatio(powerRatio)
 				elseif(self.calling == "cleric" or self.calling == "mage") then
@@ -209,7 +300,7 @@ function UnitFrame:updateResources( )
 					local manaRatio = mana/manaMax
 					local manaPercent = math.floor(manaRatio * 100)
 
-					local manaText = string.format("%s/%s (%s%%)", mana, manaMax, manaPercent)
+					local manaText = string.format("%s/%s", mana, manaMax)
 					bar:setUBarText(manaText)
 					bar:setUBarWidthRatio(manaRatio)
 				-- No Calling
@@ -282,9 +373,9 @@ end
 --
 function UnitFrame:createEnabledBars()
 
-	for position, barType in pairs(self.barsEnabled) do
-		debugPrint (position, barType)
-	end
+	--for position, barType in pairs(self.barsEnabled) do
+	---	print (position, barType)
+	--end
 
 	for _, barType in pairs(self.barsEnabled) do
 		if ( barType == "health" ) then
@@ -401,21 +492,25 @@ end
 -- A charge bar for a Mage calling class
 --
 function UnitFrame:addChargeBar()
-	debugPrint("Add charge Bar", self.unitName)
+	--print("Add charge Bar", self.unitName)
 	
 	if(self.nextAnchor) then
 		-- add resources bar
-		self:addUnitBar( "charge", 250, 20, 12, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5)
+		self:addUnitBar( "charge", 250, 15, 10, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5)
 		-- enable the bar
 		self.bars["charge"]:setUBarEnabled(true)
+		-- set charge colour
+		self.bars["charge"]:setUBarColor(0,0.8,0.8,0.8)
 		-- store anchor
 		self.nextAnchor = self.bars["charge"].bar
 	-- anchor to top left of frame
 	else
 		-- add resources bar
-		self:addUnitBar( "charge", 250, 20, 12, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
+		self:addUnitBar( "charge", 250, 15, 10, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
 		-- enable the bar
 		self.bars["charge"]:setUBarEnabled(true)
+		-- set charge colour
+		self.bars["charge"]:setUBarColor(0,0.8,0.8,0.8)
 		-- store anchor
 		self.nextAnchor = self.bars["charge"].bar
 	end
