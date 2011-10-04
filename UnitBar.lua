@@ -33,18 +33,16 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
 	uBar.texture = texture
-	uBar.visible = true
+	uBar.enabled = false
 	
 	-- create the bar
 	uBar.bar = UI.CreateFrame("Texture", name, parentItem)
-	if not (texture == "none") then
-		uBar.bar:SetTexture("MinUI",texture .. ".tga")
-	end
+	uBar.bar:SetTexture("MinUI",texture .. ".tga")
 	uBar.bar:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.bar:SetWidth(uBar.width)
 	uBar.bar:SetHeight(uBar.height)
-	uBar.bar:SetLayer(2)
-	uBar.bar:SetVisible(uBar.visible)
+	uBar.bar:SetLayer(1)
+	uBar.bar:SetVisible(uBar.enabled)
 	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
 	-- create the text
@@ -52,18 +50,40 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	uBar.text:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", offsetX, 0 )
 	uBar.text:SetWidth(uBar.width)
 	uBar.text:SetHeight(uBar.height)
-	uBar.text:SetLayer(3)
+	uBar.text:SetLayer(2)
 	uBar.text:SetVisible(true)
 	uBar.text:SetFontSize(fontSize)
 	
 	return uBar
 end
 
-
-function UnitBar:isUBarVisible()
-	return self.visible
+--
+-- Set the Unit Bar's Texture
+--
+function UnitBar:setUBarTexture( texture )
+	self.texture = texture
+	self.bar:SetTexture("MinUI",texture .. ".tga")
+	self.bar:SetLayer(1)
 end
 
+--
+-- Is the bar enabled?
+--
+function UnitBar:isUBarEnabled()
+	return self.enabled
+end
+
+--
+-- Enable/Disable the bar
+--
+function UnitBar:setUBarEnabled( toggle )
+	self.enabled = toggle
+	self.bar:SetVisible(toggle)
+end
+
+--
+--
+--
 function UnitBar:getUBarOffsetY()
 	return self.offsetY
 end
@@ -72,7 +92,14 @@ end
 -- set text
 --
 function UnitBar:setUBarText(text)
+	--print "setting ubartext"
 	self.text:SetText(text)
+	self.text:SetWidth(self.width)
+	self.text:SetHeight(self.height)
+	self.text:SetPoint( "CENTERLEFT", self.bar, "CENTERLEFT", self.offsetX, 0 )
+	self.text:SetLayer(2)
+	self.text:SetVisible(true)
+	
 end
 
 --
@@ -109,8 +136,8 @@ end
 -- Toggle Bar Visibility
 --
 function UnitBar:setUBarVisible(toggle)
-	self.visible = toggle
-	self.bar:SetVisible(self.visible)
+	self.enabled = toggle
+	self.bar:SetVisible(self.enabled)
 end
 
 --

@@ -77,18 +77,18 @@ end
 --
 local function createUnitFrames()
 	print("Create Unit Frames")
-	
+	--
 	local playerFrame = UnitFrame.new( "player", 260, 40, MinUI.context, 500,500 )
 	playerFrame:setUFrameCalling(MinUI.playerCalling)
-	playerFrame:enableHealthBar()
-	playerFrame:enablePowerBar()
-	playerFrame:setUFrameVisible(true)
-
+	playerFrame:enableBar( "health", true )
+	playerFrame:enableBar( "resources", true )
+	playerFrame:init()
 
 	local targetFrame = UnitFrame.new( "player.target", 260, 40, MinUI.context, 780,500 )
-	targetFrame:enableHealthBar()
-	targetFrame:enablePowerBar()
-	targetFrame:setUFrameVisible(false)
+	targetFrame:enableBar( "health", true )
+	targetFrame:enableBar( "resources", true )
+	targetFrame:init()
+	targetFrame:setUFrameVisible( false )
 	
 	-- Store the frames
 	MinUI.frames["player"] = playerFrame
@@ -106,7 +106,9 @@ local function update()
 		-- Once we get the player's calling initialise the frames
 		if (MinUI.initialised == false) then
 			createUnitFrames()
-			MinUI.frames["player"]:update()
+			if(MinUI.frames["player"]) then
+				MinUI.frames["player"]:update()
+			end
 			MinUI.resyncBuffs = true
 			MinUI.initialised = true
 		end

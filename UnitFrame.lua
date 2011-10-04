@@ -7,7 +7,7 @@ UnitFrame = {}
 UnitFrame.__index = UnitFrame
 
 --[[
- TODO - power is mage charge not warrior energy duh
+ TODO - resources is mage charge not warrior energy duh
  fix this(combine warrior/rogue into "energy" bar
 ]]
 
@@ -27,6 +27,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
 	uFrame.visible = false
+	
+	-- unit bars this frame will attempt to add/update as required
+	uFrame.barsEnabled = {}
 
 	-- unit frame bars
 	uFrame.bars = {}
@@ -36,7 +39,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetPoint("TOPLEFT", parentItem, "TOPLEFT", x, y ) -- frames from top left of scren
 	uFrame.frame:SetWidth(uFrame.width)
 	uFrame.frame:SetHeight(uFrame.height)
-	uFrame.frame:SetLayer(1)
+	uFrame.frame:SetLayer(-1)
 	uFrame.frame:SetVisible(uFrame.visible)
 	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
 	
@@ -99,11 +102,14 @@ function UnitFrame:update ( )
 	local unitDetails = Inspect.Unit.Detail(self.unitName)
 
 	if(unitDetails) then
+		
 		self.calling = unitDetails.calling
+		
+		print("updating...", self.calling)
+		
 		self:setUFrameVisible(true)
-		self:enablePowerBar()
 		self:updateHealth()
-		self:updateEnergy()
+		self:updateResources()
 	else
 		self:setUFrameVisible(false)
 	end
@@ -136,14 +142,13 @@ end
 --
 -- Update the Energy (Rogue) Bar of this Unit Frame
 --
-function UnitFrame:updateEnergy( )
---print("update energy")
-
+function UnitFrame:updateResources( )
 	-- dont update invisible frames
 	if ( self.visible ) then
-		local bar = self.bars["energy"]
+		local bar = self.bars["resources"]
 		-- if we have an energy bar
 		if (bar) then
+			--print("updating resources")
 			local unitDetails = Inspect.Unit.Detail(self.unitName)
 			if (unitDetails) then
 				if(self.calling == "rogue") then
@@ -153,6 +158,7 @@ function UnitFrame:updateEnergy( )
 					local energyPercent = math.floor(energyRatio * 100)
 					
 					local energyText = string.format("%s/%s (%s%%)", energy, energyMax, energyPercent)
+					--print(energyText)
 					bar:setUBarText(energyText)
 					bar:setUBarWidthRatio(energyRatio)
 				elseif(self.calling == "warrior") then
@@ -166,6 +172,9 @@ function UnitFrame:updateEnergy( )
 					bar:setUBarWidthRatio(powerRatio)
 				end
 			end
+			
+			-- set correct texture
+			self:updateResourcesBarTexture()
 		end
 	end
 end
@@ -199,91 +208,97 @@ function UnitFrame:getUnitBar( barType )
 end
 
 --
+-- Signal to the UnitFrame that we want these frames
+--
+function UnitFrame:enableBar( barType, toggle )
+	self.barsEnabled[barType] = toggle
+end
+
+--
+-- Initialise all the bars this frame has been told to enable
+--
+function UnitFrame:init()
+	print("init")
+	for barType, enabled in pairs(self.barsEnabled) do
+		if ( barType == "health" and enabled ) then
+			self:addHealthBar()
+		elseif( barType == "resources" and enabled ) then
+			self:addResourcesBar()
+		end
+	end
+end
+--
 -- Adds a Health UnitBar to this UnitFrame
 --
-function UnitFrame:enableHealthBar()
-	self:addUnitBar( "health", 250, 20, "healthy", 12, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
-end
-
---
--- Enable the Power UnitBar on this UnitFrame
--- 
--- Power will be based on the Unit's Calling
---
-function UnitFrame:enablePowerBar()
-	print("Enable Power Bar")
-	if(self.calling) then
-		local anchorPoint = self.bars["health"]
-		-- if no health bar to sit under just attach to frame (TODO: make a less hacky fix for this)
-		if ( anchorPoint == nil ) then
-			anchorPoint = self.frame
-		end
-		
-		if (self.calling == "rogue") or  (self.calling == "warrior") then
-			print("Adding Rogue Energy Bar")
-			-- reuse old energy bar if we have one
-			if( self.bars["energy"] ) then
-				print("Bar Exists")
-				self.bars["energy"]:setUBarVisible(true)
-			-- else make a new bar for rogue energy and show that
-			else
-				self:addUnitBar( "energy", 250, 20, "rogue_energy", 12, "TOPLEFT", "BOTTOMLEFT", anchorPoint.bar, 0, 5)
-			end
-			
-			self:updateEventTables("energy")
-		end
+function UnitFrame:addHealthBar()
+	if( self.bars["health"] ) then
+		print("Health Bar Exists")
+		self.bars["health"]:setUBarEnabled(true)
 	else
-		print("UnitFrame has No Calling")
-		self:disablePowerBar()
+		self:addUnitBar( "health", 250, 20, "healthy", 12, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
 	end
+	
+	-- enable the bar
+	self.bars["health"]:setUBarEnabled(true)
 	
 	-- resize based on bars currently enabled
 	self:resize()
-	
-	
+end
+
+function UnitFrame:updateResourcesBarTexture()
+	-- Set Correct Energy Texture Based on Calling
+	if (self.calling == "rogue") then
+		self.bars["resources"]:setUBarTexture("rogue_energy")
+	elseif (self.calling == "warrior") then
+		self.bars["resources"]:setUBarTexture("warrior_energy")
+	elseif (self.calling == "mage" or self.calling == "cleric") then
+		self.bars["resources"]:setUBarTexture("mana")
+	else
+		self.bars["resources"]:setUBarTexture("none")
+	end
 end
 
 --
--- If the UnitFrame doesnt have a calling this should get disabled (to stop it updating undefined power)
+-- A resources UnitBar on this UnitFrame
+-- 
+-- resources will be based on the Unit's Calling
 --
-function UnitFrame:disablePowerBar()
-	if ( self.bars["energy"] ) then
-		self.bars["energy"]:setUBarVisible(false)
-	elseif ( self.bars["power"] ) then
-		self.bars["power"]:setUBarVisible(false)
-	elseif ( self.bars["mana"] ) then
-		self.bars["mana"]:setUBarVisible(false)
+function UnitFrame:addResourcesBar()
+	print("Add resources Bar")
+	local anchorPoint = self.bars["health"]
+	-- if no health bar to sit under just attach to frame (TODO: make a less hacky fix for this)
+	if ( anchorPoint == nil ) then
+		anchorPoint = self.frame
 	end
 	
-	-- Get rid of listeners
-	self:clearEnergyEvents()
+	if(self.calling) then
+		-- Reuse old resources bar if we have one
+		if( self.bars["resources"] ) then
+			print("resources Bar Exists")
+			self.bars["resources"]:setUBarVisible(true)
+		-- Else make a new bar for resources
+		else
+			self:addUnitBar( "resources", 250, 20, "none", 12, "BOTTOMLEFT", "BOTTOMLEFT", self.frame, 0, 5)
+		end
 		
+		-- set correct texture
+		self:updateResourcesBarTexture()
+	else
+		-- Reuse old bar if we have one
+		if( self.bars["resources"] ) then
+			print("resources Bar Exists")
+			self.bars["resources"]:setUBarVisible(true)
+		-- Else make a new bar for resources (in this case we have no calling so the texture remains "none")
+		else
+			self:addUnitBar( "resources", 250, 20, "none", 12, "BOTTOMLEFT", "BOTTOMLEFT", self.frame, 0, 5)
+		end
+	end
+	
+	-- enable the bar
+	self.bars["resources"]:setUBarEnabled(true)
+	
 	-- resize based on bars currently enabled
 	self:resize()
-end
-
-
---
--- Stop listening to Energy (Rogue/Warrior) Events
---
-function UnitFrame:clearEnergyEvents()
-	for key, value in pairs(Event.Unit.Detail.Energy) do
-		if(value[2] == "MinUI") then
-			table.remove(Event.Unit.Detail.Energy, key)
-		end
-	end
-end
-
---
--- Stop listening to Mana Events
---
-local function clearManaEvents()
-	for key, value in pairs(Event.Unit.Detail.Mana) do
-		print(value[3])
-		if(value[3] == self.unitName .. "_energy" ) then
-			table.remove(Event.Unit.Detail.Mana, key)
-		end
-	end
 end
 
 --
@@ -295,7 +310,7 @@ function UnitFrame:resize()
 	-- increase frame width / height as needed
 	for k,_ in pairs(self.bars) do
 		local bar = self.bars[k]
-		if ( bar:isUBarVisible() ) then
+		if ( bar:isUBarEnabled() ) then
 			heightRequired = heightRequired + bar:getUBarHeight()
 			heightRequired = heightRequired + math.abs (bar:getUBarOffsetY())
 			offset = bar:getUBarOffsetY()
@@ -305,21 +320,21 @@ function UnitFrame:resize()
 	heightRequired = heightRequired + offset
 	self.height = heightRequired
 	self.frame:SetHeight(heightRequired)
+	
+	print("resize?", heightRequired)
 end
 
 --
 -- Attach event call back to the UnitFrame as required (remove unneeded)
 --
-function UnitFrame:updateEventTables(barType)
+function UnitFrame:registerEvents(barType)
+	-- Unit Health
 	if barType == "health" then
 		table.insert(Event.Unit.Detail.Health, {function () self:updateHealth() end, "MinUI", self.unitName .. "_" .. barType})
-	elseif barType == "energy" then
-		table.insert(Event.Unit.Detail.Energy, {function () self:updateEnergy() end, "MinUI", self.unitName .. "_" .. barType})
-	elseif barType == "power" then
-		-- mage stuff
-	elseif barType == "mana" then
-		clearEnergyEvents()
-		--table.insert(Event.Unit.Detail.Mana, {function () self:updateMana() end, "MinUI", "update mana bar"})
+	-- Unit Resources
+	elseif barType == "resources" then
+		table.insert(Event.Unit.Detail.Energy, {function () self:updateResources() end, "MinUI", self.unitName .. "_" .. barType})
+		table.insert(Event.Unit.Detail.Mana, {function () self:updateResources() end, "MinUI", self.unitName .. "_" .. barType})
 	end
 end
 
@@ -338,5 +353,5 @@ function UnitFrame:addUnitBar( barType, width, height, texture, fontSize,  ancho
 	self:resize()
 	
 	-- update event tables based on bar type
-	self:updateEventTables( barType )
+	self:registerEvents( barType )
 end
