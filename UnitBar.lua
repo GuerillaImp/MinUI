@@ -12,14 +12,14 @@ UnitBar.__index = UnitBar
 -- name: bar name (i.e "healthBarPlayer")
 -- width:
 -- height:
--- texture:
+-- texture: disabled for now
 -- fontSize:
 -- anchorPoint:
 -- parentItem:
 -- offsetX:
 -- offsetY:
 --
-function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
+function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	local uBar = {}             		-- our new object
 	setmetatable(uBar, UnitBar)      	-- make UnitBar handle lookup
 	
@@ -32,22 +32,23 @@ function UnitBar.new( name, width, height, texture, fontSize, anchorThis, anchor
 	uBar.parentItem = parentItem
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
-	uBar.texture = texture
+	--uBar.texture = texture
 	uBar.enabled = false
+	uBar.color = {}
 	
 	-- create the bar
-	uBar.bar = UI.CreateFrame("Texture", name, parentItem)
-	uBar.bar:SetTexture("MinUI",texture .. ".tga")
+	uBar.bar = UI.CreateFrame("Frame", name, parentItem)
+	--uBar.bar:SetTexture("MinUI",texture .. ".tga")
 	uBar.bar:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.bar:SetWidth(uBar.width)
 	uBar.bar:SetHeight(uBar.height)
 	uBar.bar:SetLayer(1)
 	uBar.bar:SetVisible(uBar.enabled)
-	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
 	
 	-- create the text
 	uBar.text = UI.CreateFrame("Text", name .. "_text", uBar.bar )
-	uBar.text:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", offsetX, 0 )
+	uBar.text:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 0, 0 )
 	uBar.text:SetWidth(uBar.width)
 	uBar.text:SetHeight(uBar.height)
 	uBar.text:SetLayer(2)
@@ -59,11 +60,16 @@ end
 
 --
 -- Set the Unit Bar's Texture
---
+--[[
 function UnitBar:setUBarTexture( texture )
 	self.texture = texture
 	self.bar:SetTexture("MinUI",texture .. ".tga")
 	self.bar:SetLayer(1)
+end]]
+
+function UnitBar:setUBarColor( r,g,b,a )
+	self.color = { r,g,b,a }
+	self.bar:SetBackgroundColor(r,g,b,a)
 end
 
 --
@@ -92,14 +98,8 @@ end
 -- set text
 --
 function UnitBar:setUBarText(text)
-	--print "setting ubartext"
+	--debugPrint "setting ubartext"
 	self.text:SetText(text)
-	self.text:SetWidth(self.width)
-	self.text:SetHeight(self.height)
-	self.text:SetPoint( "CENTERLEFT", self.bar, "CENTERLEFT", self.offsetX, 0 )
-	self.text:SetLayer(2)
-	self.text:SetVisible(true)
-	
 end
 
 --
