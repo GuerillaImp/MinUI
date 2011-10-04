@@ -26,7 +26,7 @@ RunOnStartup = {
 	"MinUIConfig.lua",
 	"UnitBar.lua",
 	"UnitText.lua",
-	"ComboPointsBar.lua",
+	"UnitComboBar.lua",
 	"UnitFrame.lua",
 	"MinUI.lua"
 }

@@ -12,12 +12,12 @@
 -- This means I can add it to a UnitFrame as a "bar" and it "just works"
 --
 ----------------------------------------------------------------------------------------------------------------------------- 
-ComboPointsBar = {}
-ComboPointsBar.__index = ComboPointsBar
+UnitComboBar = {}
+UnitComboBar.__index = UnitComboBar
 
-function ComboPointsBar.new( width, height, calling, anchorThis, anchorParent, parentItem, offsetX, offsetY )
+function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, parentItem, offsetX, offsetY )
 	local cpBar = {}             				-- our new object
-	setmetatable(cpBar, ComboPointsBar)      	-- make ComboPointsBar handle lookup
+	setmetatable(cpBar, UnitComboBar)      	-- make UnitComboBar handle lookup
 	
 	cpBar.anchorThis = anchorThis
 	cpBar.anchorParent = anchorParent
@@ -79,14 +79,14 @@ end
 --
 -- Is the bar enabled?
 --
-function ComboPointsBar:isUBarEnabled()
+function UnitComboBar:isUBarEnabled()
 	return self.enabled
 end
 
 --
 -- Enable/Disable the bar
 --
-function ComboPointsBar:setUBarEnabled( toggle )
+function UnitComboBar:setUBarEnabled( toggle )
 	self.enabled = toggle
 	self.bar:SetVisible(toggle)
 end
@@ -94,21 +94,21 @@ end
 --
 -- Get Bar Height
 --
-function ComboPointsBar:getUBarHeight()
+function UnitComboBar:getUBarHeight()
 	return self.height
 end
 
 --
 -- Get OffsetY
 --
-function ComboPointsBar:getUBarOffsetY()
+function UnitComboBar:getUBarOffsetY()
 	return self.offsetY
 end
 
 --
--- Set ComboBar Points
+-- Set UnitComboBar Points
 --
-function ComboPointsBar:updateComboPoints(points)
+function UnitComboBar:updateComboPoints(points)
 	-- disable all points
 	for i=0, (self.maxPoints-1) do
 		self.pointBars[i]:SetVisible(false)
