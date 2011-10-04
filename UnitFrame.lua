@@ -329,12 +329,12 @@ function UnitFrame:addComboPointsBar()
 	if(playerCalling) then
 		-- we have an anchor point
 		if(self.nextAnchor) then
-			self.bars["comboPointsBar"] = ComboBar.new( 250, 10, playerCalling, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5 )
+			self.bars["comboPointsBar"] = UnitComboBar.new( 250, 10, playerCalling, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5 )
 			-- store anchor
 			self.nextAnchor = self.bars["comboPointsBar"].frame
 		-- anchor to top left of frame
 		else
-			self.bars["comboPointsBar"] = ComboBar.new( 250, 10, playerCalling, "TOPLEFT", "TOPLEFT", self.frame, 5, 5 )
+			self.bars["comboPointsBar"] = UnitComboBar.new( 250, 10, playerCalling, "TOPLEFT", "TOPLEFT", self.frame, 5, 5 )
 			-- store anchor
 			self.nextAnchor = self.bars["comboPointsBar"].frame
 		end

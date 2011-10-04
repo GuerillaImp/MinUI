@@ -4,7 +4,7 @@
 --
 -- This basic unit bar has a solid bar, width, and text items.
 --
--- Other items such as ComboBar and UnitText "kinda" implement this as an interface by providing:
+-- Other items such as UnitComboBar and UnitText "kinda" implement this as an interface by providing:
 -- function XXX:isUBarEnabled()
 -- function XXX:setUBarEnabled( toggle )
 -- function XXX:getUBarHeight()
