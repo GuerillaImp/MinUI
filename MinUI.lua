@@ -35,6 +35,8 @@ MinUI.initialised = false
 local function muiCommandInterface(commandline)
 	local tokenCount = 0
 	local command = nil
+	local unitToConfig = nil
+	local refreshRequired = false
 	
 	-- iterate tokens in command line
 	for token in string.gmatch(commandline, "[^%s]+") do
@@ -51,8 +53,12 @@ local function muiCommandInterface(commandline)
 			-- reset all settings to defaults
 			elseif(token == "reset") then
 				reset()
-			-- print frame current settings
-			elseif(token == "print") then
+				refreshRequired = true
+			-- enable a frame
+			elseif(token == "enable") then
+				command = token
+			-- disable a frame
+			elseif(token == "disable") then
 				command = token
 			-- unknown command
 			else
@@ -63,15 +69,36 @@ local function muiCommandInterface(commandline)
 		-- handle frame name (second token) given to the command
 		if (command) then
 			if(tokenCount == 2) then
-				if (command == "print") then
-					showCurrentSettings(token)
+				if (command == "enable") then
+					print("enabling ", token)
+					if(MinUIConfig.frames[token])then
+						MinUIConfig.frames[token].frameEnabled = true
+						refreshRequired = true
+					else
+						print("unknown frame")
+					end
+				elseif (command == "disable") then
+					print("disabling ", token)
+					if(MinUIConfig.frames[token])then
+						MinUIConfig.frames[token].frameEnabled = false
+						refreshRequired = true
+					else
+						print("unknown frame")
+					end
 				end
 			end
 		end
+		
+		
 	end
 	
 	if (tokenCount == 0) then
 		printHelpText()
+	end
+
+		
+	if(refreshRequired)then
+		print("Note ReloadUI Required:\nAt the moment you will need to \"/reloadui\" to update frames. Sorry about that - fix incoming.")
 	end
 end
 
