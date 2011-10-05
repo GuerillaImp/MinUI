@@ -104,7 +104,7 @@ function UnitText:updateTextItems()
 				end
 			elseif(key == "guild")then
 				if(details.guild)then
-					local guild = "" .. details.guild .. ""
+					local guild = "<" .. details.guild .. ">"
 					value:SetText(guild)
 				else
 					value:SetText("")
@@ -163,6 +163,8 @@ function UnitText:updateTextItems()
 				if(details.guild)then
 					local guild = "<" .. details.guild .. ">"
 					value:SetText(guild)
+				else
+					value:SetText("")
 				end
 			elseif(key == "vitality")then
 				if(details.vitality)then

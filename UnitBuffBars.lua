@@ -176,8 +176,9 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.textShadow:SetText(buff.name)
 		  end
 		  
-		  self.text:SetWidth(self.text:GetFullWidth())
 		  self.textShadow:SetWidth(self.text:GetFullWidth())
+		  self.text:SetWidth(self.text:GetFullWidth())
+		  
 		  
 		  if buff.duration then
 			self.completion = buff.begin + buff.duration
