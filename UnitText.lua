@@ -57,6 +57,14 @@ function UnitText.new( width, fontSize, unitName, anchorThis, anchorParent, pare
 end
 
 --
+-- Set Background Color
+--
+function UnitText:setUBarColor( r,g,b,a )
+	self.color = { r,g,b,a }
+	self.frame:SetBackgroundColor(r,g,b,a)
+end
+
+--
 -- Add a text item 
 --
 -- TODO: Sort these like unit bar's are when they are added (i.e. provide textItem, position)

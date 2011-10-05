@@ -143,16 +143,16 @@ function UnitFrame:update ( )
 			end
 		end
 		
-		-- Target Reaction Colours
-		if( self.unitName == "player.target" ) then
+		-- Set Reaction Coloring of Target/etc but not player
+		if not ( self.unitName == "player" ) then
 			-- Colour the unit text background based on reaction (if one exists)
 			if (self.bars["text"])then
 				if ( unitDetails.relation == "friendly" ) then
-					self.bars["text"]:SetBackgroundColor(0,0.1,0, 0.3)
+					self.bars["text"]:setUBarColor(0,1,0, 0.1)
 				elseif( unitDetails.relation == "hostile" ) then
-					self.bars["text"]:SetBackgroundColor(0.1,0,0.0,0.3)
+					self.bars["text"]:setUBarColor(1,0,0.0,0.1)
 				else
-					self.bars["text"]:SetBackgroundColor(0.1,0.1,0.0,0.3)
+					self.bars["text"]:setUBarColor(1,1,0.0,0.1)
 				end
 			end
 		end
