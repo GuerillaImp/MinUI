@@ -58,6 +58,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 	local bar = table.remove(self.zombieBuffBars)
 	
 	local unitName = self.unitName
+	local width = self.width
 	
 	-- if no bar exist in our pool of bars then create one
 	if not bar then
@@ -176,8 +177,9 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.textShadow:SetText(buff.name)
 		  end
 		  
-		  self.text:SetWidth(self.text:GetFullWidth())
-		  self.textShadow:SetWidth(self.text:GetFullWidth())
+		  -- see if THIS works :/
+		  self.text:SetWidth(width)
+		  self.textShadow:SetWidth(width)
 
 		  
 		  
@@ -231,10 +233,6 @@ function UnitBuffBars:addBuffBar(buff, time)
 				  -- Update the width to avoid truncation.
 				  self.timerShadow:SetWidth(self.timer:GetFullWidth())
 				  self.timer:SetWidth(self.timer:GetFullWidth())
-				
-					-- see if this fixes the wierdness
-					self.text:SetWidth(self.text:GetFullWidth())
-					self.textShadow:SetWidth(self.text:GetFullWidth())
 				  
 				end
 			end
