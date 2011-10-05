@@ -328,16 +328,20 @@ function UnitBuffBars:update(time)
 					if(self.visibilityOptions == "all") then
 						debugPrint(buff.duration)
 						-- Check the debuff is lessthan/equal to threshold length
-						if(buff.duration <= self.lengthThreshold)then
-							table.insert(bbars, buff)
+						if(buff.duration) then
+							if(buff.duration <= self.lengthThreshold)then
+								table.insert(bbars, buff)
+							end
 						end
 					-- Showing player debuffs
 					elseif (self.visibilityOptions == "player") then
 						-- Check debuff was cast by player
 						if (buff.caster == Inspect.Unit.Lookup("player")) then
 							-- Check the buff is lessthan/equal to threshold length
-							if(buff.duration <= self.lengthThreshold)then
-								table.insert(bbars, buff)
+							if(buff.duration) then
+								if(buff.duration <= self.lengthThreshold)then
+									table.insert(bbars, buff)
+								end
 							end
 						end
 					end

@@ -5,7 +5,7 @@
 Identifier = "MinUI"
 
 -- Each addon needs a human-readable name. Languages are not currently supported but they will be soon.
-Name = "Minimalist UnitFrames for Rift."
+Name = "Minimalist UnitFrames for Rift"
 
 -- It's recommended that you include a description, author, and website. These aren't required but they will be shown to users when enabling your addon.
 Description = "Minimalist UnitFrames for Rift. Provides health/resource monitoring, buff/debuff watching and eventually will have castbar support."
