@@ -79,15 +79,6 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	return uBar
 end
 
---
--- Set the Unit Bar's Texture
---[[
-function UnitBar:setUBarTexture( texture )
-	self.texture = texture
-	self.bar:SetTexture("MinUI",texture .. ".tga")
-	self.bar:SetLayer(1)
-end]]
-
 function UnitBar:setUBarColor( r,g,b,a )
 	self.color = { r,g,b,a }
 	self.bar:SetBackgroundColor(r,g,b,a)
