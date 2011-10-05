@@ -6,11 +6,6 @@
 UnitFrame = {}
 UnitFrame.__index = UnitFrame
 
---[[
- TODO: Saved layout / colors / etc via MinUIConfig
- TODO: Remove all hard coding
-]]
-
 --
 -- Create a New UnitFrame
 --
@@ -29,8 +24,8 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.visible = false
 	
 	-- buffbars
-	uFrame.buffs = nil -- TODO
-	uFrame.debuffs = nil -- TODO
+	uFrame.buffs = nil
+	uFrame.debuffs = nil
 	
 	-- castbar
 	uFrame.castbar = nil -- TODO
@@ -51,10 +46,16 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetHeight(uFrame.height)
 	uFrame.frame:SetLayer(-1)
 	uFrame.frame:SetVisible(uFrame.visible)
-	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
 	
+	--
+	-- Mouse Interaction Code
+	--
+	-- For now we just support dragging of frames when unlocked
+	--
 	function uFrame.frame.Event:LeftDown()
-		self.MouseDown = true
+		if(MinUIConfig.unitFramesLocked == false) then
+			self.MouseDown = true
 			mouseData = Inspect.Mouse()
 			self.MyStartX = uFrame.frame:GetLeft()
 			self.MyStartY = uFrame.frame:GetTop()
@@ -69,26 +70,34 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 			uFrame.frame:SetWidth(tempW)
 			uFrame.frame:SetHeight(tempH)
 			self:SetBackgroundColor(0.3,0.0,0.0,0.5)
+		end
 	end
 	
 	function uFrame.frame.Event:MouseMove()
-		if self.MouseDown then
-			local newX, newY
-			mouseData = Inspect.Mouse()
-			newX = mouseData.x - self.StartX
-			newY = mouseData.y - self.StartY
-			uFrame.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
+		if(MinUIConfig.unitFramesLocked == false) then
+			if self.MouseDown then
+				local newX, newY
+				mouseData = Inspect.Mouse()
+				newX = mouseData.x - self.StartX
+				newY = mouseData.y - self.StartY
+				uFrame.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
+			end
 		end
 	end
 	
 	function uFrame.frame.Event:LeftUp()
-		if self.MouseDown then
-			self.MouseDown = false
-			uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
-						
-			-- store frame placement in saved var
-			uFrame.x = uFrame.frame:GetLeft()
-			uFrame.y = uFrame.frame:GetTop()
+		if(MinUIConfig.unitFramesLocked == false) then
+			if self.MouseDown then
+				self.MouseDown = false
+				uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+							
+				-- store frame placement in saved var
+				uFrame.x = uFrame.frame:GetLeft()
+				uFrame.y = uFrame.frame:GetTop()
+				
+				MinUIConfig.frames[uFrame.unitName].x = uFrame.x
+				MinUIConfig.frames[uFrame.unitName].y = uFrame.y
+			end
 		end
 	end
 	
@@ -100,7 +109,7 @@ end
 -- Set the UnitFrame to visible/invisible
 --
 function UnitFrame:setUFrameVisible( toggle )
-	debugPrint("set ", self.unitName, " visible ", toggle)
+	--print("set ", self.unitName, " visible ", toggle)
 	self.visible = toggle
 	self.frame:SetVisible( toggle )
 end
@@ -115,7 +124,7 @@ function UnitFrame:update ( )
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
 		
-		for _, barType in pairs(self.barsEnabled) do
+		for _,barType in pairs(self.barsEnabled) do
 			-- only update what is actually enabled on this unit frame
 			if(barType == "health") then
 				self:updateHealth()
@@ -133,9 +142,19 @@ function UnitFrame:update ( )
 				self:updateChargeBar()
 			end
 		end
+		
+		-- Target Reaction Colours (Expand this)
+		if( self.unitName == "player.target" ) then
+			if ( unitDetails.relation == "friendly" ) then
+				self.frame:SetBackgroundColor(0,0.1,0, 0.3)
+			elseif( unitDetails.relation == "hostile" ) then
+				self.frame:SetBackgroundColor(0.1,0,0.0,0.3)
+			else
+				self.frame:SetBackgroundColor(0.1,0.1,0.0,0.3)
+			end
+		end
 	else
 		self:setUFrameVisible(false)
-		--self:resetBuffBars()
 	end
 end
 
@@ -148,12 +167,23 @@ end
 -- lengthThreshold == max time (i.e 30 secs or less)
 --
 --
-function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location, offsetX, offsetY )
+function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location )
 	local bbars = nil
+	local fontSize = 12
+	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local itemOffset =  MinUIConfig.frames[self.unitName].itemOffset
+	
+	-- get font size
+	if (buffType == "buffs")then
+		fontSize = MinUIConfig.frames[self.unitName].buffFontSize
+	elseif (buffType == "debuffs")then
+		fontSize = MinUIConfig.frames[self.unitName].debuffFontSize
+	end
+	
 	if( location == "above") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", 250, 12, "BOTTOMCENTER", "TOPCENTER", self.frame, offsetX, offsetY )
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, fontSize, "BOTTOMCENTER", "TOPCENTER", self.frame, itemOffset, itemOffset )
 	elseif ( location == "below") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", 250, 12, "TOPCENTER", "BOTTOMCENTER", self.frame, offsetX, offsetY )
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, fontSize, "TOPCENTER", "BOTTOMCENTER", self.frame, itemOffset, itemOffset )
 	end
 	
 	-- store frame
@@ -324,11 +354,11 @@ end
 --
 function UnitFrame:updateResourcesBarColor()
 	if (self.calling == "rogue") then
-		self.bars["resources"]:setUBarColor( 0.8, 0, 0.8, 0.8 )
+		self.bars["resources"]:setUBarColor( 0.7, 0, 0.7, 0.6)
 	elseif (self.calling == "warrior") then
-		self.bars["resources"]:setUBarColor( 0.8, 0.6, 0, 0.8 )
+		self.bars["resources"]:setUBarColor( 0.7, 0.5, 0, 0.6 )
 	elseif (self.calling == "mage" or self.calling == "cleric") then
-		self.bars["resources"]:setUBarColor( 0, 0, 0.8, 0.8 )
+		self.bars["resources"]:setUBarColor( 0, 0.2, 0.7, 0.6 )
 	else
 		self.bars["resources"]:setUBarColor( 0, 0, 0, 0)
 	end
@@ -342,13 +372,13 @@ end
 --
 function UnitFrame:updateHealthBarColor(percentage)
 	if (percentage >= 66) then
-		self.bars["health"]:setUBarColor( 0.0, 0.8, 0.0, 0.8 )
+		self.bars["health"]:setUBarColor( 0.0, 0.7, 0.0, 0.6 )
 	elseif(percentage >= 33 and percentage <= 66) then
-		self.bars["health"]:setUBarColor( 0.8, 0.8, 0.0, 0.8 )
+		self.bars["health"]:setUBarColor( 0.7, 0.7, 0.0, 0.6 )
 	elseif(percentage >= 1 and percentage <= 33) then
-		self.bars["health"]:setUBarColor( 0.8, 0.0, 0.0, 0.8 )
+		self.bars["health"]:setUBarColor( 0.7, 0.0, 0.0, 0.6 )
 	else
-		self.bars["health"]:setUBarColor( 0.0, 0.0, 0.0, 0.8 )
+		self.bars["health"]:setUBarColor( 0.0, 0.0, 0.0, 0.6 )
 	end
 end
 
@@ -364,7 +394,7 @@ end
 -- Signal to the UnitFrame that we want these frames
 --
 function UnitFrame:enableBar( position, barType )
-	debugPrint("enabling bar", barType," position ", order, " on ", self.unitName)
+	---print("enabling bar", barType," position ", position, " on ", self.unitName)
 	self.barsEnabled[position] = barType
 end
 
@@ -372,12 +402,9 @@ end
 -- Initialise all the bars this frame has been told to enable
 --
 function UnitFrame:createEnabledBars()
-
-	--for position, barType in pairs(self.barsEnabled) do
-	---	print (position, barType)
-	--end
-
-	for _, barType in pairs(self.barsEnabled) do
+--print("Creating enabled bars")
+	
+	for _,barType in pairs(self.barsEnabled) do
 		if ( barType == "health" ) then
 			self:addHealthBar()
 		end
@@ -414,23 +441,31 @@ function UnitFrame:addComboPointsBar()
 	
 	-- base on player's calling ALWAYS
 	local details = Inspect.Unit.Detail("player")
-	local playerCalling = details.calling
 	
-	-- if we can find the player calling (sometimes just doesnt work)
-	if(playerCalling) then
-		-- we have an anchor point
-		if(self.nextAnchor) then
-			self.bars["comboPointsBar"] = UnitComboBar.new( 250, 10, playerCalling, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5 )
-			-- store anchor
-			self.nextAnchor = self.bars["comboPointsBar"].frame
-		-- anchor to top left of frame
-		else
-			self.bars["comboPointsBar"] = UnitComboBar.new( 250, 10, playerCalling, "TOPLEFT", "TOPLEFT", self.frame, 5, 5 )
-			-- store anchor
-			self.nextAnchor = self.bars["comboPointsBar"].frame
-		end
+	if(details) then
+		local playerCalling = details.calling
 		
-		self:resize()
+		-- values from config
+		local barWidth = MinUIConfig.frames[self.unitName].barWidth
+		local barHeight = MinUIConfig.frames[self.unitName].comboPointsBarHeight
+		local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
+		
+		-- if we can find the player calling (sometimes just doesnt work)
+		if(playerCalling) then
+			-- we have an anchor point
+			if(self.nextAnchor) then
+				self.bars["comboPointsBar"] = UnitComboBar.new( barWidth, barHeight, playerCalling, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset )
+				-- store anchor
+				self.nextAnchor = self.bars["comboPointsBar"].frame
+			-- anchor to top left of frame
+			else
+				self.bars["comboPointsBar"] = UnitComboBar.new( barWidth, barHeight, playerCalling, "TOPLEFT", "TOPLEFT", self.frame, itemOffset, itemOffset )
+				-- store anchor
+				self.nextAnchor = self.bars["comboPointsBar"].frame
+			end
+			
+			self:resize()
+		end
 	end
 end
 
@@ -439,17 +474,22 @@ end
 --
 function UnitFrame:addUnitTextBar()
 	debugPrint("Add unit text bar", self.unitName)
+	
+	-- values from config
+	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local fontSize = MinUIConfig.frames[self.unitName].unitTextFontSize
+	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
 
 	-- we have an anchor point
 	if(self.nextAnchor) then
 		-- add unit text bar
-		self.bars["text"] = UnitText.new( 250, 15, 12, self.unitName, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5 )
+		self.bars["text"] = UnitText.new( barWidth, fontSize, self.unitName, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset )
 		-- store anchor
 		self.nextAnchor = self.bars["text"].frame
 	-- anchor to top left of frame
 	else
 		-- add unit text bar
-		self.bars["text"] = UnitText.new( 250, 15, 12, self.unitName, "TOPLEFT", "TOPLEFT", self.frame, 5, 5 )
+		self.bars["text"] = UnitText.new( barWidth, fontSize, self.unitName, "TOPLEFT", "TOPLEFT", self.frame, itemOffset, itemOffset )
 		-- store anchor
 		self.nextAnchor = self.bars["text"].frame
 	end
@@ -462,13 +502,19 @@ end
 -- Adds a Health UnitBar to this UnitFrame
 --
 function UnitFrame:addHealthBar()
-	debugPrint("Add health bar", self.unitName)
+--	print("Add health bar", self.unitName)
+
+	
+	-- values from config
+	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local barHeight = MinUIConfig.frames[self.unitName].barHeight
+	local fontSize = MinUIConfig.frames[self.unitName].barFontSize
+	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
 
 	-- we have an anchor point
 	if(self.nextAnchor) then
 		-- add health bar
-		self:addUnitBar( "health", 250, 20, 12, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5)
-		self.bars["health"]:setUBarColor( 0, 0.8, 0, 0.8 ) -- TODO remove and put into a automatic colourisation for health level
+		self:addUnitBar( "health", barWidth, barHeight, fontSize, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset)
 		-- enable it
 		self.bars["health"]:setUBarEnabled(true)
 		-- store anchor
@@ -476,8 +522,7 @@ function UnitFrame:addHealthBar()
 	-- anchor to top left of frame
 	else
 		-- add health bar
-		self:addUnitBar( "health", 250, 20, 12, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
-		self.bars["health"]:setUBarColor( 0, 0.8, 0, 0.8 ) -- TODO remove and put into a automatic colourisation for health level
+		self:addUnitBar( "health", barWidth, barHeight, fontSize, "TOPLEFT", "TOPLEFT", self.frame, itemOffset, itemOffset)
 		-- enable it
 		self.bars["health"]:setUBarEnabled(true)
 		-- store anchor
@@ -494,9 +539,15 @@ end
 function UnitFrame:addChargeBar()
 	--print("Add charge Bar", self.unitName)
 	
+	-- values from config
+	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local barHeight = MinUIConfig.frames[self.unitName].mageChargeBarHeight
+	local fontSize = MinUIConfig.frames[self.unitName].mageChargeFontSize
+	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
+	
 	if(self.nextAnchor) then
 		-- add resources bar
-		self:addUnitBar( "charge", 250, 15, 10, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5)
+		self:addUnitBar( "charge", barWidth, barHeight, fontSize, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset)
 		-- enable the bar
 		self.bars["charge"]:setUBarEnabled(true)
 		-- set charge colour
@@ -506,7 +557,7 @@ function UnitFrame:addChargeBar()
 	-- anchor to top left of frame
 	else
 		-- add resources bar
-		self:addUnitBar( "charge", 250, 15, 10, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
+		self:addUnitBar( "charge", barWidth, barHeight, fontSize, "TOPLEFT", "TOPLEFT", self.frame, itemOffset, itemOffset)
 		-- enable the bar
 		self.bars["charge"]:setUBarEnabled(true)
 		-- set charge colour
@@ -527,9 +578,15 @@ end
 function UnitFrame:addResourcesBar()
 	debugPrint("Add resources Bar", self.unitName)
 	
+	-- values from config
+	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local barHeight = MinUIConfig.frames[self.unitName].barHeight
+	local fontSize = MinUIConfig.frames[self.unitName].barFontSize
+	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
+	
 	if(self.nextAnchor) then
 		-- add resources bar
-		self:addUnitBar( "resources", 250, 20, 12, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, 5)
+		self:addUnitBar( "resources", barWidth, barHeight, fontSize, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset)
 		-- enable the bar
 		self.bars["resources"]:setUBarEnabled(true)
 		-- store anchor
@@ -537,7 +594,7 @@ function UnitFrame:addResourcesBar()
 	-- anchor to top left of frame
 	else
 		-- add resources bar
-		self:addUnitBar( "resources", 250, 20, 12, "TOPLEFT", "TOPLEFT", self.frame, 5, 5)
+		self:addUnitBar( "resources", barWidth, barHeight, fontSize, "TOPLEFT", "TOPLEFT", self.frame, itemOffset, itemOffset)
 		-- enable the bar
 		self.bars["resources"]:setUBarEnabled(true)
 		-- store anchor
@@ -583,25 +640,7 @@ function UnitFrame:addUnitBar( barType, width, height, texture, fontSize, anchor
 	
 	-- resize based on bars currently enabled
 	self:resize()
-	
-	-- update event tables based on bar type
-	-- TODO: we are polling in MinUI.lua we really don't need these (Using 3% CPU ish, so maybe bad?!?!)
-	-- self:registerEvents( barType )
 end
 
---
--- Attach event call back to the UnitFrame as required (remove unneeded)
---[[
-function UnitFrame:registerEvents(barType)
-	-- Unit Health
-	if barType == "health" then
-		table.insert(Event.Unit.Detail.Health, {function () self:updateHealth() end, "MinUI", self.unitName .. "_" .. barType})
-	-- Unit Resources
-	elseif barType == "resources" then
-		table.insert(Event.Unit.Detail.Energy, {function () self:updateResources() end, "MinUI", self.unitName .. "_" .. barType})
-		table.insert(Event.Unit.Detail.Mana, {function () self:updateResources() end, "MinUI", self.unitName .. "_" .. barType})
-	end
-	-- TODO Mage Charge 
-	
-end]]
+
 

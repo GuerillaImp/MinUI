@@ -2,12 +2,6 @@
 -- MinUI UnitFrames by Grantus
 --
 
---[[
-*TODO*
-	* Add Vitality Number
-	* Add Planar Charge Number
-]]
-
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -19,7 +13,7 @@ MinUI = {}
 MinUI.context = UI.CreateContext("MinUIContext")
 
 -- Unit Frames
-MinUI.frames = {}
+MinUI.unitFrames = {}
 
 -- Buff Control
 MinUI.resyncBuffs = false
@@ -36,20 +30,51 @@ MinUI.initialised = false
 -----------------------------------------------------------------------------------------------------------------------------
 
 --
--- Target Changed
---[[
-local function targetChanged()
-	--print("Target Changed")
+-- Configuration Interface
+--
+local function muiCommandInterface(commandline)
+	local tokenCount = 0
+	local command = nil
 	
-	-- Update Player's Target/Target's Target
-	for unitName, unitFrame in pairs(MinUI.frames) do
-		if (unitName == "player.target") then
-			unitFrame:update()
-		elseif (unitName == "player.target.target") then
-			unitFrame:update()
+	-- iterate tokens in command line
+	for token in string.gmatch(commandline, "[^%s]+") do
+		tokenCount = tokenCount + 1
+		
+		-- handle commands (should always be first token)
+		if(tokenCount == 1) then
+			-- lock unitFrames
+			if(token == "lock") then
+				lockFrames()
+			-- unlock unitFrames
+			elseif(token == "unlock") then
+				unlockFrames()
+			-- reset all settings to defaults
+			elseif(token == "reset") then
+				reset()
+			-- print frame current settings
+			elseif(token == "print") then
+				command = token
+			-- unknown command
+			else
+				printHelpText()
+			end
+		end
+		
+		-- handle frame name (second token) given to the command
+		if (command) then
+			if(tokenCount == 2) then
+				if (command == "print") then
+					showCurrentSettings(token)
+				end
+			end
 		end
 	end
-end]]
+	
+	if (tokenCount == 0) then
+		printHelpText()
+	end
+end
+
 
 --
 -- Inspect player for calling, sometimes this returns nil (when loading or porting)
@@ -73,72 +98,61 @@ end
 
 
 --
--- Based on Config (Eventually) create desired frames
+-- Based on Config Create desired unitFrames
 --
 local function createUnitFrames()
-	debugPrint("Create Unit Frames")
-	--
-	local playerFrame = UnitFrame.new( "player", 260, 40, MinUI.context, 500,500 )
-	playerFrame:setUFrameCalling(MinUI.playerCalling)
-	playerFrame:enableBar( 1, "health" )
-	playerFrame:enableBar( 2, "resources" )
-	-- If we Have a Warrior
-	if ( MinUI.playerCalling == "warrior" ) then
-		playerFrame:enableBar( 3, "comboPointsBar" )
+	-- Create Unit Frames based on MinUIConfig Saved Settings
+	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
+		-- if the frame is enabled
+		if(unitSavedValues.frameEnabled) then
+			print("Creating ", unitName)
+			-- create new unitframe
+			local newFrame = UnitFrame.new( unitName, unitSavedValues.barWidth + (unitSavedValues.itemOffset*2), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
+			
+			local enabledBars = unitSavedValues.bars
+			local enabledTexts = unitSavedValues.texts
+			
+			-- add enabled bars
+			for position,barType in ipairs(enabledBars) do
+				-- Check player is a calling that has combo points
+				if ( barType == "warriorComboPoints" ) then
+					if ( MinUI.playerCalling  == "warrior" ) then
+						newFrame:enableBar(position, "comboPointsBar")
+					end
+				elseif ( barType == "rogueComboPoints" ) then
+					if ( MinUI.playerCalling  == "rogue" ) then
+						newFrame:enableBar(position, "comboPointsBar")
+					end
+				-- Check player is a calling that has charge
+				elseif ( barType == "charge" ) then
+					if ( MinUI.playerCalling  == "mage" ) then
+						newFrame:enableBar(position, barType)
+					end
+				else
+					newFrame:enableBar(position, barType)
+				end
+			end
+			newFrame:createEnabledBars()
+			
+			-- add enabled texts
+			for _, text in ipairs(enabledTexts) do
+				newFrame:showText (text)
+			end
+			
+			-- create buff bars
+			if ( unitSavedValues.buffsEnabled == true ) then
+				newFrame:addBuffBars( "buffs", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation,0, -unitSavedValues.itemOffset )
+			end
+			
+			-- create debuff bars
+			if ( unitSavedValues.debuffsEnabled == true ) then
+				newFrame:addBuffBars( "debuffs", unitSavedValues.debuffVisibilityOptions, unitSavedValues.debuffThreshold, unitSavedValues.debuffLocation,0, -unitSavedValues.itemOffset )
+			end
+			
+			-- store the unitframe
+			MinUI.unitFrames[unitName] = newFrame
+		end
 	end
-	if ( MinUI.playerCalling == "mage" ) then
-		--print("creating charge bar")
-		playerFrame:enableBar( 3, "charge" )
-	end
-	playerFrame:createEnabledBars()
-	playerFrame:setUFrameVisible(true)
-
-	local targetFrame = UnitFrame.new( "player.target", 260, 40, MinUI.context, 780,500 )
-	targetFrame:enableBar( 1, "health" )
-	targetFrame:enableBar( 2, "resources" )
-	-- If we Have a Rogue
-	if ( MinUI.playerCalling == "rogue" ) then
-		targetFrame:enableBar( 3, "comboPointsBar" )
-	end
-	targetFrame:enableBar( 4, "text")
-	targetFrame:createEnabledBars()
-	targetFrame:showText ("name")
-	targetFrame:showText ("level")
-	targetFrame:showText ("guild")
-	
-	-- add buffs with 30 seconds or less duration max, by the player, that are debuffs, above
-	--targetFrame:addBuffBars( "debuffs", "player", 30, "above",0,-5 )
-	-- show all buffs with 30seconds or less duration max, below
-	--targetFrame:addBuffBars( "buffs", "all", 30, "below",0,5 )
-	
-	
-	local totFrame = UnitFrame.new( "player.target.target", 260, 40, MinUI.context, 1080,500 )
-	totFrame:enableBar( 1, "health" )
-	totFrame:enableBar( 2, "text" )
-	totFrame:createEnabledBars()
-	totFrame:showText ("name")
-	totFrame:setUFrameVisible( false )
-	
-	local focusFrame = UnitFrame.new( "focus", 260, 40, MinUI.context, 1380,500 )
-	focusFrame:enableBar( 1, "health" )
-	focusFrame:enableBar( 2, "text" )
-	focusFrame:createEnabledBars()
-	focusFrame:showText ("name")
-	focusFrame:setUFrameVisible( false )
-	
-	local petFrame = UnitFrame.new( "player.pet", 260, 40, MinUI.context, 200,500 )
-	petFrame:enableBar( 1, "health" )
-	petFrame:enableBar( 2, "text" )
-	petFrame:createEnabledBars()
-	petFrame:showText ("name")
-	petFrame:setUFrameVisible( false )
-	
-	-- Store the frames
-	MinUI.frames["player"] = playerFrame
-	MinUI.frames["player.target"] = targetFrame
-	MinUI.frames["player.target.target"] = totFrame
-	MinUI.frames["focus"] = focusFrame
-	MinUI.frames["player.pet"] = petFrame
 end
 
 --
@@ -149,11 +163,11 @@ local function update()
 	if (MinUI.playerCallingKnown == false) then
 		getPlayerDetails()
 	else
-		-- Once we get the player's calling initialise the frames
+		-- Once we get the player's calling initialise the unitFrames
 		if (MinUI.initialised == false) then
 			createUnitFrames()
-			if(MinUI.frames["player"]) then
-				MinUI.frames["player"]:update()
+			if(MinUI.unitFrames["player"]) then
+				MinUI.unitFrames["player"]:update()
 			end
 			MinUI.resyncBuffs = true
 			MinUI.initialised = true
@@ -161,15 +175,15 @@ local function update()
 				
 		-- A buff recalculation has been queued, so go ahead and recalculate.
 		if MinUI.resyncBuffs then
-			for unitName, unitFrame in pairs(MinUI.frames) do
+			for unitName, unitFrame in pairs(MinUI.unitFrames) do
 				unitFrame:refreshBuffBars(Inspect.Time.Frame())
 			end
 			MinUI.resyncBuffs = false
 		end
 				
-		-- update cause the unit frames to ensure they are all up to date every frame
+		-- update cause the unit unitFrames to ensure they are all up to date every frame
 		-- this isn't the best way of doing this but for now it will do
-		for unitName, unitFrame in pairs(MinUI.frames) do
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
 			unitFrame:update()
 			unitFrame:tickBuffBars(Inspect.Time.Frame())
 		end
@@ -185,7 +199,8 @@ end
 --
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
-	--createUnitFrames()
+	
+	
 	--
 	-- event hooks
 	--
@@ -198,9 +213,10 @@ local function startup()
 	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 
 	-- Handle User Customisation
-	-- table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
+	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
 
 	-- Main Loop Event
+	--createUnitFrames()
 	table.insert(Event.System.Update.Begin, {update, "MinUI", "refresh"})
 end
 

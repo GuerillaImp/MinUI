@@ -15,7 +15,7 @@
 UnitText = {}
 UnitText.__index = UnitText
 
-function UnitText.new( width, height, fontSize, unitName, anchorThis, anchorParent, parentItem, offsetX, offsetY )
+function UnitText.new( width, fontSize, unitName, anchorThis, anchorParent, parentItem, offsetX, offsetY )
 	local utBar = {}             				-- our new object
 	setmetatable(utBar, UnitText)      			-- make UnitText handle lookup
 	
@@ -25,21 +25,32 @@ function UnitText.new( width, height, fontSize, unitName, anchorThis, anchorPare
 	utBar.offsetX = offsetX
 	utBar.offsetY = offsetY
 	utBar.width = width
-	utBar.height = height
 	utBar.unitName = unitName
 	utBar.fontSize = fontSize
 	utBar.enabled = true
 	
+
 	utBar.frame = UI.CreateFrame("Frame", "UnitTextBar", parentItem)
+	
+	-- calculate required height
+	local tempFont = UI.CreateFrame("Text", "TempTextBar", utBar.frame)
+	tempFont:SetFontSize(utBar.fontSize)
+	tempFont:SetText("ASDF")
+	tempFont:SetVisible(false)
+	utBar.height = tempFont:GetFullHeight()
+	
+	--print(utBar.height)
+	
 	utBar.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	utBar.frame:SetWidth(utBar.width)
 	utBar.frame:SetHeight(utBar.height)
 	utBar.frame:SetLayer(1)
 	utBar.frame:SetVisible( utBar.enabled )
-	utBar.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	--utBar.frame:SetBackgroundColor(0.0, 0.0, 1.0, 1.0)
 	
 	-- store the text items in this text frame
 	utBar.texts = {}
+	utBar.textsShadows = {}
 	utBar.numTexts = 0
 	
 	return utBar
@@ -52,9 +63,17 @@ end
 --
 function UnitText:addTextItem(textItem)
 	self.texts[textItem] = UI.CreateFrame("Text", self.unitName .. "_" .. textItem .. "_text", self.frame)
-	self.texts[textItem]:SetLayer(2)
+	self.texts[textItem]:SetLayer(3)
 	self.texts[textItem]:SetVisible( self.enabled )
 	self.texts[textItem]:SetFontSize( self.fontSize )
+	self.texts[textItem]:SetHeight( self.height )
+	
+	self.textsShadows[textItem] = UI.CreateFrame("Text", self.unitName .. "_" .. textItem .. "_textShadow", self.frame)
+	self.textsShadows[textItem]:SetLayer(2)
+	self.textsShadows[textItem]:SetVisible( self.enabled )
+	self.textsShadows[textItem]:SetFontSize( self.fontSize )
+	self.textsShadows[textItem]:SetFontColor( 0,0,0,1 )
+	self.textsShadows[textItem]:SetHeight( self.height )
 end
 
 --
@@ -67,13 +86,75 @@ function UnitText:updateTextItems()
 	if (details) then
 		local firstString = true
 		local offset = 0
+		local lastWidth = 0
+		
+		-- NOTE: Dont forget to add any new texts to this
+		-- Update textsShadows
+		for key,value in pairs(self.textsShadows) do
+			if(key == "name") then
+				value:SetText(details.name)
+			elseif(key == "level")then
+				local level = "" .. details.level
+				value:SetText(level)
+			elseif(key == "calling")then
+				if(details.calling)then
+					value:SetText(details.calling)
+				else
+					value:SetText("")
+				end
+			elseif(key == "guild")then
+				if(details.guild)then
+					local guild = "" .. details.guild .. ""
+					value:SetText(guild)
+				else
+					value:SetText("")
+				end
+			elseif(key == "vitality")then
+				if(details.vitality)then
+					local vitality = "(" .. details.vitality .. "%)"
+					value:SetText(vitality)
+				else
+					value:SetText("")
+				end
+			elseif(key == "planarCharges")then
+				if(details.planar)then
+					local planar = "<" .. details.planar .. ">"
+					value:SetText(planar)
+				else
+					value:SetText("")
+				end
+			end
+			
+			value:SetWidth(value:GetFullWidth())
+			
+			if(firstString) then
+				offset = 0
+				lastWidth = value:GetFullWidth()
+				firstString = false
+			else
+				offset = offset + lastWidth + 5
+				lastWidth = value:GetFullWidth()
+			end
+			
+			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset+1, 2 )
+			value:SetHeight(value:GetFullHeight())
+		end
+		
+		-- Reset
+		firstString = true
+		offset = 0
+		lastWidth = 0
+		
+		-- Update Texts
 		for key,value in pairs(self.texts) do
 			if(key == "name") then
 				value:SetText(details.name)
 			elseif(key == "level")then
 				local level = "" .. details.level
 				value:SetText(level)
-				value:SetFontColor(difficultyColour(self.unitName))
+				if not (self.unitName == "player") then
+					value:SetFontColor(difficultyColour(self.unitName))
+				end
 			elseif(key == "calling")then
 				if(details.calling)then
 					value:SetText(details.calling)
@@ -83,20 +164,38 @@ function UnitText:updateTextItems()
 					local guild = "<" .. details.guild .. ">"
 					value:SetText(guild)
 				end
+			elseif(key == "vitality")then
+				if(details.vitality)then
+					local vitality = "(" .. details.vitality .. "%)"
+					value:SetText(vitality)
+				else
+					value:SetText("")
+				end
+			elseif(key == "planarCharges")then
+				if(details.planar)then
+					local planar = "<" .. details.planar .. ">"
+					value:SetText(planar)
+				else
+					value:SetText("")
+				end
 			end
 			
 			value:SetWidth(value:GetFullWidth())
 			
 			if(firstString) then
 				offset = 0
+				lastWidth = value:GetFullWidth()
 				firstString = false
 			else
-				offset = offset + value:GetFullWidth() + 5
-				
+				offset = offset + lastWidth + 5
+				lastWidth = value:GetFullWidth()
 			end
 			
-			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset, self.height/2 )
+			--print(offset)
+			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset, 0 )
+			value:SetHeight(value:GetFullHeight())
 		end
+		
 	end
 end
 

@@ -60,9 +60,19 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.text:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 0, 0 )
 	uBar.text:SetWidth(uBar.width)
 	uBar.text:SetHeight(uBar.height)
-	uBar.text:SetLayer(2)
+	uBar.text:SetLayer(3)
 	uBar.text:SetVisible(true)
 	uBar.text:SetFontSize(fontSize)
+	
+	-- text shadow
+	uBar.textShadow = UI.CreateFrame("Text", name .. "_text", uBar.bar )
+	uBar.textShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1, 2 )
+	uBar.textShadow:SetWidth(uBar.width)
+	uBar.textShadow:SetHeight(uBar.height)
+	uBar.textShadow:SetLayer(2)
+	uBar.textShadow:SetVisible(true)
+	uBar.textShadow:SetFontSize(fontSize)
+	uBar.textShadow:SetFontColor(0,0,0,1)
 	
 
 	
@@ -111,6 +121,7 @@ end
 function UnitBar:setUBarText(text)
 	--print "setting ubartext"
 	self.text:SetText(text)
+	self.textShadow:SetText(text)
 end
 
 --

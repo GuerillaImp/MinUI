@@ -5,84 +5,164 @@
 -----------------------------------------------------------------------------------------------------------------------------
 
 -- Defaults
-local barWidthDefault = 250
-local barHeightDefault = 20
-local itemOffsetDefault = 5
+local barWidthDefault = 240
+local barHeightDefault = 25
+local itemOffsetDefault = 2
 local comboPointsBarHeightDefault = 7
 local mageChargeBarHeightDefault = 15
 
+local barFontSizeDefault = 14
+local buffFontSizeDefault = 12
+local unitTextFontSizeDefault = 12
+local mageChargeFontSizeDefault = 10
+
 -- Defaults for Frame Configuration
 MinUIConfigDefaults = {
-	unitFrameBarWidth = barWidthDefault,
-	unitFrameBarHeight = barHeightDefault,
-	unitFrameOffset = itemOffsetDefault,
-	comboPointsBarHeight = comboPointsBarHeightDefault,
-	mageChargeBarHeight = mageChargeBarHeightDefault,
-	showComboBox = false,
+	-- Frames Locked
 	unitFramesLocked = true,
-	-- frames configured to show player cast debuffs
-	showPlayerDebuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false  },
-	-- frames configured to show all debuffs
-	showAllDebuffs = { ["player"] = true, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-	-- frames configured to show all buffs
-	showAllBuffs = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-	-- frames configured to show player buffs only
-	showPlayerBuffsOnly = { ["player"] = false, ["player.pet"] = false, ["player.target"] = false, ["player.target.target"] = false  },
-	-- configuration for what bars are shown on what unit frame
-	showHealthBar = { ["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true },
-	showPowerBar = { ["player"] = true, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = false }, 
-	showUnitText = { ["player"] = false, ["player.pet"] = false, ["player.target"] = true, ["player.target.target"] = true },
-	-- NEW WAY: Store Everything Under a Frame
-	-- Going to be much better this way
+	-- Frame Settings
 	frames = {
 		["player"] =
 		{ 
+			x = 600,
+			y = 500,
 			frameEnabled = true,
 			-- default sizes
 			barWidth = barWidthDefault,
 			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
 			comboPointsBarHeight = comboPointsBarHeightDefault,
 			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
 			itemOffset = itemOffsetDefault,
 			-- enabled bars/items
-			showHealthBar = true,
-			showPowerBar = true,
-			showUnitText = false,
-			showRogueComboPointsBox = false,
-			showRogueComboPointsBar = false,
-			showMageChargeBar = false,
-			showWarriorComboPointsBar = false,
-			showWarriorComboPointsBox = false,
-			-- buff settings
+			bars = { "health", "resources", "charge", "warriorComboPoints", "text" }, 
+			texts = { "level", "name", "planarCharges", "vitality"},
+			-- buff/debuff settings
+			buffsEnabled = true,
+			debuffsEnabled = true,
 			buffLocation = "below",
 			debuffLocation = "above",
-			showAllDebufs = true,
-			showAllBuffs = false,
-			showPlayerDebuffsOnly = false,
-			showPlayerBuffsOnly = false, 
-			showShortDebuffsOnly = false,
-			showShortBuffsOnly = false
+			buffVisibilityOptions = "player",
+			debuffVisibilityOptions = "all",
+			buffThreshold = 30,
+			debuffThreshold = 3600
 		},
-		["player.focus"] = {},
-		["player.pet"] = {},
-		["player.target"] = {},
-		["player.target.target"] = {},
+		["player.target"] = {
+			x = 1100,
+			y = 500,
+			frameEnabled = true,
+			-- default sizes
+			barWidth = barWidthDefault,
+			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
+			comboPointsBarHeight = comboPointsBarHeightDefault,
+			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
+			itemOffset = itemOffsetDefault,
+			-- enabled bars/items
+			bars = { "health", "resources", "rogueComboPoints", "text" }, 
+			texts = { "level", "name", "guild" },
+			-- buff/debuff settings
+			buffsEnabled = true,
+			debuffsEnabled = true,
+			buffLocation = "below",
+			debuffLocation = "above",
+			buffVisibilityOptions = "player",
+			debuffVisibilityOptions = "player",
+			buffThreshold = 30,
+			debuffThreshold = 30
+		},
+		["player.target.target"] = {
+			x = 1400,
+			y = 500,
+			frameEnabled = true,
+			-- default sizes
+			barWidth = barWidthDefault,
+			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
+			comboPointsBarHeight = comboPointsBarHeightDefault,
+			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
+			itemOffset = itemOffsetDefault,
+			-- enabled bars/items
+			bars = { "health", "text" }, 
+			texts = { "level", "name" },
+			-- buff/debuff settings
+			buffsEnabled = false,
+			debuffsEnabled = false,
+			buffLocation = "below",
+			debuffLocation = "above",
+			buffVisibilityOptions = "player",
+			debuffVisibilityOptions = "player",
+			buffThreshold = 30,
+			debuffThreshold = 30
+		},
+		["focus"] = {
+			x = 1400,
+			y = 600,
+			frameEnabled = true,
+			-- default sizes
+			barWidth = barWidthDefault,
+			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
+			comboPointsBarHeight = comboPointsBarHeightDefault,
+			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
+			itemOffset = itemOffsetDefault,
+			-- enabled bars/items
+			bars = { "health", "text" }, 
+			texts = { "level", "name" },
+			-- buff/debuff settings
+			buffsEnabled = false,
+			debuffsEnabled = false,
+			buffLocation = "below",
+			debuffLocation = "above",
+			buffVisibilityOptions = "player",
+			debuffVisibilityOptions = "player",
+			buffThreshold = 30,
+			debuffThreshold = 30
+		},
+		["player.pet"] = {
+			x = 300,
+			y = 500,
+			frameEnabled = true,
+			-- default sizes
+			barWidth = barWidthDefault,
+			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
+			comboPointsBarHeight = comboPointsBarHeightDefault,
+			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
+			itemOffset = itemOffsetDefault,
+			-- enabled bars/items
+			bars = { "health", "text" }, 
+			texts = { "level", "name" },
+			-- buff/debuff settings
+			buffsEnabled = false,
+			debuffsEnabled = false,
+			buffLocation = "below",
+			debuffLocation = "above",
+			buffVisibilityOptions = "player",
+			debuffVisibilityOptions = "player",
+			buffThreshold = 30,
+			debuffThreshold = 30
+		}
 	}
-}
-
--- Default Placement
-MinUIFramePlacementDefaults = {
-	["player"] = {x = 10, y = 450},
-	["player.pet"] = {x = 10, y = 570},
-	["player.target"] = {x = 280, y = 450},
-	["player.target.target"] = {x = 550, y = 450}
 }
 
 -- Saved Frame Settings (Configured per-character through in game commands) (Set to Defaults on First Run)
 MinUIConfig = MinUIConfigDefaults
-
--- Saved Frame Placement Values (Configured per-character by dragging the frames around) (Set to Defaults on First Run)
-MinUIFramePlacement = MinUIFramePlacementDefaults
 
 --
 -- lock frames
@@ -101,21 +181,11 @@ function unlockFrames()
 end
 
 --
--- reset frame layout
---
-function resetUnitFrameLayout()
-	print("Frames Reset")
-	MinUIFramePlacement = MinUIFramePlacementDefaults
-	print("type /reloadui")
-end
-
---
 -- reset everything to default
 --
-function resetAll()
-	print("Resetting All")
+function reset()
+	print("Resetting")
 	MinUIConfig = MinUIConfigDefaults
-	MinUIFramePlacement = MinUIFramePlacementDefaults
 	print("type /reloadui")
 end
 
@@ -125,28 +195,29 @@ end
 function showCurrentSettings(unitFrame)
 	if(MinUIConfig.frames[unitFrame]) then
 		print("*** Settings for ", unitFrame)
-		print("frameEnabled: ", MinUIConfig.frames[unitFrame].frameEnabled)
-		print("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
+		print("x: ", MinUIConfig.frames[unitFrame].x)
+		print("y: ", MinUIConfig.frames[unitFrame].y)
+		print("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
+		print("enabled?: ", MinUIConfig.frames[unitFrame].frameEnabled)
 		print("barWidth: ", MinUIConfig.frames[unitFrame].barWidth)
+		print("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
 		print("comboPointsBarHeight: ", MinUIConfig.frames[unitFrame].comboPointsBarHeight)
 		print("mageChargeBarHeight: ", MinUIConfig.frames[unitFrame].mageChargeBarHeight)
-		print("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
-		print("showHealthBar: ", MinUIConfig.frames[unitFrame].showHealthBar)
-		print("showPowerBar: ", MinUIConfig.frames[unitFrame].showPowerBar)
-		print("showUnitText: ", MinUIConfig.frames[unitFrame].showUnitText)
-		print("showRogueComboPointsBox: ", MinUIConfig.frames[unitFrame].showRogueComboPointsBox)
-		print("showRogueComboPointsBar: ", MinUIConfig.frames[unitFrame].showRogueComboPointsBar)
-		print("showMageChargeBar: ", MinUIConfig.frames[unitFrame].showMageChargeBar)
-		print("showWarriorComboPointsBar: ", MinUIConfig.frames[unitFrame].showWarriorComboPointsBar)
-		print("showWarriorComboPointsBox: ", MinUIConfig.frames[unitFrame].showWarriorComboPointsBox)
+
+		for position, bar in pairs(MinUIConfig.frames[unitFrame].bars) do
+			print ("Bar ", bar, " enabled in position ", position)
+		end		
+		
+		for _, text in pairs(MinUIConfig.frames[unitFrame].texts) do
+			print("Unit Text ", text, " enabled")
+		end
+		print("unitTextPosition: ", MinUIConfig.frames[unitFrame].unitTextPosition)
+		
 		print("buffLocation: ", MinUIConfig.frames[unitFrame].buffLocation)
-		print("debuffLocation: ", MinUIConfig.frames[unitFrame].debuffLocation)
-		print("showAllDebufs: ", MinUIConfig.frames[unitFrame].showAllDebufs)
-		print("showAllBuffs: ", MinUIConfig.frames[unitFrame].showAllBuffs)
-		print("showPlayerDebuffsOnly: ", MinUIConfig.frames[unitFrame].showPlayerDebuffsOnly)
-		print("showPlayerBuffsOnly: ", MinUIConfig.frames[unitFrame].showPlayerBuffsOnly)
-		print("showShortDebuffsOnly: ", MinUIConfig.frames[unitFrame].showShortDebuffsOnly)
-		print("showShortBuffsOnly: ", MinUIConfig.frames[unitFrame].showShortBuffsOnly)
+		print("buffVisibilityOptions: ", MinUIConfig.frames[unitFrame].buffVisibilityOptions)
+		print("debuffVisibilityOptions: ", MinUIConfig.frames[unitFrame].debuffVisibilityOptions)
+		print("buffThreshold: ", MinUIConfig.frames[unitFrame].buffThreshold)
+		print("debuffThreshold: ", MinUIConfig.frames[unitFrame].debuffThreshold)
 	else
 		print "??? unknown frame name"
 	end

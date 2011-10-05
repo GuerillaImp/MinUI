@@ -9,8 +9,8 @@ function difficultyColour(unit)
 	local player = Inspect.Unit.Detail("player")
 	if unit and unit.level and player and player.level then
 		local greenStart = math.max(player.level - 2, 1)
-		local greenEnd = player.level
-		local yellowStart = player.level + 1
+		local greenEnd = player.level -1
+		local yellowStart = player.level 
 		local yellowEnd = player.level + 2
 		local redStart = player.level + 3
 		local lvl = unit.level
