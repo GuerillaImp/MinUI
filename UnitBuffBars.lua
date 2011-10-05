@@ -176,8 +176,10 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.textShadow:SetText(buff.name)
 		  end
 		  
-		  self.textShadow:SetWidth(self.text:GetFullWidth())
 		  self.text:SetWidth(self.text:GetFullWidth())
+		  self.textShadow:SetWidth(self.text:GetFullWidth())
+
+		  
 		  
 		  
 		  if buff.duration then
@@ -229,6 +231,10 @@ function UnitBuffBars:addBuffBar(buff, time)
 				  -- Update the width to avoid truncation.
 				  self.timerShadow:SetWidth(self.timer:GetFullWidth())
 				  self.timer:SetWidth(self.timer:GetFullWidth())
+				
+					-- see if this fixes the wierdness
+					self.text:SetWidth(self.text:GetFullWidth())
+					self.textShadow:SetWidth(self.text:GetFullWidth())
 				  
 				end
 			end
