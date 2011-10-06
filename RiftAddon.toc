@@ -12,7 +12,7 @@ Description = "Minimalist UnitFrames for Rift. Provides health/resource monitori
 Author = "Grantus"
 
 -- You may want to include a version string for your addon as well.
-Version = "1.0"
+Version = "1.1"
 
 -- An email is required. Trion may use this email to contact you about your addon, so please make sure it's valid.
 Email = "grantus@gmail.com"
