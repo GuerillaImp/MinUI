@@ -18,9 +18,6 @@ MinUI.unitFrames = {}
 -- Buff Control
 MinUI.resyncBuffs = false
 
--- In Combat/Secure Mode
-MinUI.secureMode = false
-
 -- Player Calling / Initialisation
 MinUI.playerCalling = "unknown"
 MinUI.playerCallingKnown = false
@@ -478,7 +475,7 @@ local function update()
 		if (MinUI.initialised == false) then
 			createUnitFrames()
 			if(MinUI.unitFrames["player"]) then
-				MinUI.unitFrames["player"]:update()
+				MinUI.unitFrames["player"]:init()
 			end
 			MinUI.resyncBuffs = true
 			MinUI.initialised = true
@@ -490,39 +487,98 @@ local function update()
 				unitFrame:refreshBuffBars(Inspect.Time.Frame())
 			end
 			MinUI.resyncBuffs = false
+		-- else just tick the buff bars along
+		else
+			for unitName, unitFrame in pairs(MinUI.unitFrames) do
+				unitFrame:tickBuffBars(Inspect.Time.Frame())
+			end
 		end
+		
+		
 				
 		-- update cause the unit unitFrames to ensure they are all up to date every frame
 		-- this isn't the best way of doing this but for now it will do
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			unitFrame:update()
-			unitFrame:tickBuffBars(Inspect.Time.Frame())
-		end
+		--for unitName, unitFrame in pairs(MinUI.unitFrames) do
+		--	unitFrame:update()
+		--	unitFrame:tickBuffBars(Inspect.Time.Frame())
+		--end
 		
 		
 	end
 end
 
 local function enterSecureMode()
-	--print("Entering combat/secure mode")
-	MinUI.secureMode = true
-	
-	-- TODO enable mouse over healing when in combat
-	-- AND combat flash / icon
-	if (MinUI.unitFrames["player"]) then
-		--MinUI.unitFrames["player"]:setUFrameBackgroundColor(0.3,0,0,0.3)
-	end
+	print("+++ entering combat")
+	--[[
+	if(MinUI.initialised) then
+		MinUI.context:SetSecureMode("restricted")
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			unitFrame:setUFrameRestrictedMode()
+		end
+	end]]
 end
 
 local function leaveSecureMode()
-	--print("Leaving combat/secure mode")
-	MinUI.secureMode = false
-	
-	-- TODO enable mouse over healing when in combat
-	if (MinUI.unitFrames["player"]) then
-		--MinUI.unitFrames["player"]:setUFrameBackgroundColor(0,0,0,0.3)
+	print("--- leaving combat")
+	--[[
+	MinUI.context:SetSecureMode("normal")
+	for unitName, unitFrame in pairs(MinUI.unitFrames) do
+		unitFrame:setUFrameNormalMode()
 	end
+	]]
 end
+
+local function unitHealthChanged( units )
+
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		print("health changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateHealth()
+			end
+		end 
+	end
+	
+end
+
+local function unitHealthMaxChanged( units )
+
+end
+
+local function unitManaChanged( units )
+
+end
+
+local function unitManaMaxChanged( units )
+
+end
+
+local function unitPowerChanged( units )
+
+end
+
+local function unitEnergyChanged( units )
+
+end
+
+local function unitEnergyMaxChanged( units )
+
+end
+
+local function unitComboChanged( units )
+
+end
+
+local function unitComboMaxChanged( units )
+
+end
+
+local function unitChargeChanged( units )
+
+end
+
+
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -541,14 +597,26 @@ local function startup()
 	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-
-	-- Inform frames we are entering "secure" mode (basically, combat)
-	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "entering combat secure mode"})
-	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "entering combat secure mode"})
+	
+	-- Unit Changes (So we don't have to poll for updates)
+	table.insert(Event.Unit.Detail.Health, {unitHealthChanged, "MinUI", "unit health changed"})
+	table.insert(Event.Unit.Detail.HealthMax, {unitHealthMaxChanged, "MinUI", "unit health max changed"})
+	table.insert(Event.Unit.Detail.Mana, {unitManaChanged, "MinUI", "unit mana changed"})
+	table.insert(Event.Unit.Detail.ManaMax, {unitManaMaxChanged, "MinUI", "unit mana max changed"})
+	table.insert(Event.Unit.Detail.Power, {unitPowerChanged, "MinUI", "unit power changed"})
+	table.insert(Event.Unit.Detail.Energy, {unitEnergyChanged, "MinUI", "unit energy changed"})
+	table.insert(Event.Unit.Detail.EnergyMax, {unitEnergyMaxChanged, "MinUI", "unit energy max changed"})
+	table.insert(Event.Unit.Detail.Combo, {unitComboChanged, "MinUI", "unit combo max changed"})
+	table.insert(Event.Unit.Detail.ComboUnit, {unitComboUnitChanged, "MinUI", "unit combo max changed"})
+	table.insert(Event.Unit.Detail.Charge, {unitChargeChanged, "MinUI", "unit charge max changed"})
 	
 	-- Handle User Customisation
 	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
 
+	-- Inform frames we are entering "secure" mode (basically, combat)
+	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "entering combat/secure mode"})
+	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "leaving combat/secure mode"})
+	
 	-- Main Loop Event
 	--createUnitFrames()
 	table.insert(Event.System.Update.Begin, {update, "MinUI", "refresh"})

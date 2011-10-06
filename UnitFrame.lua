@@ -22,7 +22,6 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
 	uFrame.visible = false
-	uFrame.secureMode = false
 	
 	-- buffbars
 	uFrame.buffs = nil
@@ -41,7 +40,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.bars = {}
 	
 	-- create the frame
-	uFrame.frame = UI.CreateFrame("Frame", unitName, parentItem)
+	uFrame.frame = UI.CreateFrame("Frame", uFrame.unitName, parentItem)
 	uFrame.frame:SetPoint("TOPLEFT", parentItem, "TOPLEFT", x, y ) -- frames from top left of scren
 	uFrame.frame:SetWidth(uFrame.width)
 	uFrame.frame:SetHeight(uFrame.height)
@@ -49,6 +48,11 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetVisible(uFrame.visible)
 	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
 	
+
+	-- Make the frame restricted such that we can ues mouesover macros on them
+	uFrame.frame:SetSecureMode("restricted")
+	uFrame.frame:SetMouseoverUnit(uFrame.unitName)
+
 	--
 	-- Mouse Interaction Code
 	--
@@ -70,7 +74,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 			uFrame.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", tempX, tempY)
 			uFrame.frame:SetWidth(tempW)
 			uFrame.frame:SetHeight(tempH)
-			self:SetBackgroundColor(0.3,0.0,0.0,0.5)
+			self:SetBackgroundColor(0.3,0.0,0.0,0.6)
 		end
 	end
 	
@@ -86,11 +90,19 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 		end
 	end
 	
+	-- mouse hover colors
+	function uFrame.frame.Event:MouseIn()
+		self:SetBackgroundColor(0.9,0.7,0.0,0.2)
+	end
+	function uFrame.frame.Event:MouseOut()
+		self:SetBackgroundColor(0.0,0.0,0.0,0.3)
+	end
+	
 	function uFrame.frame.Event:LeftUp()
 		if(MinUIConfig.unitFramesLocked == false) then
 			if self.MouseDown then
 				self.MouseDown = false
-				uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+				uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
 							
 				-- store frame placement in saved var
 				uFrame.x = uFrame.frame:GetLeft()
@@ -107,31 +119,54 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 end
 
 --
--- 
+-- Set UFrame Background
 --
-function UnitFrame:setUFrameSecureMode(toggle)
-	self.secureMode = toggle
-	
-	self.frame:SetSecureMode()
-end
-
-function UnitFrame:setUFrameBackgroundColor (r,g,b,a)
-	self.frame:SetBackgroundColor(r,g,b,a)
-end
-
+-- Due to restricted mode we can't actually "hide" the frame itself using SetVisible, 
+-- so instead we shall set opacity to 0 on the frame, and ask everything else (which should be in "normal" mode)
+-- to hide using SetVisible
 --
--- Set the UnitFrame to visible/invisible
 --
-function UnitFrame:setUFrameVisible( toggle )
-	--print("set ", self.unitName, " visible ", toggle)
+function UnitFrame:setUFrameVisible (toggle)
+	-- store visiblity
 	self.visible = toggle
-	self.frame:SetVisible( toggle )
+	
+	-- make things visible
+	if(visible)then
+		self.frame:SetBackgroundColor(0,0,0,0.3)
+		for _,barType in pairs(self.barsEnabled) do
+			if(self.bars[barType])then
+				self.bars[barType]:setUBarEnabled(true)
+			end
+		end
+	-- hide everything
+	else
+		self.frame:SetBackgroundColor(0,0,0,0)
+		for _,barType in pairs(self.barsEnabled) do
+			if(self.bars[barType])then
+				self.bars[barType]:setUBarEnabled(false)
+			end
+		end
+	end
+end
+
+--
+-- Set UFrame to Restricted Mode (ergo in combat)
+--
+function UnitFrame:setUFrameRestrictedMode()
+	-- Make Frame "secure"
+	self.frame:SetSecureMode("restricted")
+	-- make the unit a mouse/over target for itself
+	print("setting ", self.unitName, " restricted mode")
+	self.frame:SetMouseoverUnit(self.unitName)
+	--
+	self.restrictedMode = true
 end
 
 --
 -- Make the UnitFrame update all of it's values
+-- 
 --
-function UnitFrame:update ( )
+function UnitFrame:init ( )
 	local unitDetails = Inspect.Unit.Detail(self.unitName)
 
 	if(unitDetails) then
