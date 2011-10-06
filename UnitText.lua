@@ -131,12 +131,12 @@ function UnitText:updateTextItems()
 				else
 					value:SetText("")
 				end
-			elseif(key == "planarCharges")then
+			elseif(key == "planar")then
 				if(details.planar)then
 					local planar = "<" .. details.planar .. ">"
 					value:SetText(planar)
 				else
-					value:SetText("")
+					value:SetText("<0>")
 				end
 			end
 			
@@ -188,12 +188,12 @@ function UnitText:updateTextItems()
 				else
 					value:SetText("")
 				end
-			elseif(key == "planarCharges")then
+			elseif(key == "planar")then
 				if(details.planar)then
 					local planar = "<" .. details.planar .. ">"
 					value:SetText(planar)
 				else
-					value:SetText("")
+					value:SetText("<0>")
 				end
 			end
 			

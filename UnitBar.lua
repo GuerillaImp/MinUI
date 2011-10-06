@@ -46,14 +46,14 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.enabled = false -- TODO phase this out kinda useless
 	uBar.color = {}
 
-	-- create the bar
+	-- Create Bar
 	uBar.bar = UI.CreateFrame("Frame", name, parentItem)
 	uBar.bar:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.bar:SetWidth(uBar.width)
-	uBar.bar:SetHeight(uBar.height)
 	uBar.bar:SetLayer(1)
 	uBar.bar:SetVisible(uBar.enabled)
 	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+	uBar.bar:SetHeight(uBar.height)
 	
 	-- create the text
 	uBar.text = UI.CreateFrame("Text", name .. "_text", uBar.bar )
@@ -63,7 +63,8 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.text:SetLayer(3)
 	uBar.text:SetVisible(true)
 	uBar.text:SetFontSize(fontSize)
-	-- Font: TODO From Config
+	uBar.text:SetText("???")
+	-- Font: From Config
 	if(MinUIConfig.globalTextFont) then
 		uBar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
@@ -77,9 +78,17 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.textShadow:SetVisible(true)
 	uBar.textShadow:SetFontSize(fontSize)
 	uBar.textShadow:SetFontColor(0,0,0,1)
-	-- Font: TODO From Config
+	-- Font: From Config
 	if(MinUIConfig.globalTextFont) then
 		uBar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
+	
+	-- check bar is big enough for text
+	if(uBar.text:GetFullHeight() > uBar.height) then
+		uBar.height = uBar.text:GetFullHeight()
+		uBar.bar:SetHeight(uBar.height)
+		uBar.text:SetHeight(uBar.height)
+		uBar.textShadow:SetHeight(uBar.height)
 	end
 	
 	return uBar

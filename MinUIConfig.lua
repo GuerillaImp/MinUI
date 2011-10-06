@@ -40,7 +40,7 @@ MinUIConfigDefaults = {
 			itemOffset = itemOffsetDefault, -- the generic spacer used
 			-- enabled bars/items
 			bars = { "health", "resources", "charge", "warriorComboPoints", "text" }, -- bars enabled on this frame, (can be health, resources, charge, rogueComboPoints, warriorComboPoints, text) the order here is the order they are placed on the frame left->right
-			texts = { "level", "name", "planarCharges", "vitality"}, -- bars enabled on this frame, (can be level, name, planarCharges, guild, vitality, calling) the order here is currently unimportant but eventually will be as above
+			texts = { "level", "name", "planar", "vitality"}, -- bars enabled on this frame, (can be level, name, planar, guild, vitality, calling) the order here is currently unimportant but eventually will be as above
 			-- buff/debuff settings
 			buffsEnabled = true, -- true/false
 			debuffsEnabled = true, -- true/false
@@ -177,7 +177,7 @@ end
 -- unlock frames
 --
 function unlockFrames()
-	print("Frames unLlcked")
+	print("Frames unlocked")
 	MinUIConfig.unitFramesLocked = false
 end
 

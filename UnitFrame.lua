@@ -22,6 +22,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
 	uFrame.visible = false
+	uFrame.secureMode = false
 	
 	-- buffbars
 	uFrame.buffs = nil
@@ -103,6 +104,15 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 
 	return uFrame
+end
+
+--
+-- 
+--
+function UnitFrame:setUFrameSecureMode(toggle)
+	self.secureMode = toggle
+	
+	self.frame:SetSecureMode()
 end
 
 function UnitFrame:setUFrameBackgroundColor (r,g,b,a)
@@ -337,7 +347,7 @@ function UnitFrame:updateResources( )
 						local energyRatio = energy/energyMax
 						local energyPercent = math.floor(energyRatio * 100)
 						
-						local energyText = string.format("%s/%s)", energy, energyMax)
+						local energyText = string.format("%s/%s", energy, energyMax)
 						bar:setUBarText(energyText)
 						bar:setUBarWidthRatio(energyRatio)
 					end
