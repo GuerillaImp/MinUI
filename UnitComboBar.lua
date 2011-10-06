@@ -114,10 +114,13 @@ function UnitComboBar:updateComboPoints(points)
 		self.pointBars[i]:SetVisible(false)
 	end
 	
-	-- set visible points
-	if (points > 0) then
-		for i=0, (points-1) do
-			self.pointBars[i]:SetVisible(true)
+	-- guard against people adding comboPoints bar to things they shouldnt
+	if (points) then
+		-- set visible points
+		if (points > 0) then
+			for i=0, (points-1) do
+				self.pointBars[i]:SetVisible(true)
+			end
 		end
 	end
 end
