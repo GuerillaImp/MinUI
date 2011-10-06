@@ -20,35 +20,36 @@ local mageChargeFontSizeDefault = 10
 MinUIConfigDefaults = {
 	-- Frames Locked
 	unitFramesLocked = true,
+	globalTextFont = "arial_round",
 	-- Frame Settings
 	frames = {
 		["player"] =
 		{ 
-			x = 600,
-			y = 500,
-			frameEnabled = true,
+			x = 600, -- x location 
+			y = 500, -- y location 
+			frameEnabled = true, -- determines if the frame is created on loading
 			-- default sizes
-			barWidth = barWidthDefault,
-			barHeight = barHeightDefault,
-			barFontSize = barFontSizeDefault,
-			buffFontSize = buffFontSizeDefault,
-			unitTextFontSize = unitTextFontSizeDefault,
-			comboPointsBarHeight = comboPointsBarHeightDefault,
-			mageChargeBarHeight = mageChargeBarHeightDefault,
-			mageChargeFontSize = mageChargeFontSizeDefault,
-			itemOffset = itemOffsetDefault,
+			barWidth = barWidthDefault, -- the width of the bars 
+			barHeight = barHeightDefault, -- the height of the bars
+			barFontSize = barFontSizeDefault, -- the font size used on the bars
+			buffFontSize = buffFontSizeDefault, -- the font size used on the buff bars
+			unitTextFontSize = unitTextFontSizeDefault, -- the font size used on the unit bar
+			comboPointsBarHeight = comboPointsBarHeightDefault, -- combo points bar height
+			mageChargeBarHeight = mageChargeBarHeightDefault, -- mage charge bar height
+			mageChargeFontSize = mageChargeFontSizeDefault, -- mage charge font size
+			itemOffset = itemOffsetDefault, -- the generic spacer used
 			-- enabled bars/items
-			bars = { "health", "resources", "charge", "warriorComboPoints", "text" }, 
-			texts = { "level", "name", "planarCharges", "vitality"},
+			bars = { "health", "resources", "charge", "warriorComboPoints", "text" }, -- bars enabled on this frame, (can be health, resources, charge, rogueComboPoints, warriorComboPoints, text) the order here is the order they are placed on the frame left->right
+			texts = { "level", "name", "planarCharges", "vitality"}, -- bars enabled on this frame, (can be level, name, planarCharges, guild, vitality, calling) the order here is currently unimportant but eventually will be as above
 			-- buff/debuff settings
-			buffsEnabled = true,
-			debuffsEnabled = true,
-			buffLocation = "below",
-			debuffLocation = "above",
-			buffVisibilityOptions = "player",
-			debuffVisibilityOptions = "all",
-			buffThreshold = 30,
-			debuffThreshold = 3600
+			buffsEnabled = true, -- true/false
+			debuffsEnabled = true, -- true/false
+			buffLocation = "below", -- can only be below or above at the moment
+			debuffLocation = "above", -- can only be below or above at the moment
+			buffVisibilityOptions = "player", -- "player" cast or "all"
+			debuffVisibilityOptions = "all",-- "player" cast or "all"
+			buffThreshold = 30, -- the maximum length of the buff shown on the buff bar (i.e only show buffs shorter than 30 seconds here)
+			debuffThreshold = 3600 -- the maximum length of the debuff shown on the buff bar (i.e only show debuffs shorter than 1 hour here)
 		},
 		["player.target"] = {
 			x = 1100,
@@ -168,7 +169,7 @@ MinUIConfig = MinUIConfigDefaults
 -- lock frames
 --
 function lockFrames()
-	print("Frames Locked")
+	print("Frames locked")
 	MinUIConfig.unitFramesLocked = true
 end
 
@@ -176,7 +177,7 @@ end
 -- unlock frames
 --
 function unlockFrames()
-	print("Frames UnLocked")
+	print("Frames unLlcked")
 	MinUIConfig.unitFramesLocked = false
 end
 
@@ -184,9 +185,8 @@ end
 -- reset everything to default
 --
 function reset()
-	print("Resetting")
+	print("Restoring factory default settings ;)")
 	MinUIConfig = MinUIConfigDefaults
-	print("type /reloadui")
 end
 
 --

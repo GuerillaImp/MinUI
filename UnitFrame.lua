@@ -105,6 +105,10 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	return uFrame
 end
 
+function UnitFrame:setUFrameBackgroundColor (r,g,b,a)
+	self.frame:SetBackgroundColor(r,g,b,a)
+end
+
 --
 -- Set the UnitFrame to visible/invisible
 --
@@ -165,28 +169,20 @@ end
 --
 -- Add Buff Bars to the UnitFrame
 --
--- buffType == buff/debuff
+-- buffType == buff/debuff/meged
 -- visibilityOptions == player/all/curable
 -- lengthThreshold == max time (i.e 30 secs or less)
 --
 --
 function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location )
 	local bbars = nil
-	local fontSize = 12
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
-	local itemOffset =  MinUIConfig.frames[self.unitName].itemOffset
-	
-	-- get font size
-	if (buffType == "buffs")then
-		fontSize = MinUIConfig.frames[self.unitName].buffFontSize
-	elseif (buffType == "debuffs")then
-		fontSize = MinUIConfig.frames[self.unitName].debuffFontSize
-	end
-	
+
+	-- create bar in correct location
 	if( location == "above") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, fontSize, "BOTTOMCENTER", "TOPCENTER", self.frame, itemOffset, itemOffset )
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
 	elseif ( location == "below") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, fontSize, "TOPCENTER", "BOTTOMCENTER", self.frame, itemOffset, itemOffset )
+		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
 	end
 	
 	-- store frame
@@ -194,9 +190,9 @@ function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, lo
 		self.buffs = bbars
 	elseif (buffType == "debuffs")then
 		self.debuffs = bbars
+	elseif(buffType == "merged") then
+		self.buffs = bbars -- just store here
 	end
-	
-	-- TODO: add more positions if requested
 end
 
 function UnitFrame:resetBuffBars()
@@ -237,8 +233,26 @@ function UnitFrame:updateComboPointsBar()
 			-- combo points only available for player
 			local unitDetails = Inspect.Unit.Detail("player")
 			if (unitDetails) then
-				local points = unitDetails.combo
-				bar:updateComboPoints(points)
+				-- rogues need to pin their combo points to the correct target
+				if ( MinUI.playerCalling == "rogue" ) then
+					if( unitDetails.comboUnit ) then
+						local unit = Inspect.Unit.Lookup(unitDetails.comboUnit)
+						--print("combo points are on ", unit, unitDetails.comboUnit)
+						if ( unit == "player.target" ) then
+							local points = unitDetails.combo
+							--print ( points ) 
+							bar:updateComboPoints(points)
+						else
+							bar:updateComboPoints(0)
+						end
+					else
+						bar:updateComboPoints(0)
+					end
+				-- warriors just add points to the bar (which by default is on the player frame)
+				else
+					local points = unitDetails.combo
+					bar:updateComboPoints(points)
+				end
 			end
 		end
 	end
@@ -257,16 +271,19 @@ function UnitFrame:updateHealth( )
 			local unitDetails = Inspect.Unit.Detail(self.unitName)
 			if (unitDetails) then
 				local health = unitDetails.health
-				local healthMax = unitDetails.healthMax
-				local healthRatio = health/healthMax
-				local healthPercent = math.floor(healthRatio * 100)
-				
-				local healthText = string.format("%s/%s", health, healthMax)
-				bar:setUBarText(healthText)
-				bar:setUBarWidthRatio(healthRatio)
-				
-				-- set correct color
-				self:updateHealthBarColor(healthPercent)
+				-- guard against wierdness when zoning
+				if (health) then
+					local healthMax = unitDetails.healthMax
+					local healthRatio = health/healthMax
+					local healthPercent = math.floor(healthRatio * 100)
+					
+					local healthText = string.format("%s/%s", health, healthMax)
+					bar:setUBarText(healthText)
+					bar:setUBarWidthRatio(healthRatio)
+					
+					-- set correct color
+					self:updateHealthBarColor(healthPercent)
+				end
 			end
 		end
 	end
@@ -284,14 +301,17 @@ function UnitFrame:updateChargeBar( )
 			local unitDetails = Inspect.Unit.Detail(self.unitName)
 			if (unitDetails) then
 				local charge = unitDetails.charge
-				local chargeMax = 100 -- TODO: can mages go over 100 charge?
-				local chargeRatio = charge/chargeMax
-				local chargePercent = math.floor(chargeRatio * 100)
-				
-				local chargeText = string.format("%s/%s", charge,chargeMax)
-				--print(chargeText)
-				bar:setUBarText(chargeText)
-				bar:setUBarWidthRatio(chargeRatio)
+				-- guard against wierdness when zoning
+				if (charge) then
+					local chargeMax = 100 -- TODO: can mages go over 100 charge?
+					local chargeRatio = charge/chargeMax
+					local chargePercent = math.floor(chargeRatio * 100)
+					
+					local chargeText = string.format("%s/%s", charge,chargeMax)
+					--print(chargeText)
+					bar:setUBarText(chargeText)
+					bar:setUBarWidthRatio(chargeRatio)
+				end
 			end
 		end
 	end
@@ -311,31 +331,40 @@ function UnitFrame:updateResources( )
 			if (unitDetails) then
 				if(self.calling == "rogue") then
 					local energy = unitDetails.energy
-					local energyMax = unitDetails.energyMax
-					local energyRatio = energy/energyMax
-					local energyPercent = math.floor(energyRatio * 100)
-					
-					local energyText = string.format("%s/%s)", energy, energyMax)
-					bar:setUBarText(energyText)
-					bar:setUBarWidthRatio(energyRatio)
+					-- guard against wierdness when zoning
+					if (energy) then
+						local energyMax = unitDetails.energyMax
+						local energyRatio = energy/energyMax
+						local energyPercent = math.floor(energyRatio * 100)
+						
+						local energyText = string.format("%s/%s)", energy, energyMax)
+						bar:setUBarText(energyText)
+						bar:setUBarWidthRatio(energyRatio)
+					end
 				elseif(self.calling == "warrior") then
 					local power = unitDetails.power
-					local powerMax = 100
-					local powerRatio = power/powerMax
-					local powerPercent = math.floor(powerRatio * 100)
+					-- guard against wierdness when zoning
+					if (power) then
+						local powerMax = 100
+						local powerRatio = power/powerMax
+						local powerPercent = math.floor(powerRatio * 100)
 
-					local powerText = string.format("%s/%s", power, powerMax)
-					bar:setUBarText(powerText)
-					bar:setUBarWidthRatio(powerRatio)
+						local powerText = string.format("%s/%s", power, powerMax)
+						bar:setUBarText(powerText)
+						bar:setUBarWidthRatio(powerRatio)
+					end
 				elseif(self.calling == "cleric" or self.calling == "mage") then
 					local mana = unitDetails.mana
-					local manaMax = unitDetails.manaMax
-					local manaRatio = mana/manaMax
-					local manaPercent = math.floor(manaRatio * 100)
+					-- guard against wierdness when zoning
+					if (mana) then
+						local manaMax = unitDetails.manaMax
+						local manaRatio = mana/manaMax
+						local manaPercent = math.floor(manaRatio * 100)
 
-					local manaText = string.format("%s/%s", mana, manaMax)
-					bar:setUBarText(manaText)
-					bar:setUBarWidthRatio(manaRatio)
+						local manaText = string.format("%s/%s", mana, manaMax)
+						bar:setUBarText(manaText)
+						bar:setUBarWidthRatio(manaRatio)
+					end
 				-- No Calling
 				else
 					bar:setUBarText("")

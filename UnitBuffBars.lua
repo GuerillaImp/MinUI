@@ -10,7 +10,7 @@ UnitBuffBars = {}
 UnitBuffBars.__index = UnitBuffBars
 
 --
-function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshold, direction, width, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
+function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshold, direction, width, anchorThis, anchorParent, parentItem, offsetX, offsetY )
 	local uBBars = {}             			-- our new object
 	setmetatable(uBBars, UnitBuffBars)      	-- make UnitBar handle lookup
 	
@@ -18,7 +18,6 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	
 	-- store values for the bar
 	uBBars.width = width
-	uBBars.fontSize = fontSize
 	uBBars.anchorThis = anchorThis
 	uBBars.anchorParent = anchorParent
 	uBBars.parentItem = parentItem
@@ -40,7 +39,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	uBBars.frame = UI.CreateFrame("Frame", "buffBars_"..buffType, parentItem)
 	uBBars.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBBars.frame:SetWidth(uBBars.width + (MinUIConfig.frames[uBBars.unitName].itemOffset*2)) -- give "breathing room" at either end
-	uBBars.frame:SetHeight(5)
+	uBBars.frame:SetHeight(MinUIConfig.frames[uBBars.unitName].itemOffset)
 	uBBars.frame:SetLayer(-1)
 	uBBars.frame:SetVisible(true)
 	uBBars.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
@@ -83,6 +82,10 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.timer:SetLayer(2)
 		bar.timerShadow:SetLayer(1)
 		
+		bar.timer:SetHeight(bar.text:GetFullHeight())
+		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
+		
+		
 		bar.icon = UI.CreateFrame("Texture", "Icon", bar)
 
 		-- Solid background - this is the actual "bar" part of it.
@@ -91,9 +94,18 @@ function UnitBuffBars:addBuffBar(buff, time)
 		
 		bar.text:SetText("???")
 		bar.text:SetFontSize(12)
-		bar.text:SetHeight(bar.text:GetFullHeight())
 		bar.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
 		bar.textShadow:SetFontColor(0,0,0,1)
+
+		-- Set Fonts
+		if (MinUIConfig.globalTextFont) then
+			bar.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			bar.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			bar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			bar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		end
+		
+		bar.text:SetHeight(bar.text:GetFullHeight())
 		bar.textShadow:SetHeight(bar.text:GetFullHeight())
 		
 		bar.timerShadow:SetFontSize(12)
@@ -265,7 +277,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 		if (self.direction == "up") then
 			bar:SetPoint("BOTTOMCENTER", self.lastAttach, "TOPCENTER", 0, -MinUIConfig.frames[unitName].itemOffset)
 		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.lastAttach, "BOTTOMCENTER", 0, -MinUIConfig.frames[unitName].itemOffset)
+			bar:SetPoint("TOPCENTER", self.lastAttach, "BOTTOMCENTER", 0, MinUIConfig.frames[unitName].itemOffset)
 		end
 	end
 	
@@ -345,8 +357,32 @@ function UnitBuffBars:update(time)
 							end
 						end
 					end
+				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
+				elseif (self.buffType == "merged") then
+					-- Showing all debuffs
+					if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
+						debugPrint(buff.duration)
+						-- Check the debuff is lessthan/equal to threshold length
+						if(buff.duration) then
+							if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
+								table.insert(bbars, buff)
+							end
+						end
+					-- Showing player debuffs
+					elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
+						-- Check debuff was cast by player
+						if (buff.caster == Inspect.Unit.Lookup("player")) then
+							-- Check the buff is lessthan/equal to threshold length
+							if(buff.duration) then
+								if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
+									table.insert(bbars, buff)
+								end
+							end
+						end
+					end
 				end
 			else
+				-- if we are showing buffType buffs
 				if (self.buffType == "buffs") then
 					-- Showing all buffs
 					if(self.visibilityOptions == "all") then
@@ -370,6 +406,29 @@ function UnitBuffBars:update(time)
 							end
 						end
 					end
+				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
+				elseif (self.buffType == "merged") then
+					-- Showing all debuffs
+					if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
+						debugPrint(buff.duration)
+						-- Check the debuff is lessthan/equal to threshold length
+						if(buff.duration) then
+							if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
+								table.insert(bbars, buff)
+							end
+						end
+					-- Showing player debuffs
+					elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
+						-- Check debuff was cast by player
+						if (buff.caster == Inspect.Unit.Lookup("player")) then
+							-- Check the buff is lessthan/equal to threshold length
+							if(buff.duration) then
+								if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold)then
+									table.insert(bbars, buff)
+								end
+							end
+						end
+					end
 				end
 			end
 		end
@@ -377,6 +436,12 @@ function UnitBuffBars:update(time)
 		-- sort on time
 		table.sort(
 			bbars, function (a, b)
+				if(self.buffType == "merged") then
+					 if (a.debuff ~= b.debuff) then
+						return b.debuff
+					end
+				end
+			
 				if a.duration and b.duration then return a.remaining > b.remaining end
 				if not a.duration and not b.duration then return false end
 				return not a.duration

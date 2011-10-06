@@ -75,13 +75,20 @@ function UnitText:addTextItem(textItem)
 	self.texts[textItem]:SetVisible( self.enabled )
 	self.texts[textItem]:SetFontSize( self.fontSize )
 	self.texts[textItem]:SetHeight( self.height )
-	
 	self.textsShadows[textItem] = UI.CreateFrame("Text", self.unitName .. "_" .. textItem .. "_textShadow", self.frame)
 	self.textsShadows[textItem]:SetLayer(2)
 	self.textsShadows[textItem]:SetVisible( self.enabled )
 	self.textsShadows[textItem]:SetFontSize( self.fontSize )
 	self.textsShadows[textItem]:SetFontColor( 0,0,0,1 )
 	self.textsShadows[textItem]:SetHeight( self.height )
+	
+	-- Set Font
+	if (MinUIConfig.globalTextFont) then
+		self.texts[textItem]:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		self.textsShadows[textItem]:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
+	
+	
 end
 
 --

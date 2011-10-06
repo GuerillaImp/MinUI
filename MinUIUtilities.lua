@@ -8,9 +8,9 @@ function difficultyColour(unit)
 	local unit = Inspect.Unit.Detail(unit)
 	local player = Inspect.Unit.Detail("player")
 	if unit and unit.level and player and player.level then
-		local greenStart = math.max(player.level - 2, 1)
-		local greenEnd = player.level -1
-		local yellowStart = player.level 
+		local greenStart = math.max(player.level - 3, 1)
+		local greenEnd = player.level -2
+		local yellowStart = player.level -1
 		local yellowEnd = player.level + 2
 		local redStart = player.level + 3
 		local lvl = unit.level
@@ -33,16 +33,4 @@ function debugPrint(...)
 	if( debugging == true) then
 		print(...)
 	end
-end
-
---
--- print help text
---
-function printHelpText()
-	print("Mui Help:")
-	print("/mui command [frame] [params]")
-	print("Commands:")
-	print("lock unlock reset configure")
-	print("Frames:")
-	print("player player.pet player.target player.target.target") -- todo player.focus
 end

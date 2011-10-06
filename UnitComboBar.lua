@@ -46,7 +46,6 @@ function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, par
 	cpBar.frame:SetVisible( cpBar.enabled )
 	cpBar.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
-	cpBar.comboPoints = 0
 	cpBar.pointBars = {}
 	cpBar.pointGap = 2
 	
@@ -109,12 +108,16 @@ end
 -- Set UnitComboBar Points
 --
 function UnitComboBar:updateComboPoints(points)
-	-- disable all points
+
+	-- hide all points
 	for i=0, (self.maxPoints-1) do
 		self.pointBars[i]:SetVisible(false)
 	end
+	
 	-- set visible points
-	for i=0, (points-1) do
-		self.pointBars[i]:SetVisible(true)
+	if (points > 0) then
+		for i=0, (points-1) do
+			self.pointBars[i]:SetVisible(true)
+		end
 	end
 end

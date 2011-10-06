@@ -63,6 +63,10 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.text:SetLayer(3)
 	uBar.text:SetVisible(true)
 	uBar.text:SetFontSize(fontSize)
+	-- Font: TODO From Config
+	if(MinUIConfig.globalTextFont) then
+		uBar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
 	
 	-- text shadow
 	uBar.textShadow = UI.CreateFrame("Text", name .. "_text", uBar.bar )
@@ -73,8 +77,10 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.textShadow:SetVisible(true)
 	uBar.textShadow:SetFontSize(fontSize)
 	uBar.textShadow:SetFontColor(0,0,0,1)
-	
-
+	-- Font: TODO From Config
+	if(MinUIConfig.globalTextFont) then
+		uBar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
 	
 	return uBar
 end
