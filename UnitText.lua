@@ -107,10 +107,18 @@ function UnitText:updateTextItems()
 		-- Update textsShadows
 		for key,value in pairs(self.textsShadows) do
 			if(key == "name") then
-				value:SetText(details.name)
+				if(details.name)then
+					value:SetText(details.name)
+				else
+					value:SetText("")
+				end
 			elseif(key == "level")then
-				local level = "" .. details.level
-				value:SetText(level)
+				if(details.level)then
+					local level = "" .. details.level
+					value:SetText(level)
+				else
+					value:SetText("")
+				end
 			elseif(key == "calling")then
 				if(details.calling)then
 					value:SetText(details.calling)
@@ -163,12 +171,20 @@ function UnitText:updateTextItems()
 		-- Update Texts
 		for key,value in pairs(self.texts) do
 			if(key == "name") then
-				value:SetText(details.name)
+				if(details.name)then
+					value:SetText(details.name)
+				else
+					value:SetText("")
+				end
 			elseif(key == "level")then
-				local level = "" .. details.level
-				value:SetText(level)
-				if not (self.unitName == "player") then
-					value:SetFontColor(difficultyColour(self.unitName))
+				if(details.level)then
+					local level = "" .. details.level
+					value:SetText(level)
+					if not (self.unitName == "player") then
+						value:SetFontColor(difficultyColour(self.unitName))
+					end
+				else
+					value:SetText("")
 				end
 			elseif(key == "calling")then
 				if(details.calling)then
@@ -212,7 +228,14 @@ function UnitText:updateTextItems()
 			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset, 0 )
 			value:SetHeight(value:GetFullHeight())
 		end
-		
+	else
+		-- No details, set text to ""
+		for key,value in pairs(self.textsShadows) do
+			value:SetText("")
+		end	
+		for key,value in pairs(self.texts) do
+			value:SetText("")
+		end		
 	end
 end
 

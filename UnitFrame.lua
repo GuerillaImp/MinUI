@@ -58,8 +58,8 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 
 	-- Make the frame restricted such that we can ues mouesover macros on them
-	uFrame.frame:SetSecureMode("restricted")
-	uFrame.frame:SetMouseoverUnit(uFrame.unitName)
+	--uFrame.frame:SetSecureMode("restricted")
+	--uFrame.frame:SetMouseoverUnit(uFrame.unitName)
 
 	--
 	-- Mouse Interaction Code
@@ -152,9 +152,9 @@ function UnitFrame:setUFrameVisible (toggle)
 	self.visible = toggle
 	
 	-- if in secure mode we can't set things to invisible
-	if(MinUI.secureMode)then
+	--if(MinUI.secureMode)then -- for now, fuck it.
 		-- make things visible
-		if(self.visible)then
+		--[[if(self.visible)then
 			self.frame:SetBackgroundColor(0,0,0,0.3)
 			for _,barType in pairs(self.barsEnabled) do
 				if(self.bars[barType])then
@@ -163,17 +163,35 @@ function UnitFrame:setUFrameVisible (toggle)
 			end
 		-- hide everything
 		else
-			self.frame:SetBackgroundColor(0,0,0,0.1)
+			self.frame:SetBackgroundColor(0,0,0,0.3)
 			for _,barType in pairs(self.barsEnabled) do
 				if(self.bars[barType])then
-					self.bars[barType]:setUBarEnabled(false)
+					--self.bars[barType]:setUBarEnabled(false)
+					--self.bars[barType]:setUBarColorAlpha(0,0,0,0) -- eventually we will disable them
 				end
 			end
-		end
+		end]]
 	-- if not, we can :-)
+	--[[else]]
+	
+	self.frame:SetVisible(self.visible)
+	
+	-- dont forget to re-enable everything else :)
+	--[[if(self.visible)then
+		for _,barType in pairs(self.barsEnabled) do
+			if(self.bars[barType])then
+				self.bars[barType]:setUBarEnabled(true)
+			end
+		end
 	else
-		self.frame:SetVisible(toggle)
-	end
+		for _,barType in pairs(self.barsEnabled) do
+			if(self.bars[barType])then
+				self.bars[barType]:setUBarEnabled(false)
+			end
+		end
+	end]]
+	
+	--end
 end
 
 --
@@ -196,46 +214,57 @@ function UnitFrame:refresh ( )
 	if(unitDetails) then
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
-		self:updateReactionColoring(unitDetails)
-		
-		--
-		-- refresh all of our bars
-		--
-		for _,barType in pairs(self.barsEnabled) do
-			-- only update what is actually enabled on this unit frame
-			if(barType == "health") then
-				self:updateHealth()
-			end
-			if(barType == "resources") then
-				self:updateResources()
-			end
-			if(barType == "comboPointsBar") then
-				self:updateComboPointsBar()
-			end
-			if(barType == "text") then
-				self.bars["text"]:updateTextItems()
-			end
-			if(barType == "charge") then
-				self:updateChargeBar()
-			end
-		end
+		self:updateReactionColoring(unitDetails.relation)
+		self:refreshValues()
 	else
 		self:setUFrameVisible(false)
+		--self:updateReactionColoring("none")
+		--self:refreshValues()
+	end
+end
+
+--
+-- Refresh the bar values
+--
+function UnitFrame:refreshValues()
+	--
+	-- refresh all of our bars
+	--
+	for _,barType in pairs(self.barsEnabled) do
+		-- only update what is actually enabled on this unit frame
+		if(barType == "health") then
+			self:updateHealth()
+		end
+		if(barType == "resources") then
+			self:updateResources()
+		end
+		if(barType == "comboPointsBar") then
+			self:updateComboPointsBar()
+		end
+		if(barType == "text") then
+			self.bars["text"]:updateTextItems()
+		end
+		if(barType == "charge") then
+			self:updateChargeBar()
+		end
 	end
 end
 
 --
 -- Update the Unit Frame's reaction coloring
 --
-function UnitFrame:updateReactionColoring( unitDetails )
+function UnitFrame:updateReactionColoring( relation )
 	-- Set Reaction Coloring of Target/etc but not player
 	if not ( self.unitName == "player" ) then
+		
 		-- Colour the unit text background based on reaction (if one exists)
 		if (self.bars["text"])then
-			if ( unitDetails.relation == "friendly" ) then
+			if ( relation == "friendly" ) then
 				self.bars["text"]:setUBarColor(0,1,0, 0.1)
-			elseif( unitDetails.relation == "hostile" ) then
+			elseif( relation == "hostile" ) then
 				self.bars["text"]:setUBarColor(1,0,0.0,0.1)
+			elseif( relation == "none" ) then
+				self.bars["text"]:setUBarColor(0,0,0.0,0.0)
 			else
 				self.bars["text"]:setUBarColor(1,1,0.0,0.1)
 			end
@@ -316,11 +345,6 @@ end
 -- Update the Combo Points Bar
 --
 function UnitFrame:updateComboPointsBar()
-	-- if we get an update, we should set the frame to visible
-	if( self.visible == false )then
-		self:setUFrameVisible(true)
-	end
-
 	local bar = self.bars["comboPointsBar"]
 	if (bar) then
 		-- combo points only available for player
@@ -355,15 +379,11 @@ end
 -- Update the Health Bar of this Unit Frame
 --
 function UnitFrame:updateHealth( )
-	-- if we get an update, we should set the frame to visible
-	if( self.visible == false )then
-		self:setUFrameVisible(true)
-	end
-	
 	local bar = self.bars["health"]
 	-- if this frame has a health bar
 	if (bar) then
 		local unitDetails = Inspect.Unit.Detail(self.unitName)
+		local healthPercent = 0
 		if (unitDetails) then
 			local health = unitDetails.health
 			-- guard against wierdness when zoning
@@ -372,7 +392,7 @@ function UnitFrame:updateHealth( )
 				local healthMax = unitDetails.healthMax
 				if (healthMax) then
 					local healthRatio = health/healthMax
-					local healthPercent = math.floor(healthRatio * 100)
+					healthPercent = math.floor(healthRatio * 100)
 					
 					-- Convert large numbers to small versions
 					if (health >= 10000) then
@@ -396,12 +416,18 @@ function UnitFrame:updateHealth( )
 					bar:setUBarLeftText(healthText)
 					bar:setUBarWidthRatio(healthRatio)
 					bar:setUBarRightText(healthPercentText)
-					
-					-- set correct color
-					self:updateHealthBarColor(healthPercent)
 				end
 			end
+		else
+			-- No details, set text to ""
+			bar:setUBarLeftText("")
+			bar:setUBarWidthRatio(1)
+			bar:setUBarRightText("")
 		end
+		
+							
+		-- set correct color
+		self:updateHealthBarColor(healthPercent)
 	end
 end
 
@@ -409,11 +435,6 @@ end
 -- Update the Charge Bar of this Unit Frame
 --
 function UnitFrame:updateChargeBar( )
-	-- if we get an update, we should set the frame to visible
-	if( self.visible == false )then
-		self:setUFrameVisible(true)
-	end
-	
 	local bar = self.bars["charge"]
 	-- if this frame has a charge bar
 	if (bar) then
@@ -432,6 +453,11 @@ function UnitFrame:updateChargeBar( )
 				bar:setUBarWidthRatio(chargeRatio)
 				bar:setUBarRightText("")
 			end
+		else
+			-- No details, set text to ""
+			bar:setUBarLeftText("")
+			bar:setUBarWidthRatio(1)
+			bar:setUBarRightText("")
 		end
 	end
 end
@@ -441,11 +467,6 @@ end
 -- Update the Resources Bar of this Unit Frame
 --
 function UnitFrame:updateResources( )
-	-- if we get an update, we should set the frame to visible
-	if( self.visible == false )then
-		self:setUFrameVisible(true)
-	end
-	
 	local bar = self.bars["resources"]
 	-- if we have an energy bar
 	if (bar) then
@@ -519,6 +540,12 @@ function UnitFrame:updateResources( )
 				bar:setUBarRightText("")
 				bar:setUBarWidthRatio(1)
 			end
+		else
+			-- No details, set text to ""
+			self.calling = "moo"
+			bar:setUBarLeftText("")
+			bar:setUBarWidthRatio(1)
+			bar:setUBarRightText("")
 		end
 		
 		-- set correct color
@@ -558,7 +585,7 @@ function UnitFrame:updateHealthBarColor(percentage)
 	elseif(percentage >= 1 and percentage <= 33) then
 		self.bars["health"]:setUBarColor( 0.7, 0.0, 0.0)
 	else
-		self.bars["health"]:setUBarColor( 0.0, 0.0, 0.0)
+		self.bars["health"]:setUBarColorAlpha( 0.0, 0.0, 0.0, 0.0)
 	end
 end
 
@@ -574,7 +601,6 @@ end
 -- Signal to the UnitFrame that we want these frames
 --
 function UnitFrame:enableBar( position, barType )
-	--print("enabling bar", barType," position ", position, " on ", self.unitName)
 	self.barsEnabled[position] = barType
 end
 
@@ -582,8 +608,6 @@ end
 -- Initialise all the bars this frame has been told to enable
 --
 function UnitFrame:createEnabledBars()
---print("Creating enabled bars")
-	
 	for _,barType in pairs(self.barsEnabled) do
 		if ( barType == "health" ) then
 			self:addHealthBar()
@@ -617,8 +641,6 @@ end
 -- Add a Combo Points Bar
 --
 function UnitFrame:addComboPointsBar()
-	debugPrint("Add combo points bar", self.unitName)
-	
 	-- base on player's calling ALWAYS
 	local details = Inspect.Unit.Detail("player")
 	
@@ -653,8 +675,6 @@ end
 -- Adds a Health UnitBar to this UnitFrame
 --
 function UnitFrame:addUnitTextBar()
-	debugPrint("Add unit text bar", self.unitName)
-	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
 	local fontSize = MinUIConfig.frames[self.unitName].unitTextFontSize
@@ -682,9 +702,6 @@ end
 -- Adds a Health UnitBar to this UnitFrame
 --
 function UnitFrame:addHealthBar()
---	print("Add health bar", self.unitName)
-
-	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
 	local barHeight = MinUIConfig.frames[self.unitName].barHeight

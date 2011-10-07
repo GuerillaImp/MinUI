@@ -519,16 +519,16 @@ local function update()
 end
 
 local function enterSecureMode()
-	print("+++ entering combat (config disabled)")
+	--print("+++ entering combat (config disabled)")
 	MinUI.secureMode = true
 end
 
 local function leaveSecureMode()
-	print("--- leaving combat (config enabled)")
+	--print("--- leaving combat (config enabled)")
 	MinUI.secureMode = false
-	for unitName, unitFrame in pairs(MinUI.unitFrames) do
-		unitFrame:refresh()
-	end
+	--for unitName, unitFrame in pairs(MinUI.unitFrames) do
+	--	unitFrame:refresh()
+	--end
 end
 
 

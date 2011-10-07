@@ -23,6 +23,9 @@ function difficultyColour(unit)
 		else
 			return 0.5, 0.5, 0.5
 		end
+	else
+		-- return white if no data available
+		return 1,1,1
 	end
 end
 
