@@ -464,7 +464,7 @@ local function createUnitFrames()
 end
 
 --
--- Main Update Loop
+-- Main Update Loop (For Buffs)
 --
 local function update()
 	-- Poll for player calling until we get one
@@ -473,10 +473,15 @@ local function update()
 	else
 		-- Once we get the player's calling initialise the unitFrames
 		if (MinUI.initialised == false) then
+		
+			-- Create the Unit Frames
 			createUnitFrames()
-			if(MinUI.unitFrames["player"]) then
-				MinUI.unitFrames["player"]:init()
+			
+			-- Initialise the Unit Frames
+			for unitName, unitFrame in pairs(MinUI.unitFrames) do
+				unitFrame:refresh()
 			end
+			
 			MinUI.resyncBuffs = true
 			MinUI.initialised = true
 		end
@@ -498,10 +503,10 @@ local function update()
 				
 		-- update cause the unit unitFrames to ensure they are all up to date every frame
 		-- this isn't the best way of doing this but for now it will do
-		--for unitName, unitFrame in pairs(MinUI.unitFrames) do
-		--	unitFrame:update()
-		--	unitFrame:tickBuffBars(Inspect.Time.Frame())
-		--end
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			unitFrame:refresh()
+			unitFrame:tickBuffBars(Inspect.Time.Frame())
+		end
 		
 		
 	end
@@ -509,30 +514,62 @@ end
 
 local function enterSecureMode()
 	print("+++ entering combat")
-	--[[
-	if(MinUI.initialised) then
-		MinUI.context:SetSecureMode("restricted")
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			unitFrame:setUFrameRestrictedMode()
-		end
-	end]]
 end
 
 local function leaveSecureMode()
 	print("--- leaving combat")
-	--[[
-	MinUI.context:SetSecureMode("normal")
-	for unitName, unitFrame in pairs(MinUI.unitFrames) do
-		unitFrame:setUFrameNormalMode()
-	end
-	]]
 end
 
-local function unitHealthChanged( units )
 
+--
+-- I attempted to be smart, and not poll the unit's every frame, but ...
+-- It's a bit of a waste of time since tab targetting doesnt give unitDetails, and events don't fire for 
+-- target of target - making the entire excersize a waste of time
+--
+
+--
+-- Refresh ToT
+--
+--[[
+local function refreshToT()
+	if(MinUI.unitFrames["player.target.target"])then
+		MinUI.unitFrames["player.target.target"]:refresh()
+		MinUI.unitFrames["player.target.target"]:resetBuffBars()
+	end
+end
+
+--
+-- Refresh Target
+--
+local function refreshTarget()
+	if(MinUI.unitFrames["player.target"])then
+		MinUI.unitFrames["player.target"]:refresh()
+		MinUI.unitFrames["player.target"]:resetBuffBars()
+	end
+end
+--
+-- If our target changes, refresh the target/tot frames and resync buffs
+--
+local function refreshTargets ( units )
+
+	MinUI.resyncBuffs = true
+	
+	--
+	-- Update Target/TOT
+	--
+	refreshTarget()
+	refreshToT()
+end
+
+
+
+--
+-- Update Unit's Health Values
+--
+local function unitHealthChanged( units )
 	for unitID,_ in pairs(units) do
 		local unitChanged = Inspect.Unit.Lookup (unitID)
-		print("health changed", unitChanged)
+		--print("health changed", unitChanged)
 		for unitName, unitFrame in pairs(MinUI.unitFrames) do
 			if(unitName == unitChanged) then
 				unitFrame:updateHealth()
@@ -540,44 +577,114 @@ local function unitHealthChanged( units )
 		end 
 	end
 	
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
 
+--
+-- Update Unit's Max Health Values
+--
 local function unitHealthMaxChanged( units )
-
+	unitHealthChanged ( units )
 end
 
 local function unitManaChanged( units )
-
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		--print("mana changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
 
 local function unitManaMaxChanged( units )
-
+	unitManaChanged(units)
 end
 
 local function unitPowerChanged( units )
-
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		--print("power changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
 
 local function unitEnergyChanged( units )
-
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		--print("energy changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
 
 local function unitEnergyMaxChanged( units )
-
+	unitEnergyChanged (units)
 end
 
 local function unitComboChanged( units )
-
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		--print("combo changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateComboPointsBar()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
 
-local function unitComboMaxChanged( units )
-
+local function unitComboUnitChanged( units )
+	unitComboChanged ( units )
 end
 
 local function unitChargeChanged( units )
-
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		--print("charge changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateChargeBar()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
 end
-
+]]
 
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -586,12 +693,16 @@ end
 --
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
+	-- We need our context to be restricted, so we can utilise mouse over macros
+	MinUI.context:SetSecureMode("restricted")
+
 	--
 	-- event hooks
 	--
 	
 	-- Target Changed
-	table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
+	-- table.insert(Event.Ability.Target, {refreshTargets, "MinUI", "target changed"})
+	table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "target changed"})
 	
 	-- Buffs
 	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
@@ -599,6 +710,9 @@ local function startup()
 	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
 	
 	-- Unit Changes (So we don't have to poll for updates)
+	-- A bit of a waste of time since tab targetting doesnt give unitDetails, and these events don't fire for 
+	-- target of target
+	--[[
 	table.insert(Event.Unit.Detail.Health, {unitHealthChanged, "MinUI", "unit health changed"})
 	table.insert(Event.Unit.Detail.HealthMax, {unitHealthMaxChanged, "MinUI", "unit health max changed"})
 	table.insert(Event.Unit.Detail.Mana, {unitManaChanged, "MinUI", "unit mana changed"})
@@ -609,6 +723,7 @@ local function startup()
 	table.insert(Event.Unit.Detail.Combo, {unitComboChanged, "MinUI", "unit combo max changed"})
 	table.insert(Event.Unit.Detail.ComboUnit, {unitComboUnitChanged, "MinUI", "unit combo max changed"})
 	table.insert(Event.Unit.Detail.Charge, {unitChargeChanged, "MinUI", "unit charge max changed"})
+	]]
 	
 	-- Handle User Customisation
 	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
@@ -619,7 +734,7 @@ local function startup()
 	
 	-- Main Loop Event
 	--createUnitFrames()
-	table.insert(Event.System.Update.Begin, {update, "MinUI", "refresh"})
+	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
 end
 
 -- Start the UnitFrame

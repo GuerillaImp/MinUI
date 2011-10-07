@@ -27,6 +27,7 @@ function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, par
 	cpBar.width = width
 	cpBar.height = height
 	cpBar.maxPoints = 0
+	cpBar.enabled = true
 
 	-- rogue
 	if( calling == "rogue") then
@@ -83,11 +84,11 @@ function UnitComboBar:isUBarEnabled()
 end
 
 --
--- Enable/Disable the bar
+-- Enable/Disable the frame/bar
 --
 function UnitComboBar:setUBarEnabled( toggle )
 	self.enabled = toggle
-	self.bar:SetVisible(toggle)
+	self.frame:SetVisible(toggle)
 end
 
 --
@@ -108,7 +109,6 @@ end
 -- Set UnitComboBar Points
 --
 function UnitComboBar:updateComboPoints(points)
-
 	-- hide all points
 	for i=0, (self.maxPoints-1) do
 		self.pointBars[i]:SetVisible(false)

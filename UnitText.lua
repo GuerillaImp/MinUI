@@ -35,7 +35,7 @@ function UnitText.new( width, fontSize, unitName, anchorThis, anchorParent, pare
 	-- calculate required height
 	local tempFont = UI.CreateFrame("Text", "TempTextBar", utBar.frame)
 	tempFont:SetFontSize(utBar.fontSize)
-	tempFont:SetText("ASDF")
+	tempFont:SetText("???")
 	tempFont:SetVisible(false)
 	utBar.height = tempFont:GetFullHeight()
 	
@@ -131,7 +131,7 @@ function UnitText:updateTextItems()
 				else
 					value:SetText("")
 				end
-			elseif(key == "planar")then
+			elseif(key == "planar" or key == "planarCharges") then -- added planarCharges for backwards compat with people's saved vars
 				if(details.planar)then
 					local planar = "<" .. details.planar .. ">"
 					value:SetText(planar)

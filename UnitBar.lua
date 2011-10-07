@@ -43,7 +43,7 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.parentItem = parentItem
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
-	uBar.enabled = false -- TODO phase this out kinda useless
+	uBar.enabled = true
 	uBar.color = {}
 
 	-- Create Bar
@@ -54,41 +54,69 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.bar:SetVisible(uBar.enabled)
 	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
 	uBar.bar:SetHeight(uBar.height)
-	
-	-- create the text
-	uBar.text = UI.CreateFrame("Text", name .. "_text", uBar.bar )
-	uBar.text:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 0, 0 )
-	uBar.text:SetWidth(uBar.width)
-	uBar.text:SetHeight(uBar.height)
-	uBar.text:SetLayer(3)
-	uBar.text:SetVisible(true)
-	uBar.text:SetFontSize(fontSize)
-	uBar.text:SetText("???")
+	 
+	-- create text 1
+	uBar.leftText = UI.CreateFrame("Text", name .. "_text1", uBar.bar )
+	uBar.leftText:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 0, 0 )
+	uBar.leftText:SetLayer(3)
+	uBar.leftText:SetVisible(true)
+	uBar.leftText:SetFontSize(fontSize)
+	uBar.leftText:SetText("???")
+	uBar.leftText:SetWidth(uBar.leftText:GetFullWidth())
+	uBar.leftText:SetHeight(uBar.leftText:GetFullHeight())
 	-- Font: From Config
 	if(MinUIConfig.globalTextFont) then
-		uBar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		uBar.leftText:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	
-	-- text shadow
-	uBar.textShadow = UI.CreateFrame("Text", name .. "_text", uBar.bar )
-	uBar.textShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1, 2 )
-	uBar.textShadow:SetWidth(uBar.width)
-	uBar.textShadow:SetHeight(uBar.height)
-	uBar.textShadow:SetLayer(2)
-	uBar.textShadow:SetVisible(true)
-	uBar.textShadow:SetFontSize(fontSize)
-	uBar.textShadow:SetFontColor(0,0,0,1)
+	-- create text shadow 1
+	uBar.leftTextShadow = UI.CreateFrame("Text", name .. "_textshadow1", uBar.bar )
+	uBar.leftTextShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1, 2 )
+	uBar.leftTextShadow:SetLayer(2)
+	uBar.leftTextShadow:SetVisible(true)
+	uBar.leftTextShadow:SetFontSize(fontSize)
+	uBar.leftTextShadow:SetFontColor(0,0,0,1)
+	uBar.leftTextShadow:SetWidth(uBar.leftText:GetFullWidth())
+	uBar.leftTextShadow:SetHeight(uBar.leftText:GetFullHeight())
 	-- Font: From Config
 	if(MinUIConfig.globalTextFont) then
-		uBar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		uBar.leftTextShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
+	
+	-- create text 2
+	uBar.rightText = UI.CreateFrame("Text", name .. "_text2", uBar.bar )
+	uBar.rightText:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 0, 0 )
+	uBar.rightText:SetLayer(3)
+	uBar.rightText:SetVisible(true)
+	uBar.rightText:SetFontSize(fontSize)
+	uBar.rightText:SetText("???")
+	uBar.rightText:SetWidth(uBar.rightText:GetFullWidth())
+	uBar.rightText:SetHeight(uBar.rightText:GetFullHeight())
+	-- Font: From Config
+	if(MinUIConfig.globalTextFont) then
+		uBar.rightText:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
+	
+	-- create text shadow 2
+	uBar.rightTextShadow = UI.CreateFrame("Text", name .. "_textshadow2", uBar.bar )
+	uBar.rightTextShadow:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 1, 2 )
+	uBar.rightTextShadow:SetLayer(2)
+	uBar.rightTextShadow:SetVisible(true)
+	uBar.rightTextShadow:SetFontSize(fontSize)
+	uBar.rightTextShadow:SetFontColor(0,0,0,1)
+	uBar.rightTextShadow:SetWidth(uBar.rightText:GetFullWidth())
+	uBar.rightTextShadow:SetHeight(uBar.rightText:GetFullHeight())
+	-- Font: From Config
+	if(MinUIConfig.globalTextFont) then
+		uBar.rightTextShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	
 	-- check bar is big enough for text
-	if(uBar.text:GetFullHeight() > uBar.height) then
-		uBar.height = uBar.text:GetFullHeight()
+	if(uBar.leftText:GetFullHeight() > uBar.height) then
+		uBar.height = uBar.leftText:GetFullHeight()
 		uBar.bar:SetHeight(uBar.height)
-		uBar.text:SetHeight(uBar.height)
-		uBar.textShadow:SetHeight(uBar.height)
+		uBar.leftText:SetHeight(uBar.height)
+		uBar.leftTextShadow:SetHeight(uBar.height)
 	end
 	
 	return uBar
@@ -122,12 +150,27 @@ function UnitBar:getUBarOffsetY()
 end
 
 --
--- set text
+-- set left text
 --
-function UnitBar:setUBarText(text)
-	--print "setting ubartext"
-	self.text:SetText(text)
-	self.textShadow:SetText(text)
+function UnitBar:setUBarLeftText(text)
+	self.leftText:SetText(text)
+	self.leftTextShadow:SetText(text)
+	self.leftText:SetWidth(self.leftText:GetFullWidth())
+	self.leftText:SetHeight(self.leftText:GetFullHeight())
+	self.leftTextShadow:SetWidth(self.leftText:GetFullWidth())
+	self.leftTextShadow:SetHeight(self.leftText:GetFullHeight())
+end
+
+--
+-- set right text
+--
+function UnitBar:setUBarRightText(text)
+	self.rightText:SetText(text)
+	self.rightTextShadow:SetText(text)
+	self.rightText:SetWidth(self.rightText:GetFullWidth())
+	self.rightText:SetHeight(self.rightText:GetFullHeight())
+	self.rightTextShadow:SetWidth(self.rightText:GetFullWidth())
+	self.rightTextShadow:SetHeight(self.rightText:GetFullHeight())
 end
 
 --

@@ -21,7 +21,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.y = y
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
-	uFrame.visible = false
+	uFrame.visible = true
 	
 	-- buffbars
 	uFrame.buffs = nil
@@ -47,6 +47,14 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetLayer(-1)
 	uFrame.frame:SetVisible(uFrame.visible)
 	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
+	
+	uFrame.highlightBar = UI.CreateFrame("Frame", "highlightbar_"..uFrame.unitName, uFrame.frame )
+	uFrame.highlightBar:SetPoint("TOPCENTER", uFrame.frame, "BOTTOMCENTER", 0, 0 )
+	uFrame.highlightBar:SetWidth(uFrame.width)
+	uFrame.highlightBar:SetHeight(MinUIConfig.frames[uFrame.unitName].itemOffset)
+	uFrame.highlightBar:SetLayer(-1)
+	uFrame.highlightBar:SetVisible(uFrame.visible)
+	uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
 
 	-- Make the frame restricted such that we can ues mouesover macros on them
@@ -92,10 +100,14 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 	-- mouse hover colors
 	function uFrame.frame.Event:MouseIn()
-		self:SetBackgroundColor(0.9,0.7,0.0,0.2)
+		if(uFrame.visible)then
+			uFrame.highlightBar:SetBackgroundColor(1.0, 1.0, 0.0, 0.3)
+		end
 	end
 	function uFrame.frame.Event:MouseOut()
-		self:SetBackgroundColor(0.0,0.0,0.0,0.3)
+		if(uFrame.visible)then
+			uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+		end
 	end
 	
 	function uFrame.frame.Event:LeftUp()
@@ -130,8 +142,10 @@ function UnitFrame:setUFrameVisible (toggle)
 	-- store visiblity
 	self.visible = toggle
 	
+	--print("Setting ", self.unitName, " to visible = ", toggle)
+	
 	-- make things visible
-	if(visible)then
+	if(self.visible)then
 		self.frame:SetBackgroundColor(0,0,0,0.3)
 		for _,barType in pairs(self.barsEnabled) do
 			if(self.bars[barType])then
@@ -140,7 +154,7 @@ function UnitFrame:setUFrameVisible (toggle)
 		end
 	-- hide everything
 	else
-		self.frame:SetBackgroundColor(0,0,0,0)
+		self.frame:SetBackgroundColor(0,0,0,0.1)
 		for _,barType in pairs(self.barsEnabled) do
 			if(self.bars[barType])then
 				self.bars[barType]:setUBarEnabled(false)
@@ -150,29 +164,30 @@ function UnitFrame:setUFrameVisible (toggle)
 end
 
 --
--- Set UFrame to Restricted Mode (ergo in combat)
---
-function UnitFrame:setUFrameRestrictedMode()
-	-- Make Frame "secure"
-	self.frame:SetSecureMode("restricted")
-	-- make the unit a mouse/over target for itself
-	print("setting ", self.unitName, " restricted mode")
-	self.frame:SetMouseoverUnit(self.unitName)
-	--
-	self.restrictedMode = true
+-- Is the frame visible?
+-- 
+function UnitFrame:isUFrameVisible()
+	return self.visible
 end
 
 --
--- Make the UnitFrame update all of it's values
+-- Make the UnitFrame update all of it's values (or hide if there are 
+-- no longer details for it)
 -- 
 --
-function UnitFrame:init ( )
+function UnitFrame:refresh ( )
 	local unitDetails = Inspect.Unit.Detail(self.unitName)
+	
+	--print("unitDetails, for ",self.unitName, " are ", unitDetails)
 
 	if(unitDetails) then
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
+		self:updateReactionColoring(unitDetails)
 		
+		--
+		-- refresh all of our bars
+		--
 		for _,barType in pairs(self.barsEnabled) do
 			-- only update what is actually enabled on this unit frame
 			if(barType == "health") then
@@ -191,25 +206,29 @@ function UnitFrame:init ( )
 				self:updateChargeBar()
 			end
 		end
-		
-		-- Set Reaction Coloring of Target/etc but not player
-		if not ( self.unitName == "player" ) then
-			-- Colour the unit text background based on reaction (if one exists)
-			if (self.bars["text"])then
-				if ( unitDetails.relation == "friendly" ) then
-					self.bars["text"]:setUBarColor(0,1,0, 0.1)
-				elseif( unitDetails.relation == "hostile" ) then
-					self.bars["text"]:setUBarColor(1,0,0.0,0.1)
-				else
-					self.bars["text"]:setUBarColor(1,1,0.0,0.1)
-				end
-			end
-		end
 	else
 		self:setUFrameVisible(false)
 	end
 end
 
+--
+-- Update the Unit Frame's reaction coloring
+--
+function UnitFrame:updateReactionColoring( unitDetails )
+	-- Set Reaction Coloring of Target/etc but not player
+	if not ( self.unitName == "player" ) then
+		-- Colour the unit text background based on reaction (if one exists)
+		if (self.bars["text"])then
+			if ( unitDetails.relation == "friendly" ) then
+				self.bars["text"]:setUBarColor(0,1,0, 0.1)
+			elseif( unitDetails.relation == "hostile" ) then
+				self.bars["text"]:setUBarColor(1,0,0.0,0.1)
+			else
+				self.bars["text"]:setUBarColor(1,1,0.0,0.1)
+			end
+		end
+	end
+end
 
 --
 -- Add Buff Bars to the UnitFrame
@@ -240,6 +259,9 @@ function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, lo
 	end
 end
 
+--
+-- Resets the buff bar to contain no buffs
+--
 function UnitFrame:resetBuffBars()
 	if(self.buffs) then
 		self.buffs:resetBuffBars(time)
@@ -249,21 +271,31 @@ function UnitFrame:resetBuffBars()
 	end
 end
 
+--
+-- Refresh the buffs to update for new buffs/debuffs
+--
 function UnitFrame:refreshBuffBars(time)
-	if(self.buffs) then
-		self.buffs:update(time)
-	end
-	if(self.debuffs)  then
-		self.debuffs:update(time)
+	if (self.visible) then
+		if(self.buffs) then
+			self.buffs:update(time)
+		end
+		if(self.debuffs)  then
+			self.debuffs:update(time)
+		end
 	end
 end
 
+--
+-- Tick the timers on the buff bars
+--
 function UnitFrame:tickBuffBars(time)
-	if(self.buffs) then
-		self.buffs:tickBars(time)
-	end
-	if(self.debuffs)  then
-		self.debuffs:tickBars(time)
+	if(self.visible) then
+		if(self.buffs) then
+			self.buffs:tickBars(time)
+		end
+		if(self.debuffs)  then
+			self.debuffs:tickBars(time)
+		end
 	end
 end
 
@@ -271,33 +303,35 @@ end
 -- Update the Combo Points Bar
 --
 function UnitFrame:updateComboPointsBar()
-	-- dont update invisible frames
-	if ( self.visible ) then
-		local bar = self.bars["comboPointsBar"]
-		if (bar) then
-			-- combo points only available for player
-			local unitDetails = Inspect.Unit.Detail("player")
-			if (unitDetails) then
-				-- rogues need to pin their combo points to the correct target
-				if ( MinUI.playerCalling == "rogue" ) then
-					if( unitDetails.comboUnit ) then
-						local unit = Inspect.Unit.Lookup(unitDetails.comboUnit)
-						--print("combo points are on ", unit, unitDetails.comboUnit)
-						if ( unit == "player.target" ) then
-							local points = unitDetails.combo
-							--print ( points ) 
-							bar:updateComboPoints(points)
-						else
-							bar:updateComboPoints(0)
-						end
+	-- if we get an update, we should set the frame to visible
+	if( self.visible == false )then
+		self:setUFrameVisible(true)
+	end
+
+	local bar = self.bars["comboPointsBar"]
+	if (bar) then
+		-- combo points only available for player
+		local unitDetails = Inspect.Unit.Detail("player")
+		if (unitDetails) then
+			-- rogues need to pin their combo points to the correct target
+			if ( MinUI.playerCalling == "rogue" ) then
+				if( unitDetails.comboUnit ) then
+					local unit = Inspect.Unit.Lookup(unitDetails.comboUnit)
+					--print("combo points are on ", unit, unitDetails.comboUnit)
+					if ( unit == "player.target" ) then
+						local points = unitDetails.combo
+						--print ( points ) 
+						bar:updateComboPoints(points)
 					else
 						bar:updateComboPoints(0)
 					end
-				-- warriors just add points to the bar (which by default is on the player frame)
 				else
-					local points = unitDetails.combo
-					bar:updateComboPoints(points)
+					bar:updateComboPoints(0)
 				end
+			-- warriors just add points to the bar (which by default is on the player frame)
+			else
+				local points = unitDetails.combo
+				bar:updateComboPoints(points)
 			end
 		end
 	end
@@ -308,23 +342,47 @@ end
 -- Update the Health Bar of this Unit Frame
 --
 function UnitFrame:updateHealth( )
-	-- dont update invisible frames
-	if ( self.visible ) then
-		local bar = self.bars["health"]
-		-- if this frame has a health bar
-		if (bar) then
-			local unitDetails = Inspect.Unit.Detail(self.unitName)
-			if (unitDetails) then
-				local health = unitDetails.health
-				-- guard against wierdness when zoning
-				if (health) then
-					local healthMax = unitDetails.healthMax
+	-- if we get an update, we should set the frame to visible
+	if( self.visible == false )then
+		self:setUFrameVisible(true)
+	end
+	
+	local bar = self.bars["health"]
+	-- if this frame has a health bar
+	if (bar) then
+		local unitDetails = Inspect.Unit.Detail(self.unitName)
+		if (unitDetails) then
+			local health = unitDetails.health
+			-- guard against wierdness when zoning
+			if (health) then
+				local largeNumbers = false
+				local healthMax = unitDetails.healthMax
+				if (healthMax) then
 					local healthRatio = health/healthMax
 					local healthPercent = math.floor(healthRatio * 100)
 					
-					local healthText = string.format("%s/%s", health, healthMax)
-					bar:setUBarText(healthText)
+					-- Convert large numbers to small versions
+					if (health >= 10000) then
+						health = health/1000
+						largeNumbers = true
+					end
+					if (healthMax >= 10000) then
+						healthMax = healthMax/1000
+						largeNumbers = true
+					end
+					
+					local healthText = ""
+					if(largeNumbers)then
+						healthText = string.format("%sk / %sk", health, healthMax)
+					else
+						healthText = string.format("%s / %s", health, healthMax)
+					end
+					
+					local healthPercentText = string.format("(%s%%)", healthPercent)
+					
+					bar:setUBarLeftText(healthText)
 					bar:setUBarWidthRatio(healthRatio)
+					bar:setUBarRightText(healthPercentText)
 					
 					-- set correct color
 					self:updateHealthBarColor(healthPercent)
@@ -338,25 +396,27 @@ end
 -- Update the Charge Bar of this Unit Frame
 --
 function UnitFrame:updateChargeBar( )
-	-- dont update invisible frames
-	if ( self.visible ) then
-		local bar = self.bars["charge"]
-		-- if this frame has a charge bar
-		if (bar) then
-			local unitDetails = Inspect.Unit.Detail(self.unitName)
-			if (unitDetails) then
-				local charge = unitDetails.charge
-				-- guard against wierdness when zoning
-				if (charge) then
-					local chargeMax = 100 -- TODO: can mages go over 100 charge?
-					local chargeRatio = charge/chargeMax
-					local chargePercent = math.floor(chargeRatio * 100)
-					
-					local chargeText = string.format("%s/%s", charge,chargeMax)
-					--print(chargeText)
-					bar:setUBarText(chargeText)
-					bar:setUBarWidthRatio(chargeRatio)
-				end
+	-- if we get an update, we should set the frame to visible
+	if( self.visible == false )then
+		self:setUFrameVisible(true)
+	end
+	
+	local bar = self.bars["charge"]
+	-- if this frame has a charge bar
+	if (bar) then
+		local unitDetails = Inspect.Unit.Detail(self.unitName)
+		if (unitDetails) then
+			local charge = unitDetails.charge
+			-- guard against wierdness when zoning
+			if (charge) then
+				local chargeMax = 100 -- TODO: can mages go over 100 charge?
+				local chargeRatio = charge/chargeMax
+				local chargePercent = math.floor(chargeRatio * 100)
+				
+				local chargeText = string.format("%s/%s", charge,chargeMax)
+				--print(chargeText)
+				bar:setUBarLeftText(chargeText)
+				bar:setUBarWidthRatio(chargeRatio)
 			end
 		end
 	end
@@ -367,59 +427,85 @@ end
 -- Update the Resources Bar of this Unit Frame
 --
 function UnitFrame:updateResources( )
-	-- dont update invisible frames
-	if ( self.visible ) then
-		local bar = self.bars["resources"]
-		-- if we have an energy bar
-		if (bar) then
-			local unitDetails = Inspect.Unit.Detail(self.unitName)
-			if (unitDetails) then
-				if(self.calling == "rogue") then
-					local energy = unitDetails.energy
-					-- guard against wierdness when zoning
-					if (energy) then
-						local energyMax = unitDetails.energyMax
+	-- if we get an update, we should set the frame to visible
+	if( self.visible == false )then
+		self:setUFrameVisible(true)
+	end
+	
+	local bar = self.bars["resources"]
+	-- if we have an energy bar
+	if (bar) then
+		local unitDetails = Inspect.Unit.Detail(self.unitName)
+		if (unitDetails) then
+			if(self.calling == "rogue") then
+				local energy = unitDetails.energy
+				-- guard against wierdness when zoning
+				if (energy) then
+					local energyMax = unitDetails.energyMax
+					if (energyMax) then
 						local energyRatio = energy/energyMax
 						local energyPercent = math.floor(energyRatio * 100)
 						
 						local energyText = string.format("%s/%s", energy, energyMax)
-						bar:setUBarText(energyText)
+						bar:setUBarLeftText(energyText)
 						bar:setUBarWidthRatio(energyRatio)
 					end
-				elseif(self.calling == "warrior") then
-					local power = unitDetails.power
-					-- guard against wierdness when zoning
-					if (power) then
-						local powerMax = 100
-						local powerRatio = power/powerMax
-						local powerPercent = math.floor(powerRatio * 100)
+				end
+			elseif(self.calling == "warrior") then
+				local power = unitDetails.power
+				-- guard against wierdness when zoning
+				if (power) then
+					local powerMax = 100
+					local powerRatio = power/powerMax
+					local powerPercent = math.floor(powerRatio * 100)
 
-						local powerText = string.format("%s/%s", power, powerMax)
-						bar:setUBarText(powerText)
-						bar:setUBarWidthRatio(powerRatio)
-					end
-				elseif(self.calling == "cleric" or self.calling == "mage") then
-					local mana = unitDetails.mana
-					-- guard against wierdness when zoning
-					if (mana) then
-						local manaMax = unitDetails.manaMax
+					local powerText = string.format("%s/%s", power, powerMax)
+					bar:setUBarLeftText(powerText)
+					bar:setUBarWidthRatio(powerRatio)
+				end
+			elseif(self.calling == "cleric" or self.calling == "mage") then
+				local mana = unitDetails.mana
+				-- guard against wierdness when zoning
+				if (mana) then
+					local largeNumbers = false
+					local manaMax = unitDetails.manaMax
+					if (manaMax) then
 						local manaRatio = mana/manaMax
 						local manaPercent = math.floor(manaRatio * 100)
-
-						local manaText = string.format("%s/%s", mana, manaMax)
-						bar:setUBarText(manaText)
+						
+						-- Convert large numbers to small versions
+						if (mana >= 10000) then
+							mana = mana/1000
+							largeNumbers = true
+						end
+						if (manaMax >= 10000) then
+							manaMax = manaMax/1000
+							largeNumbers = true
+						end
+						
+						local manaText = ""
+						if(largeNumbers)then
+							manaText = string.format("%sk / %sk", mana, manaMax)
+						else
+							manaText = string.format("%s / %s", mana, manaMax)
+						end
+						
+						local manaPercentText = string.format("(%s%%)", manaPercent)
+						
+						bar:setUBarLeftText(manaText)
+						bar:setUBarRightText(manaPercentText)
 						bar:setUBarWidthRatio(manaRatio)
 					end
-				-- No Calling
-				else
-					bar:setUBarText("")
-					bar:setUBarWidthRatio(1)
 				end
+			-- No Calling
+			else
+				bar:setUBarLeftText("")
+				bar:setUBarWidthRatio(1)
 			end
-			
-			-- set correct color
-			self:updateResourcesBarColor()
 		end
+		
+		-- set correct color
+		self:updateResourcesBarColor()
 	end
 end
 
@@ -471,7 +557,7 @@ end
 -- Signal to the UnitFrame that we want these frames
 --
 function UnitFrame:enableBar( position, barType )
-	---print("enabling bar", barType," position ", position, " on ", self.unitName)
+	--print("enabling bar", barType," position ", position, " on ", self.unitName)
 	self.barsEnabled[position] = barType
 end
 
