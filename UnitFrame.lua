@@ -417,6 +417,7 @@ function UnitFrame:updateChargeBar( )
 				--print(chargeText)
 				bar:setUBarLeftText(chargeText)
 				bar:setUBarWidthRatio(chargeRatio)
+				bar:setUBarRightText("")
 			end
 		end
 	end
@@ -449,6 +450,7 @@ function UnitFrame:updateResources( )
 						local energyText = string.format("%s/%s", energy, energyMax)
 						bar:setUBarLeftText(energyText)
 						bar:setUBarWidthRatio(energyRatio)
+						bar:setUBarRightText("")
 					end
 				end
 			elseif(self.calling == "warrior") then
@@ -462,6 +464,7 @@ function UnitFrame:updateResources( )
 					local powerText = string.format("%s/%s", power, powerMax)
 					bar:setUBarLeftText(powerText)
 					bar:setUBarWidthRatio(powerRatio)
+					bar:setUBarRightText("")
 				end
 			elseif(self.calling == "cleric" or self.calling == "mage") then
 				local mana = unitDetails.mana
@@ -500,6 +503,7 @@ function UnitFrame:updateResources( )
 			-- No Calling
 			else
 				bar:setUBarLeftText("")
+				bar:setUBarRightText("")
 				bar:setUBarWidthRatio(1)
 			end
 		end
@@ -517,13 +521,13 @@ end
 --
 function UnitFrame:updateResourcesBarColor()
 	if (self.calling == "rogue") then
-		self.bars["resources"]:setUBarColor( 0.7, 0, 0.7, 0.6)
+		self.bars["resources"]:setUBarColor( 0.7, 0, 0.7)
 	elseif (self.calling == "warrior") then
-		self.bars["resources"]:setUBarColor( 0.7, 0.5, 0, 0.6 )
+		self.bars["resources"]:setUBarColor( 0.7, 0.5, 0 )
 	elseif (self.calling == "mage" or self.calling == "cleric") then
-		self.bars["resources"]:setUBarColor( 0, 0.2, 0.7, 0.6 )
+		self.bars["resources"]:setUBarColor( 0, 0.2, 0.7 )
 	else
-		self.bars["resources"]:setUBarColor( 0, 0, 0, 0)
+		self.bars["resources"]:setUBarColorAlpha( 0, 0, 0, 0)
 	end
 end
 
@@ -535,13 +539,13 @@ end
 --
 function UnitFrame:updateHealthBarColor(percentage)
 	if (percentage >= 66) then
-		self.bars["health"]:setUBarColor( 0.0, 0.7, 0.0, 0.6 )
+		self.bars["health"]:setUBarColor( 0.0, 0.7, 0.0)
 	elseif(percentage >= 33 and percentage <= 66) then
-		self.bars["health"]:setUBarColor( 0.7, 0.7, 0.0, 0.6 )
+		self.bars["health"]:setUBarColor( 0.7, 0.7, 0.0)
 	elseif(percentage >= 1 and percentage <= 33) then
-		self.bars["health"]:setUBarColor( 0.7, 0.0, 0.0, 0.6 )
+		self.bars["health"]:setUBarColor( 0.7, 0.0, 0.0)
 	else
-		self.bars["health"]:setUBarColor( 0.0, 0.0, 0.0, 0.6 )
+		self.bars["health"]:setUBarColor( 0.0, 0.0, 0.0)
 	end
 end
 

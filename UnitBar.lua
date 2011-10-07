@@ -44,7 +44,8 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.offsetX = offsetX
 	uBar.offsetY = offsetY
 	uBar.enabled = true
-	uBar.color = {}
+	
+	uBar.curBarWidth = width
 
 	-- Create Bar
 	uBar.bar = UI.CreateFrame("Frame", name, parentItem)
@@ -52,8 +53,18 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.bar:SetWidth(uBar.width)
 	uBar.bar:SetLayer(1)
 	uBar.bar:SetVisible(uBar.enabled)
-	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.5)
+	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	uBar.bar:SetHeight(uBar.height)
+	
+	-- Create the bit that resizes
+	uBar.solid = UI.CreateFrame("Frame", name.."_solid", parentItem)
+	uBar.solid:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
+	uBar.solid:SetWidth(uBar.width)
+	uBar.solid:SetLayer(-1)
+	uBar.solid:SetVisible(uBar.enabled)
+	uBar.solid:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	uBar.solid:SetHeight(uBar.height)
+	 
 	 
 	-- create text 1
 	uBar.leftText = UI.CreateFrame("Text", name .. "_text1", uBar.bar )
@@ -122,9 +133,17 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	return uBar
 end
 
-function UnitBar:setUBarColor( r,g,b,a )
-	self.color = { r,g,b,a }
+--
+-- Set UBar Color
+--
+function UnitBar:setUBarColor( r,g,b )
+	self.bar:SetBackgroundColor(r,g,b, 0.3)
+	self.solid:SetBackgroundColor(r,g,b, 0.8)
+end
+
+function UnitBar:setUBarColorAlpha(r,g,b,a)
 	self.bar:SetBackgroundColor(r,g,b,a)
+	self.solid:SetBackgroundColor(r,g,b,a)
 end
 
 --
@@ -140,6 +159,7 @@ end
 function UnitBar:setUBarEnabled( toggle )
 	self.enabled = toggle
 	self.bar:SetVisible(toggle)
+	self.solid:SetVisible(toggle)
 end
 
 --
@@ -171,6 +191,8 @@ function UnitBar:setUBarRightText(text)
 	self.rightText:SetHeight(self.rightText:GetFullHeight())
 	self.rightTextShadow:SetWidth(self.rightText:GetFullWidth())
 	self.rightTextShadow:SetHeight(self.rightText:GetFullHeight())
+	
+	
 end
 
 --
@@ -215,5 +237,5 @@ end
 -- grow/shrink the bar based on width given the percentage of "thing" this bar is watching
 --
 function UnitBar:setUBarWidthRatio( ratio )
-	self.bar:SetWidth(self.width * ratio)
+	self.solid:SetWidth(self.width * ratio)
 end

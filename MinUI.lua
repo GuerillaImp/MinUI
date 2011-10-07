@@ -513,11 +513,11 @@ local function update()
 end
 
 local function enterSecureMode()
-	print("+++ entering combat")
+	--print("+++ entering combat")
 end
 
 local function leaveSecureMode()
-	print("--- leaving combat")
+	--print("--- leaving combat")
 end
 
 
