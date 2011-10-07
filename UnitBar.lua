@@ -126,6 +126,7 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	if(uBar.leftText:GetFullHeight() > uBar.height) then
 		uBar.height = uBar.leftText:GetFullHeight()
 		uBar.bar:SetHeight(uBar.height)
+		uBar.solid:SetHeight(uBar.height)
 		uBar.leftText:SetHeight(uBar.height)
 		uBar.leftTextShadow:SetHeight(uBar.height)
 	end

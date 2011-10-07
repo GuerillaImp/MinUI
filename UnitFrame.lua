@@ -67,6 +67,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	-- For now we just support dragging of frames when unlocked
 	--
 	function uFrame.frame.Event:LeftDown()
+		if(MinUI.secureMode) then
+			return
+		end
 		if(MinUIConfig.unitFramesLocked == false) then
 			self.MouseDown = true
 			mouseData = Inspect.Mouse()
@@ -87,6 +90,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	end
 	
 	function uFrame.frame.Event:MouseMove()
+		if(MinUI.secureMode) then
+			return
+		end
 		if(MinUIConfig.unitFramesLocked == false) then
 			if self.MouseDown then
 				local newX, newY
@@ -111,6 +117,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	end
 	
 	function uFrame.frame.Event:LeftUp()
+		if(MinUI.secureMode) then
+			return
+		end
 		if(MinUIConfig.unitFramesLocked == false) then
 			if self.MouseDown then
 				self.MouseDown = false
@@ -142,24 +151,28 @@ function UnitFrame:setUFrameVisible (toggle)
 	-- store visiblity
 	self.visible = toggle
 	
-	--print("Setting ", self.unitName, " to visible = ", toggle)
-	
-	-- make things visible
-	if(self.visible)then
-		self.frame:SetBackgroundColor(0,0,0,0.3)
-		for _,barType in pairs(self.barsEnabled) do
-			if(self.bars[barType])then
-				self.bars[barType]:setUBarEnabled(true)
+	-- if in secure mode we can't set things to invisible
+	if(MinUI.secureMode)then
+		-- make things visible
+		if(self.visible)then
+			self.frame:SetBackgroundColor(0,0,0,0.3)
+			for _,barType in pairs(self.barsEnabled) do
+				if(self.bars[barType])then
+					self.bars[barType]:setUBarEnabled(true)
+				end
+			end
+		-- hide everything
+		else
+			self.frame:SetBackgroundColor(0,0,0,0.1)
+			for _,barType in pairs(self.barsEnabled) do
+				if(self.bars[barType])then
+					self.bars[barType]:setUBarEnabled(false)
+				end
 			end
 		end
-	-- hide everything
+	-- if not, we can :-)
 	else
-		self.frame:SetBackgroundColor(0,0,0,0.1)
-		for _,barType in pairs(self.barsEnabled) do
-			if(self.bars[barType])then
-				self.bars[barType]:setUBarEnabled(false)
-			end
-		end
+		self.frame:SetVisible(toggle)
 	end
 end
 

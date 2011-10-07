@@ -23,6 +23,10 @@ MinUI.playerCalling = "unknown"
 MinUI.playerCallingKnown = false
 MinUI.initialised = false
 
+-- Are we current in secure mode?
+MinUI.secureMode = false
+
+
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- Core Functions
@@ -473,17 +477,19 @@ local function update()
 	else
 		-- Once we get the player's calling initialise the unitFrames
 		if (MinUI.initialised == false) then
-		
-			-- Create the Unit Frames
-			createUnitFrames()
-			
-			-- Initialise the Unit Frames
-			for unitName, unitFrame in pairs(MinUI.unitFrames) do
-				unitFrame:refresh()
+			-- Dont create in secure mode
+			if(MinUI.secureMode == false) then
+				-- Create the Unit Frames
+				createUnitFrames()
+				
+				-- Initialise the Unit Frames
+				for unitName, unitFrame in pairs(MinUI.unitFrames) do
+					unitFrame:refresh()
+				end
+				
+				MinUI.resyncBuffs = true
+				MinUI.initialised = true
 			end
-			
-			MinUI.resyncBuffs = true
-			MinUI.initialised = true
 		end
 				
 		-- A buff recalculation has been queued, so go ahead and recalculate.
@@ -513,11 +519,16 @@ local function update()
 end
 
 local function enterSecureMode()
-	--print("+++ entering combat")
+	print("+++ entering combat (config disabled)")
+	MinUI.secureMode = true
 end
 
 local function leaveSecureMode()
-	--print("--- leaving combat")
+	print("--- leaving combat (config enabled)")
+	MinUI.secureMode = false
+	for unitName, unitFrame in pairs(MinUI.unitFrames) do
+		unitFrame:refresh()
+	end
 end
 
 
