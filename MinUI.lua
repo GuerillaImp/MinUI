@@ -705,15 +705,25 @@ end
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
 	-- We need our context to be restricted, so we can utilise mouse over macros
-	MinUI.context:SetSecureMode("restricted")
-
+	--MinUI.context:SetSecureMode("restricted")
+	
+	local eventTable1 = Library.LibUnitChange.Register("player.target")
+	table.insert(eventTable1, {function() print "target changed" end, "MinUI", "testing lib unit change"})
+	
+	local eventTable2 = Library.LibUnitChange.Register("player.target.target")
+	table.insert(eventTable2, {function() print "target's target changed" end, "MinUI", "testing lib unit change"})
+	
+	local eventTable3 = Library.LibUnitChange.Register("focus")
+	table.insert(eventTable3, {function() print "focus changed" end, "MinUI", "testing lib unit change"})
+	
+	
 	--
 	-- event hooks
 	--
 	
 	-- Target Changed
 	-- table.insert(Event.Ability.Target, {refreshTargets, "MinUI", "target changed"})
-	table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "target changed"})
+	-- table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "target changed"})
 	
 	-- Buffs
 	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
