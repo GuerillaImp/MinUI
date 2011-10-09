@@ -14,7 +14,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	local uBBars = {}             			-- our new object
 	setmetatable(uBBars, UnitBuffBars)      	-- make UnitBar handle lookup
 	
-	debugPrint("creating buff bars for ",unitName, buffType, visibilityOptions, lengthThreshold, direction)
+	--debugPrint("creating buff bars for ",unitName, buffType, visibilityOptions, lengthThreshold, direction)
 	
 	-- store values for the bar
 	uBBars.width = width
@@ -44,7 +44,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	uBBars.frame:SetVisible(true)
 	uBBars.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
-	debugPrint(uBBars)
+	--debugPrint(uBBars)
 	return uBBars
 end
 
@@ -189,12 +189,8 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.textShadow:SetText(buff.name)
 		  end
 		  
-		  -- see if THIS works :/
 		  self.text:SetWidth(width)
 		  self.textShadow:SetWidth(width)
-
-		  
-		  
 		  
 		  if buff.duration then
 			self.completion = buff.begin + buff.duration
@@ -203,6 +199,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 			-- Display everything we might have hidden.
 			self.solid:SetVisible(true)
 			self.timer:SetVisible(true)
+			self.timerShadow:SetVisible(true)
 			
 			self:Tick(time)
 		  else
@@ -212,6 +209,8 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.solid:SetVisible(false)
 			self.timer:SetVisible(false)
 			self.timer:SetWidth(0)
+			self.timerShadow:SetVisible(false)
+			self.timerShadow:SetWidth(0)
 		  end
 		  
 		  self.debuff = buff.debuff
@@ -227,6 +226,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 
 				if remaining < 0 then
 					self.timer:SetVisible(false)
+					self.timerShadow:SetVisible(false)
 				else
 				  -- Update our timer.
 					self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
@@ -235,7 +235,6 @@ function UnitBuffBars:addBuffBar(buff, time)
 				  if remaining >= 3600 then
 					self.timerShadow:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
 					self.timer:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-					
 				  else
 					self.timerShadow:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
 					self.timer:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
@@ -298,7 +297,7 @@ end
 -- Reset buff bars
 --
 function UnitBuffBars:resetBuffBars()
-	--debugPrint("resetting buff bars on ", self.unitName)
+	----debugPrint("resetting buff bars on ", self.unitName)
 	
 	for _, bar in pairs(self.activeBuffBars) do
 		table.insert(self.zombieBuffBars, bar)
@@ -338,12 +337,15 @@ function UnitBuffBars:update(time)
 				if (self.buffType == "debuffs") then
 					-- Showing all debuffs
 					if(self.visibilityOptions == "all") then
-						debugPrint(buff.duration)
+						--debugPrint(buff.duration)
 						-- Check the debuff is lessthan/equal to threshold length
 						if(buff.duration) then
 							if(buff.duration <= self.lengthThreshold)then
 								table.insert(bbars, buff)
 							end
+						-- or we have auras
+						elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+							table.insert(bbars, buff)
 						end
 					-- Showing player debuffs
 					elseif (self.visibilityOptions == "player") then
@@ -354,6 +356,9 @@ function UnitBuffBars:update(time)
 								if(buff.duration <= self.lengthThreshold)then
 									table.insert(bbars, buff)
 								end
+							-- or we have auras
+							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+								table.insert(bbars, buff)
 							end
 						end
 					end
@@ -361,12 +366,15 @@ function UnitBuffBars:update(time)
 				elseif (self.buffType == "merged") then
 					-- Showing all debuffs
 					if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
-						debugPrint(buff.duration)
+						--debugPrint(buff.duration)
 						-- Check the debuff is lessthan/equal to threshold length
 						if(buff.duration) then
 							if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
 								table.insert(bbars, buff)
 							end
+						-- or we have auras
+						elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+							table.insert(bbars, buff)
 						end
 					-- Showing player debuffs
 					elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
@@ -377,6 +385,9 @@ function UnitBuffBars:update(time)
 								if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
 									table.insert(bbars, buff)
 								end
+							-- or we have auras
+							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+								table.insert(bbars, buff)
 							end
 						end
 					end
@@ -386,16 +397,19 @@ function UnitBuffBars:update(time)
 				if (self.buffType == "buffs") then
 					-- Showing all buffs
 					if(self.visibilityOptions == "all") then
-						debugPrint(buff.duration)
-						-- Check the debuff is lessthan/equal to threshold length
+						--debugPrint(buff.duration)
+						-- Check the buff is lessthan/equal to threshold length
 						if(buff.duration)then
 							if(buff.duration <= self.lengthThreshold)then
 								table.insert(bbars, buff)
 							end
-						end
+						-- or if we have auras
+						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+							table.insert(bbars, buff)
+						end	
 					-- Showing player buffs
 					elseif (self.visibilityOptions == "player") then
-						-- Check debuff was cast by player
+						-- Check buff was cast by player
 						if (buff.caster == Inspect.Unit.Lookup("player")) then
 							-- Check the buff is lessthan/equal to threshold length
 							-- Check the debuff is lessthan/equal to threshold length
@@ -403,20 +417,26 @@ function UnitBuffBars:update(time)
 								if(buff.duration <= self.lengthThreshold)then
 									table.insert(bbars, buff)
 								end
-							end
+							-- or if we have auras
+							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+								table.insert(bbars, buff)
+							end							
 						end
 					end
 				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
 				elseif (self.buffType == "merged") then
 					-- Showing all debuffs
 					if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
-						debugPrint(buff.duration)
+						--debugPrint(buff.duration)
 						-- Check the debuff is lessthan/equal to threshold length
 						if(buff.duration) then
 							if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
 								table.insert(bbars, buff)
 							end
-						end
+						-- or if we have auras
+						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+							table.insert(bbars, buff)
+						end						
 					-- Showing player debuffs
 					elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
 						-- Check debuff was cast by player
@@ -427,7 +447,10 @@ function UnitBuffBars:update(time)
 									table.insert(bbars, buff)
 								end
 							end
-						end
+						-- or if we have auras
+						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+							table.insert(bbars, buff)
+						end						
 					end
 				end
 			end

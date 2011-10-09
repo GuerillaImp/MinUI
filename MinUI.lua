@@ -26,6 +26,8 @@ MinUI.initialised = false
 -- Are we current in secure mode?
 MinUI.secureMode = false
 
+MinUI.version = "1.2a"
+
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -117,9 +119,9 @@ local function muiCommandInterface(commandline)
 					or token == "mageChargeFontSize" or token == "itemOffset" or token == "bars" or token == "texts" 
 					or token == "buffsEnabled" or token == "debuffsEnabled" or token == "buffLocation" or token == "debuffLocation"
 					or token == "buffVisibilityOptions" or token == "debuffVisibilityOptions" or token == "buffThreshold" 
-					or token == "debuffThreshold" or token == "globalTextFont") then
+					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" ) then
 				command = token 
-				print("command given ", command)
+				--debugPrint("command given ", command)
 			-- unknown command
 			else
 				print ("Unknown command, type \'/mui\' for help")
@@ -161,9 +163,9 @@ local function muiCommandInterface(commandline)
 						or command == "mageChargeFontSize" or command == "itemOffset" or command == "bars"  or command == "texts" 
 						or command == "buffsEnabled" or command == "debuffsEnabled" or command == "buffLocation" or command == "debuffLocation"
 						or command == "buffVisibilityOptions" or command == "debuffVisibilityOptions" or command == "buffThreshold" 
-						or command == "debuffThreshold" ) then
+						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" ) then
 					frameToConfig = token
-					--print("configuring frame", frameToConfig)
+					----debugPrint("configuring frame", frameToConfig)
 				end
 			else
 				print("Error in command, type \'/mui\' for help")	
@@ -307,7 +309,25 @@ local function muiCommandInterface(commandline)
 					print ("Setting debuffs threshold to ", debuffThreshold, " on ", frameToConfig)
 					MinUIConfig.frames[frameToConfig].debuffThreshold = debuffThreshold
 					refreshRequired = true
-				end				
+				end		
+			-- enabled/disable buffAuras
+			elseif (command == "buffAuras") then
+				local buffAuras = false
+				if(token == "true") then
+					buffAuras = true
+				end
+				print ("Setting buff auras to ", buffAuras, " on ", frameToConfig)
+				MinUIConfig.frames[frameToConfig].buffAuras = buffAuras
+				refreshRequired = true
+			-- enabled/disable debuffAuras
+			elseif (command == "debuffAuras") then
+				local debuffAuras = false
+				if(token == "true") then
+					debuffAuras = true
+				end
+				print ("Setting debuff auras to ", debuffAuras, " on ", frameToConfig)
+				MinUIConfig.frames[frameToConfig].debuffAuras = debuffAuras
+				refreshRequired = true					
 			-- bars requires a comma separated list of items afterwards (health,resource,charge,text,comboPointsBar)
 			elseif (command == "bars") then
 				barsToken = token
@@ -375,7 +395,7 @@ end
 -- Inspect player for calling, sometimes this returns nil (when loading or porting)
 --
 local function getPlayerDetails()
-	debugPrint("Get Player Details")
+	--debugPrint("Get Player Details")
 	
 	-- based on player class some things are different
 	local playerDetails = Inspect.Unit.Detail("player")
@@ -400,7 +420,7 @@ local function createUnitFrames()
 	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
 		-- if the frame is enabled
 		if(unitSavedValues.frameEnabled) then
-			print("Creating ", unitName)
+			--debugPrint("Creating ", unitName)
 			-- create new unitframe
 			local newFrame = UnitFrame.new( unitName, unitSavedValues.barWidth + (unitSavedValues.itemOffset*2), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
 			
@@ -445,7 +465,7 @@ local function createUnitFrames()
 			
 			-- if we do have a merged buff bar then create it
 			if ( mergedBuffBar ) then
-				--print ( "Note: Buffs/debufs are on the same side of the unit frame ", unitSavedValues.buffLocation, " so will merge" )
+				----debugPrint ( "Note: Buffs/debufs are on the same side of the unit frame ", unitSavedValues.buffLocation, " so will merge" )
 				-- NOTE: in merged bars the threshold and visibility options provided here are ignored (and read out of MinUI Config)
 				newFrame:addBuffBars( "merged", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation)
 			-- else create bars as normal
@@ -470,233 +490,61 @@ end
 --
 -- Main Update Loop (For Buffs)
 --
+--
+-- Rename animate loop (for things that animate :P)
+--
 local function update()
+	--
 	-- Poll for player calling until we get one
+	--
 	if (MinUI.playerCallingKnown == false) then
+		debugPrint("waiting for rift to start giving details...")
 		getPlayerDetails()
 	else
+		--
 		-- Once we get the player's calling initialise the unitFrames
+		--
 		if (MinUI.initialised == false) then
-			-- Dont create in secure mode
-			if(MinUI.secureMode == false) then
-				-- Create the Unit Frames
-				createUnitFrames()
-				
-				-- Initialise the Unit Frames
-				for unitName, unitFrame in pairs(MinUI.unitFrames) do
-					unitFrame:refresh()
-				end
-				
-				MinUI.resyncBuffs = true
-				MinUI.initialised = true
-			end
-		end
-				
-		-- A buff recalculation has been queued, so go ahead and recalculate.
-		if MinUI.resyncBuffs then
+			debugPrint("we have details (at least for the player) so lets create the frames now")
+			-- Create the Unit Frames
+			createUnitFrames()
+			
+			-- Initialise the Unit Frames
 			for unitName, unitFrame in pairs(MinUI.unitFrames) do
-				unitFrame:refreshBuffBars(Inspect.Time.Frame())
+				unitFrame:unitChanged()
 			end
-			MinUI.resyncBuffs = false
-		-- else just tick the buff bars along
+			
+			MinUI.resyncBuffs = true
+			MinUI.initialised = true
+			
+			debugPrint("all done, initialisation complete")
+		--
+		-- Handle buffs and other items that need to constantly poll for animation/updates
+		--
 		else
-			for unitName, unitFrame in pairs(MinUI.unitFrames) do
-				unitFrame:tickBuffBars(Inspect.Time.Frame())
+			if(MinUI.resyncBuffs)then
+				for unitName, unitFrame in pairs(MinUI.unitFrames) do
+					unitFrame:updateBuffBars()
+				end
+				MinUI.resyncBuffs = false
+			else
+				for unitName, unitFrame in pairs(MinUI.unitFrames) do
+					unitFrame:animateBuffs()
+				end
 			end
 		end
-		
-		
-				
-		-- update cause the unit unitFrames to ensure they are all up to date every frame
-		-- this isn't the best way of doing this but for now it will do
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			unitFrame:refresh()
-			unitFrame:tickBuffBars(Inspect.Time.Frame())
-		end
-		
-		
 	end
 end
 
 local function enterSecureMode()
-	--print("+++ entering combat (config disabled)")
+	debugPrint("+++ entering combat (config disabled)")
 	MinUI.secureMode = true
 end
 
 local function leaveSecureMode()
-	--print("--- leaving combat (config enabled)")
+	debugPrint("--- leaving combat (config enabled)")
 	MinUI.secureMode = false
-	--for unitName, unitFrame in pairs(MinUI.unitFrames) do
-	--	unitFrame:refresh()
-	--end
 end
-
-
---
--- I attempted to be smart, and not poll the unit's every frame, but ...
--- It's a bit of a waste of time since tab targetting doesnt give unitDetails, and events don't fire for 
--- target of target - making the entire excersize a waste of time
---
-
---
--- Refresh ToT
---
---[[
-local function refreshToT()
-	if(MinUI.unitFrames["player.target.target"])then
-		MinUI.unitFrames["player.target.target"]:refresh()
-		MinUI.unitFrames["player.target.target"]:resetBuffBars()
-	end
-end
-
---
--- Refresh Target
---
-local function refreshTarget()
-	if(MinUI.unitFrames["player.target"])then
-		MinUI.unitFrames["player.target"]:refresh()
-		MinUI.unitFrames["player.target"]:resetBuffBars()
-	end
-end
---
--- If our target changes, refresh the target/tot frames and resync buffs
---
-local function refreshTargets ( units )
-
-	MinUI.resyncBuffs = true
-	
-	--
-	-- Update Target/TOT
-	--
-	refreshTarget()
-	refreshToT()
-end
-
-
-
---
--- Update Unit's Health Values
---
-local function unitHealthChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("health changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateHealth()
-			end
-		end 
-	end
-	
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
---
--- Update Unit's Max Health Values
---
-local function unitHealthMaxChanged( units )
-	unitHealthChanged ( units )
-end
-
-local function unitManaChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("mana changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitManaMaxChanged( units )
-	unitManaChanged(units)
-end
-
-local function unitPowerChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("power changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitEnergyChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("energy changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitEnergyMaxChanged( units )
-	unitEnergyChanged (units)
-end
-
-local function unitComboChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("combo changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateComboPointsBar()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitComboUnitChanged( units )
-	unitComboChanged ( units )
-end
-
-local function unitChargeChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		--print("charge changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateChargeBar()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-]]
-
 
 -----------------------------------------------------------------------------------------------------------------------------
 --
@@ -704,47 +552,18 @@ end
 --
 -----------------------------------------------------------------------------------------------------------------------------
 local function startup()
+	--
 	-- We need our context to be restricted, so we can utilise mouse over macros
+	--
+	-- Eventually
+	--
 	--MinUI.context:SetSecureMode("restricted")
 	
-	local eventTable1 = Library.LibUnitChange.Register("player.target")
-	table.insert(eventTable1, {function() print "target changed" end, "MinUI", "testing lib unit change"})
-	
-	local eventTable2 = Library.LibUnitChange.Register("player.target.target")
-	table.insert(eventTable2, {function() print "target's target changed" end, "MinUI", "testing lib unit change"})
-	
-	local eventTable3 = Library.LibUnitChange.Register("focus")
-	table.insert(eventTable3, {function() print "focus changed" end, "MinUI", "testing lib unit change"})
-	
-	
 	--
-	-- event hooks
+	-- Event Hooks
 	--
 	
-	-- Target Changed
-	-- table.insert(Event.Ability.Target, {refreshTargets, "MinUI", "target changed"})
-	-- table.insert(Event.Ability.Target, {function () MinUI.resyncBuffs = true end, "MinUI", "target changed"})
-	
-	-- Buffs
-	table.insert(Event.Buff.Add, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-	table.insert(Event.Buff.Change, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-	table.insert(Event.Buff.Remove, {function () MinUI.resyncBuffs = true end, "MinUI", "refresh"})
-	
-	-- Unit Changes (So we don't have to poll for updates)
-	-- A bit of a waste of time since tab targetting doesnt give unitDetails, and these events don't fire for 
-	-- target of target
-	--[[
-	table.insert(Event.Unit.Detail.Health, {unitHealthChanged, "MinUI", "unit health changed"})
-	table.insert(Event.Unit.Detail.HealthMax, {unitHealthMaxChanged, "MinUI", "unit health max changed"})
-	table.insert(Event.Unit.Detail.Mana, {unitManaChanged, "MinUI", "unit mana changed"})
-	table.insert(Event.Unit.Detail.ManaMax, {unitManaMaxChanged, "MinUI", "unit mana max changed"})
-	table.insert(Event.Unit.Detail.Power, {unitPowerChanged, "MinUI", "unit power changed"})
-	table.insert(Event.Unit.Detail.Energy, {unitEnergyChanged, "MinUI", "unit energy changed"})
-	table.insert(Event.Unit.Detail.EnergyMax, {unitEnergyMaxChanged, "MinUI", "unit energy max changed"})
-	table.insert(Event.Unit.Detail.Combo, {unitComboChanged, "MinUI", "unit combo max changed"})
-	table.insert(Event.Unit.Detail.ComboUnit, {unitComboUnitChanged, "MinUI", "unit combo max changed"})
-	table.insert(Event.Unit.Detail.Charge, {unitChargeChanged, "MinUI", "unit charge max changed"})
-	]]
+	table.insert (Event.Addon.Load.Begin, {function () print("Loaded ["..MinUI.version.."]. Type /mui for help.") end, "MinUI", "loaded"})
 	
 	-- Handle User Customisation
 	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
@@ -753,10 +572,18 @@ local function startup()
 	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "entering combat/secure mode"})
 	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "leaving combat/secure mode"})
 	
+	--
+	-- A Buff Hath Changed - sucks that I have to use this :/
+	--
+	table.insert(Event.Buff.Add, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffAdd"})
+	table.insert(Event.Buff.Change, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffChange"})
+	table.insert(Event.Buff.Remove, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffRemove"})
+	
 	-- Main Loop Event
-	--createUnitFrames()
 	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
 end
 
 -- Start the UnitFrame
 startup()
+
+

@@ -21,7 +21,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.y = y
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
-	uFrame.visible = true
+	uFrame.visible = false
 	
 	-- buffbars
 	uFrame.buffs = nil
@@ -56,11 +56,40 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.highlightBar:SetVisible(uFrame.visible)
 	uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
-
+	-- debugPrint(unitName)
+	
+	--
 	-- Make the frame restricted such that we can ues mouesover macros on them
+	--
+	-- Eventually
+	--
 	--uFrame.frame:SetSecureMode("restricted")
 	--uFrame.frame:SetMouseoverUnit(uFrame.unitName)
-
+	
+	
+	--
+	-- Register UnitName Changes to be handled within the frame
+	--
+	uFrame.unitChangedEventTable = nil
+	uFrame.unitChangedEventTable = Library.LibUnitChange.Register(uFrame.unitName)
+	table.insert(uFrame.unitChangedEventTable, {function() uFrame:unitChanged() end, "MinUI", uFrame.unitName.."_unitChanged"})
+	
+	--
+	-- Unit Changes
+	--
+	-- XXX: For now dont bother checking if it's the correct frame because focus/and tot dont ever seem to appear in the UnitID
+	--
+	table.insert(Event.Unit.Detail.Health, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
+	table.insert(Event.Unit.Detail.HealthMax, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
+	table.insert(Event.Unit.Detail.Mana, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.ManaMax, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Power, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Energy, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.EnergyMax, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:updateChargeBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
+	
 	--
 	-- Mouse Interaction Code
 	--
@@ -140,6 +169,42 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 end
 
 --
+-- Animation Loop
+--
+function UnitFrame:animateBuffs( )
+	local curTime = Inspect.Time.Frame()
+	
+	--debugPrint(self.unitName, self.visible)
+	
+	--
+	-- Anything that needs updating, should get done here :-)
+	--
+	if ( self.visible ) then
+		--if(self.unitName == "player.target.target") then
+		
+		--end
+		-- tick buff bars
+		self:tickBuffBars( curTime )
+	end
+end
+
+--
+-- Unit Changed
+--
+function UnitFrame:unitChanged( )
+	debugPrint ("Unit Changed ", self.unitName )
+	--
+	-- Ensure the values on the bars update to the new target's details
+	--
+	self:refresh()
+	--
+	-- Ensure the buffsbars are reset then update
+	--
+	self:resetBuffBars()
+	self:updateBuffBars( )
+end
+
+--
 -- Set UFrame Background
 --
 -- Due to restricted mode we can't actually "hide" the frame itself using SetVisible, 
@@ -148,8 +213,15 @@ end
 --
 --
 function UnitFrame:setUFrameVisible (toggle)
+	debugPrint("setting ", self.unitName, " to visible ", toggle)
 	-- store visiblity
 	self.visible = toggle
+	self.frame:SetVisible(self.visible)
+		
+		
+	--
+	-- Secure Mode Workaround?
+	--
 	
 	-- if in secure mode we can't set things to invisible
 	--if(MinUI.secureMode)then -- for now, fuck it.
@@ -173,9 +245,6 @@ function UnitFrame:setUFrameVisible (toggle)
 		end]]
 	-- if not, we can :-)
 	--[[else]]
-	
-	self.frame:SetVisible(self.visible)
-	
 	-- dont forget to re-enable everything else :)
 	--[[if(self.visible)then
 		for _,barType in pairs(self.barsEnabled) do
@@ -209,24 +278,27 @@ end
 function UnitFrame:refresh ( )
 	local unitDetails = Inspect.Unit.Detail(self.unitName)
 	
-	--print("unitDetails, for ",self.unitName, " are ", unitDetails)
+	if(unitDetails)then
+		debugPrint("we have details for ", self.unitName)
+	end
 
+	--
+	-- Unit Details Weeeee
+	-- 
 	if(unitDetails) then
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
 		self:updateReactionColoring(unitDetails.relation)
-		self:refreshValues()
+		self:refreshBarValues()
 	else
 		self:setUFrameVisible(false)
-		--self:updateReactionColoring("none")
-		--self:refreshValues()
 	end
 end
 
 --
 -- Refresh the bar values
 --
-function UnitFrame:refreshValues()
+function UnitFrame:refreshBarValues()
 	--
 	-- refresh all of our bars
 	--
@@ -306,23 +378,27 @@ end
 --
 function UnitFrame:resetBuffBars()
 	if(self.buffs) then
-		self.buffs:resetBuffBars(time)
+		debugPrint("resetBuffBars buffs on ", self.unitName)
+		self.buffs:resetBuffBars(Inspect.Time.Frame())
 	end
 	if(self.debuffs)  then
-		self.debuffs:resetBuffBars(time)
+		debugPrint("resetBuffBars buffs on ", self.unitName)
+		self.debuffs:resetBuffBars(Inspect.Time.Frame())
 	end
 end
 
 --
 -- Refresh the buffs to update for new buffs/debuffs
 --
-function UnitFrame:refreshBuffBars(time)
+function UnitFrame:updateBuffBars( )
 	if (self.visible) then
 		if(self.buffs) then
-			self.buffs:update(time)
+			debugPrint("updateBuffBars buffs on ", self.unitName)
+			self.buffs:update(Inspect.Time.Frame())
 		end
 		if(self.debuffs)  then
-			self.debuffs:update(time)
+			debugPrint("updateBuffBars debuffs on ", self.unitName)
+			self.debuffs:update(Inspect.Time.Frame())
 		end
 	end
 end
@@ -354,10 +430,10 @@ function UnitFrame:updateComboPointsBar()
 			if ( MinUI.playerCalling == "rogue" ) then
 				if( unitDetails.comboUnit ) then
 					local unit = Inspect.Unit.Lookup(unitDetails.comboUnit)
-					--print("combo points are on ", unit, unitDetails.comboUnit)
+					------debugPrint("combo points are on ", unit, unitDetails.comboUnit)
 					if ( unit == "player.target" ) then
 						local points = unitDetails.combo
-						--print ( points ) 
+						------debugPrint ( points ) 
 						bar:updateComboPoints(points)
 					else
 						bar:updateComboPoints(0)
@@ -388,7 +464,8 @@ function UnitFrame:updateHealth( )
 			local health = unitDetails.health
 			-- guard against wierdness when zoning
 			if (health) then
-				local largeNumbers = false
+				local largeHealth = false
+				local largeHealthMax = false
 				local healthMax = unitDetails.healthMax
 				if (healthMax) then
 					local healthRatio = health/healthMax
@@ -397,18 +474,23 @@ function UnitFrame:updateHealth( )
 					-- Convert large numbers to small versions
 					if (health >= 10000) then
 						health = health/1000
-						largeNumbers = true
+						largeHealth = true
 					end
 					if (healthMax >= 10000) then
 						healthMax = healthMax/1000
-						largeNumbers = true
+						largeHealthMax = true
 					end
 					
 					local healthText = ""
-					if(largeNumbers)then
-						healthText = string.format("%sk / %sk", health, healthMax)
+					if ( largeHealth )then
+						healthText = string.format("%sk / ", health)
 					else
-						healthText = string.format("%s / %s", health, healthMax)
+						healthText = string.format("%s / ", health)
+					end
+					if( largeHealthMax ) then
+						healthText = healthText .. string.format("%sk", healthMax)
+					else
+						healthText = healthText .. string.format("%s", healthMax)
 					end
 					
 					local healthPercentText = string.format("(%s%%)", healthPercent)
@@ -448,7 +530,7 @@ function UnitFrame:updateChargeBar( )
 				local chargePercent = math.floor(chargeRatio * 100)
 				
 				local chargeText = string.format("%s/%s", charge,chargeMax)
-				--print(chargeText)
+				------debugPrint(chargeText)
 				bar:setUBarLeftText(chargeText)
 				bar:setUBarWidthRatio(chargeRatio)
 				bar:setUBarRightText("")
@@ -504,7 +586,8 @@ function UnitFrame:updateResources( )
 				local mana = unitDetails.mana
 				-- guard against wierdness when zoning
 				if (mana) then
-					local largeNumbers = false
+					local largeMana = false
+					local largeManaMax = false
 					local manaMax = unitDetails.manaMax
 					if (manaMax) then
 						local manaRatio = mana/manaMax
@@ -513,18 +596,23 @@ function UnitFrame:updateResources( )
 						-- Convert large numbers to small versions
 						if (mana >= 10000) then
 							mana = mana/1000
-							largeNumbers = true
+							largeMana = true
 						end
 						if (manaMax >= 10000) then
 							manaMax = manaMax/1000
-							largeNumbers = true
+							largeManaMax = true
 						end
 						
 						local manaText = ""
-						if(largeNumbers)then
-							manaText = string.format("%sk / %sk", mana, manaMax)
+						if ( largeMana )then
+							manaText = string.format("%sk / ", mana)
 						else
-							manaText = string.format("%s / %s", mana, manaMax)
+							manaText = string.format("%s / ", mana)
+						end
+						if( largeManaMax ) then
+							manaText = manaText .. string.format("%sk", manaMax)
+						else
+							manaText = manaText .. string.format("%s", manaMax)
 						end
 						
 						local manaPercentText = string.format("(%s%%)", manaPercent)
@@ -594,7 +682,7 @@ end
 --
 function UnitFrame:setUFrameCalling ( calling )
 	self.calling = calling
-	debugPrint("Set ", self.unitName, " to calling ", self.calling)
+	----debugPrint("Set ", self.unitName, " to calling ", self.calling)
 end
 
 --
@@ -734,7 +822,7 @@ end
 -- A charge bar for a Mage calling class
 --
 function UnitFrame:addChargeBar()
-	--print("Add charge Bar", self.unitName)
+	------debugPrint("Add charge Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
@@ -773,7 +861,7 @@ end
 -- Resource will be based on the Unit's Calling
 --
 function UnitFrame:addResourcesBar()
-	debugPrint("Add resources Bar", self.unitName)
+	----debugPrint("Add resources Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
@@ -828,7 +916,7 @@ end
 -- Add a bar to this UnitFrame
 --
 function UnitFrame:addUnitBar( barType, width, height, texture, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
-	debugPrint ("Adding Unit Bar", barType, " to ", self.unitName)
+	----debugPrint ("Adding Unit Bar", barType, " to ", self.unitName)
 
 	newBar = UnitBar.new( barType, width, height, texture, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	
@@ -841,3 +929,168 @@ end
 
 
 
+
+--
+-- I attempted to be smart, and not poll the unit's every frame, but ...
+-- It's a bit of a waste of time since tab targetting doesnt give unitDetails, and events don't fire for 
+-- target of target - making the entire excersize a waste of time
+--
+
+--
+-- Refresh ToT
+--
+--[[
+local function refreshToT()
+	if(MinUI.unitFrames["player.target.target"])then
+		MinUI.unitFrames["player.target.target"]:refresh()
+		MinUI.unitFrames["player.target.target"]:resetBuffBars()
+	end
+end
+
+--
+-- Refresh Target
+--
+local function refreshTarget()
+	if(MinUI.unitFrames["player.target"])then
+		MinUI.unitFrames["player.target"]:refresh()
+		MinUI.unitFrames["player.target"]:resetBuffBars()
+	end
+end
+--
+-- If our target changes, refresh the target/tot frames and resync buffs
+--
+local function refreshTargets ( units )
+
+	MinUI.resyncBuffs = true
+	
+	--
+	-- Update Target/TOT
+	--
+	refreshTarget()
+	refreshToT()
+end
+
+
+
+--
+-- Update Unit's Health Values
+--
+local function unitHealthChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("health changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateHealth()
+			end
+		end 
+	end
+	
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+
+--
+-- Update Unit's Max Health Values
+--
+local function unitHealthMaxChanged( units )
+	unitHealthChanged ( units )
+end
+
+local function unitManaChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("mana changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+
+local function unitManaMaxChanged( units )
+	unitManaChanged(units)
+end
+
+local function unitPowerChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("power changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+
+local function unitEnergyChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("energy changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateResources()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+
+local function unitEnergyMaxChanged( units )
+	unitEnergyChanged (units)
+end
+
+local function unitComboChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("combo changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateComboPointsBar()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+
+local function unitComboUnitChanged( units )
+	unitComboChanged ( units )
+end
+
+local function unitChargeChanged( units )
+	for unitID,_ in pairs(units) do
+		local unitChanged = Inspect.Unit.Lookup (unitID)
+		------debugPrint("charge changed", unitChanged)
+		for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			if(unitName == unitChanged) then
+				unitFrame:updateChargeBar()
+			end
+		end 
+	end
+	
+		
+	-- Target of Target never has these events fired for them
+	-- So we need to refresh it manually
+	refreshToT()
+end
+]]
