@@ -44,7 +44,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetPoint("TOPLEFT", parentItem, "TOPLEFT", x, y ) -- frames from top left of scren
 	uFrame.frame:SetWidth(uFrame.width)
 	uFrame.frame:SetHeight(uFrame.height)
-	uFrame.frame:SetLayer(-1)
+	uFrame.frame:SetLayer(0)
 	uFrame.frame:SetVisible(uFrame.visible)
 	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
 	
@@ -52,7 +52,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.highlightBar:SetPoint("TOPCENTER", uFrame.frame, "BOTTOMCENTER", 0, 0 )
 	uFrame.highlightBar:SetWidth(uFrame.width)
 	uFrame.highlightBar:SetHeight(MinUIConfig.frames[uFrame.unitName].itemOffset)
-	uFrame.highlightBar:SetLayer(-1)
+	uFrame.highlightBar:SetLayer(0)
 	uFrame.highlightBar:SetVisible(uFrame.visible)
 	uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
@@ -649,11 +649,11 @@ end
 --
 function UnitFrame:updateResourcesBarColor()
 	if (self.calling == "rogue") then
-		self.bars["resources"]:setUBarColor( 0.7, 0, 0.7)
+		self.bars["resources"]:setUBarColor( 1.0, 0, 1.0)
 	elseif (self.calling == "warrior") then
-		self.bars["resources"]:setUBarColor( 0.7, 0.5, 0 )
+		self.bars["resources"]:setUBarColor( 1.0, 0.5, 0 )
 	elseif (self.calling == "mage" or self.calling == "cleric") then
-		self.bars["resources"]:setUBarColor( 0, 0.2, 0.7 )
+		self.bars["resources"]:setUBarColor( 0, 0.5, 1.0 )
 	else
 		self.bars["resources"]:setUBarColorAlpha( 0, 0, 0, 0)
 	end

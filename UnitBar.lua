@@ -47,7 +47,7 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	
 	uBar.curBarWidth = width
 
-	-- Create Bar
+	-- Create bar background
 	uBar.bar = UI.CreateFrame("Frame", name, parentItem)
 	uBar.bar:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.bar:SetWidth(uBar.width)
@@ -56,20 +56,30 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	uBar.bar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	uBar.bar:SetHeight(uBar.height)
 	
-	-- Create the bit that resizes
+	-- Create textured component that resizes
+	uBar.tex = UI.CreateFrame("Texture", name.."_text", parentItem)
+	uBar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+	uBar.tex:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
+	uBar.tex:SetWidth(uBar.width)
+	uBar.tex:SetLayer(2)
+	uBar.tex:SetVisible(uBar.enabled)
+	uBar.tex:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	uBar.tex:SetHeight(uBar.height)
+	
+	-- Create solid component that resizes
 	uBar.solid = UI.CreateFrame("Frame", name.."_solid", parentItem)
 	uBar.solid:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.solid:SetWidth(uBar.width)
-	uBar.solid:SetLayer(-1)
+	uBar.solid:SetLayer(3)
 	uBar.solid:SetVisible(uBar.enabled)
 	uBar.solid:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	uBar.solid:SetHeight(uBar.height)
 	 
 	 
 	-- create text 1
-	uBar.leftText = UI.CreateFrame("Text", name .. "_text1", uBar.bar )
+	uBar.leftText = UI.CreateFrame("Text", name .. "_text1", parentItem )
 	uBar.leftText:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 0, 0 )
-	uBar.leftText:SetLayer(3)
+	uBar.leftText:SetLayer(5)
 	uBar.leftText:SetVisible(true)
 	uBar.leftText:SetFontSize(fontSize)
 	uBar.leftText:SetText("???")
@@ -81,9 +91,9 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	end
 	
 	-- create text shadow 1
-	uBar.leftTextShadow = UI.CreateFrame("Text", name .. "_textshadow1", uBar.bar )
+	uBar.leftTextShadow = UI.CreateFrame("Text", name .. "_textshadow1", parentItem )
 	uBar.leftTextShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1, 2 )
-	uBar.leftTextShadow:SetLayer(2)
+	uBar.leftTextShadow:SetLayer(4)
 	uBar.leftTextShadow:SetVisible(true)
 	uBar.leftTextShadow:SetFontSize(fontSize)
 	uBar.leftTextShadow:SetFontColor(0,0,0,1)
@@ -95,9 +105,9 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	end
 	
 	-- create text 2
-	uBar.rightText = UI.CreateFrame("Text", name .. "_text2", uBar.bar )
+	uBar.rightText = UI.CreateFrame("Text", name .. "_text2", parentItem )
 	uBar.rightText:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 0, 0 )
-	uBar.rightText:SetLayer(3)
+	uBar.rightText:SetLayer(5)
 	uBar.rightText:SetVisible(true)
 	uBar.rightText:SetFontSize(fontSize)
 	uBar.rightText:SetText("???")
@@ -109,9 +119,9 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	end
 	
 	-- create text shadow 2
-	uBar.rightTextShadow = UI.CreateFrame("Text", name .. "_textshadow2", uBar.bar )
+	uBar.rightTextShadow = UI.CreateFrame("Text", name .. "_textshadow2", parentItem )
 	uBar.rightTextShadow:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 1, 2 )
-	uBar.rightTextShadow:SetLayer(2)
+	uBar.rightTextShadow:SetLayer(4)
 	uBar.rightTextShadow:SetVisible(true)
 	uBar.rightTextShadow:SetFontSize(fontSize)
 	uBar.rightTextShadow:SetFontColor(0,0,0,1)
@@ -138,8 +148,8 @@ end
 -- Set UBar Color
 --
 function UnitBar:setUBarColor( r,g,b )
-	self.bar:SetBackgroundColor(r,g,b, 0.3)
-	self.solid:SetBackgroundColor(r,g,b, 0.8)
+	self.bar:SetBackgroundColor(r,g,b, 0.2)
+	self.solid:SetBackgroundColor(r,g,b, 0.6)
 end
 
 function UnitBar:setUBarColorAlpha(r,g,b,a)
@@ -239,4 +249,5 @@ end
 --
 function UnitBar:setUBarWidthRatio( ratio )
 	self.solid:SetWidth(self.width * ratio)
+	self.tex:SetWidth(self.width * ratio)
 end

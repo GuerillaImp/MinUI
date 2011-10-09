@@ -92,6 +92,11 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.solid = UI.CreateFrame("Frame", "Solid", bar)
 		bar.solid:SetLayer(-1)  -- Put it behind every other element.
 		
+		bar.tex = UI.CreateFrame("Texture", "Texture", bar)
+		bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+		bar.tex:SetLayer(-2)
+
+		
 		bar.text:SetText("???")
 		bar.text:SetFontSize(12)
 		bar.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
@@ -114,6 +119,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 		
 		bar:SetHeight(bar.text:GetFullHeight())
 		bar.solid:SetHeight(bar.text:GetFullHeight())
+		bar.tex:SetHeight(bar.text:GetFullHeight())
 
 		bar.icon:SetPoint("TOPLEFT", bar, "TOPLEFT") -- The icon is pinned to the top-left corner of the bar.
 		bar.icon:SetPoint("BOTTOM", bar, "BOTTOM") -- Vertically, it always fills the entire bar.
@@ -130,6 +136,8 @@ function UnitBuffBars:addBuffBar(buff, time)
 		-- Set the solid bar to fill the entire buff bar.
 		bar.solid:SetPoint("TOPLEFT", bar, "TOPLEFT")
 		bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
+		bar.tex:SetPoint("TOPLEFT", bar, "TOPLEFT")
+		bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
 		bar:SetWidth( MinUIConfig.frames[unitName].barWidth + MinUIConfig.frames[unitName].itemOffset )
 		
 		--
@@ -138,12 +146,12 @@ function UnitBuffBars:addBuffBar(buff, time)
 		function bar:SetBuff(buff, time)
 			-- Set Debuff Color
 			if buff.debuff then
-				self:SetBackgroundColor(0.5, 0.0, 0.0, 0.3)
-				self.solid:SetBackgroundColor(0.5, 0.0, 0.0, 0.6)
+				self:SetBackgroundColor(1.0, 0.0, 0.0, 0.2)
+				self.solid:SetBackgroundColor(1.0, 0.0, 0.0, 0.6)
 			-- Set Buff Color
 			else
-				self:SetBackgroundColor(0.2, 0.2, 0.6, 0.3)
-				self.solid:SetBackgroundColor(0.2, 0.2, 0.6,0.6)
+				self:SetBackgroundColor(0.4, 0.4, 1.0, 0.2)
+				self.solid:SetBackgroundColor(0.4, 0.4,1.0,0.6)
 			end
 		  
 			-- if we are showing all buffs/debuffs distinguish player buffs
@@ -173,7 +181,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 			self.timerShadow:SetHeight(self.text:GetFullHeight())
 			self:SetHeight(self.text:GetFullHeight())
 			self.solid:SetHeight(self.text:GetFullHeight())
-			
+			self.tex:SetHeight(self.text:GetFullHeight())
 			
 		  
 		  -- Re-square and set the icon
@@ -198,6 +206,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 			
 			-- Display everything we might have hidden.
 			self.solid:SetVisible(true)
+			self.tex:SetVisible(true)
 			self.timer:SetVisible(true)
 			self.timerShadow:SetVisible(true)
 			
@@ -207,6 +216,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 			
 			-- This is a permanent buff without a timer, so don't show any of that.
 			self.solid:SetVisible(false)
+			self.tex:SetVisible(false)
 			self.timer:SetVisible(false)
 			self.timer:SetWidth(0)
 			self.timerShadow:SetVisible(false)
@@ -229,6 +239,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 					self.timerShadow:SetVisible(false)
 				else
 				  -- Update our timer.
+					self.tex:SetPoint("RIGHT", bar, remaining / self.duration, nil)
 					self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
 	
 				  -- Generate the timer text string.
