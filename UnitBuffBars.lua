@@ -23,6 +23,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	uBBars.parentItem = parentItem
 	uBBars.offsetX = offsetX
 	uBBars.offsetY = offsetY
+	uBBars.fontSize = MinUIConfig.frames[unitName].buffFontSize
 
 	-- buff values
 	uBBars.direction = direction
@@ -30,6 +31,11 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	uBBars.buffType = buffType
 	uBBars.visibilityOptions = visibilityOptions
 	uBBars.lengthThreshold = lengthThreshold
+		
+	-- scale font size if we have a scale
+	if ( MinUIConfig.frames[uBBars.unitName].scale ) then
+		uBBars.fontSize = uBBars.fontSize * MinUIConfig.frames[uBBars.unitName].scale
+	end
 	
 	-- store buffs
 	uBBars.activeBuffBars = {}
@@ -58,6 +64,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 	
 	local unitName = self.unitName
 	local width = self.width
+	local fontSize = self.fontSize
 	
 	-- if no bar exist in our pool of bars then create one
 	if not bar then
@@ -93,13 +100,18 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.solid:SetLayer(-1)  -- Put it behind every other element.
 		
 		bar.tex = UI.CreateFrame("Texture", "Texture", bar)
-		bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+		if ( MinUIConfig.barTexture ) then
+			bar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
+		else
+			bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+		end
+	
 		bar.tex:SetLayer(-2)
 
 		
 		bar.text:SetText("???")
-		bar.text:SetFontSize(12)
-		bar.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
+		bar.text:SetFontSize(fontSize)
+		bar.textShadow:SetFontSize(fontSize)
 		bar.textShadow:SetFontColor(0,0,0,1)
 
 		-- Set Fonts
@@ -113,7 +125,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.text:SetHeight(bar.text:GetFullHeight())
 		bar.textShadow:SetHeight(bar.text:GetFullHeight())
 		
-		bar.timerShadow:SetFontSize(12)
+		bar.timerShadow:SetFontSize(fontSize)
 		bar.timerShadow:SetFontColor(0,0,0,1)
 		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
 		
@@ -138,7 +150,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
 		bar.tex:SetPoint("TOPLEFT", bar, "TOPLEFT")
 		bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
-		bar:SetWidth( MinUIConfig.frames[unitName].barWidth + MinUIConfig.frames[unitName].itemOffset )
+		bar:SetWidth( self.width + MinUIConfig.frames[unitName].itemOffset )
 		
 		--
 		-- Set Buff - requires a buff and a timestamp
@@ -157,21 +169,21 @@ function UnitBuffBars:addBuffBar(buff, time)
 			-- if we are showing all buffs/debuffs distinguish player buffs
 			if(self.visibilityOptions == "all")then
 				if (buff.caster == Inspect.Unit.Lookup("player")) then
-					self.text:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-					self.timer:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-					self.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-					self.timerShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
+					self.text:SetFontSize(fontSize)
+					self.timer:SetFontSize(fontSize)
+					self.textShadow:SetFontSize(fontSize)
+					self.timerShadow:SetFontSize(fontSize)
 				else
-					self.text:SetFontSize(MinUIConfig.frames[unitName].buffFontSize - 2)
-					self.timer:SetFontSize(MinUIConfig.frames[unitName].buffFontSize - 2)
-					self.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize - 2)
-					self.timerShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize - 2)
+					self.text:SetFontSize(fontSize - 2)
+					self.timer:SetFontSize(fontSize - 2)
+					self.textShadow:SetFontSize(fontSize - 2)
+					self.timerShadow:SetFontSize(fontSize - 2)
 				end
 			else
-				self.text:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-				self.timer:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-				self.textShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
-				self.timerShadow:SetFontSize(MinUIConfig.frames[unitName].buffFontSize)
+				self.text:SetFontSize(fontSize)
+				self.timer:SetFontSize(fontSize)
+				self.textShadow:SetFontSize(fontSize)
+				self.timerShadow:SetFontSize(fontSize)
 			end
 			
 			-- Set Heights

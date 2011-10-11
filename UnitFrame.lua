@@ -22,6 +22,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
 	uFrame.visible = false
+	uFrame.itemOffset = MinUIConfig.frames[uFrame.unitName].itemOffset
 	
 	-- buffbars
 	uFrame.buffs = nil
@@ -46,7 +47,13 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetHeight(uFrame.height)
 	uFrame.frame:SetLayer(0)
 	uFrame.frame:SetVisible(uFrame.visible)
-	uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
+	
+	local configColor = MinUIConfig.backgroundColor
+	if(configColor)then
+		uFrame.frame:SetBackgroundColor(configColor.r,configColor.g,configColor.b,configColor.a)
+	else
+		uFrame.frame:SetBackgroundColor(0,0,0,0.3)
+	end
 	
 	uFrame.highlightBar = UI.CreateFrame("Frame", "highlightbar_"..uFrame.unitName, uFrame.frame )
 	uFrame.highlightBar:SetPoint("TOPCENTER", uFrame.frame, "BOTTOMCENTER", 0, 0 )
@@ -55,6 +62,42 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.highlightBar:SetLayer(0)
 	uFrame.highlightBar:SetVisible(uFrame.visible)
 	uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	
+	--
+	-- Icons for Role - XXX: Replace this with one of the new anchors mayhap
+	--
+	uFrame.bottomRightIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
+	uFrame.bottomRightIcon:SetPoint("BOTTOMRIGHT", uFrame.frame, "BOTTOMRIGHT", -uFrame.itemOffset,-uFrame.itemOffset) -- top right icon
+	uFrame.bottomRightIcon:SetWidth(18)
+	uFrame.bottomRightIcon:SetHeight(18)
+	uFrame.bottomRightIcon:SetLayer(1)
+	uFrame.bottomRightIcon:SetVisible(true)
+	
+	uFrame.bottomLeftIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomLeftIcon", uFrame.frame)
+	uFrame.bottomLeftIcon:SetPoint("BOTTOMLEFT",  uFrame.frame, "BOTTOMLEFT", uFrame.itemOffset, -uFrame.itemOffset) -- top left icon
+	uFrame.bottomLeftIcon:SetWidth(18)
+	uFrame.bottomLeftIcon:SetHeight(18)
+	uFrame.bottomLeftIcon:SetLayer(1)
+	uFrame.bottomLeftIcon:SetVisible(false)
+	
+	--
+	-- Anchors for Items, want to add more anchor points for things
+	--
+	uFrame.belowCenterItem = UI.CreateFrame("Frame", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
+	uFrame.belowCenterItem:SetPoint("TOPCENTER",  uFrame.frame, "BOTTOMCENTER", 0, uFrame.itemOffset) 
+	uFrame.belowCenterItem:SetWidth(20)
+	uFrame.belowCenterItem:SetHeight(20)
+	uFrame.belowCenterItem:SetLayer(1)
+	uFrame.belowCenterItem:SetBackgroundColor(0,0,0,0.3)
+	uFrame.belowCenterItem:SetVisible(false) 
+	
+	uFrame.aboveCenterItem = UI.CreateFrame("Frame", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
+	uFrame.aboveCenterItem:SetPoint("BOTTOMCENTER",  uFrame.frame, "TOPCENTER", 0, -uFrame.itemOffset) 
+	uFrame.aboveCenterItem:SetWidth(20)
+	uFrame.aboveCenterItem:SetHeight(20)
+	uFrame.aboveCenterItem:SetLayer(1)
+	uFrame.aboveCenterItem:SetBackgroundColor(0,0,0,0.3)
+	uFrame.aboveCenterItem:SetVisible(false)
 	
 	-- debugPrint(unitName)
 	
@@ -65,8 +108,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	--
 	--uFrame.frame:SetSecureMode("restricted")
 	--uFrame.frame:SetMouseoverUnit(uFrame.unitName)
-	
-	
+
 	--
 	-- Register UnitName Changes to be handled within the frame
 	--
@@ -78,6 +120,8 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	-- Unit Changes
 	--
 	-- XXX: For now dont bother checking if it's the correct frame because focus/and tot dont ever seem to appear in the UnitID
+	-- 
+	-- But when they do, this will make the frames more efficient
 	--
 	table.insert(Event.Unit.Detail.Health, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
 	table.insert(Event.Unit.Detail.HealthMax, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
@@ -89,6 +133,15 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
 	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
 	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:updateChargeBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
+	
+	-- text items that may have updated
+	table.insert(Event.Unit.Detail.Planar, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
+	table.insert(Event.Unit.Detail.Vitality, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
+	table.insert(Event.Unit.Detail.Level, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
+	table.insert(Event.Unit.Detail.Guild, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
+	
+	-- things that effect icons
+	table.insert(Event.Unit.Detail.Role, {function ( unitIDs ) uFrame:updateIcons( unitIDs ) end, "MinUI", uFrame.unitName.."_updateIcons"})
 	
 	--
 	-- Mouse Interaction Code
@@ -173,16 +226,10 @@ end
 --
 function UnitFrame:animateBuffs( )
 	local curTime = Inspect.Time.Frame()
-	
-	--debugPrint(self.unitName, self.visible)
-	
 	--
 	-- Anything that needs updating, should get done here :-)
 	--
 	if ( self.visible ) then
-		--if(self.unitName == "player.target.target") then
-		
-		--end
 		-- tick buff bars
 		self:tickBuffBars( curTime )
 	end
@@ -201,7 +248,35 @@ function UnitFrame:unitChanged( )
 	-- Ensure the buffsbars are reset then update
 	--
 	self:resetBuffBars()
-	self:updateBuffBars( )
+	self:updateBuffBars( )	
+end
+
+--
+-- Update the UnitFrame's icons
+--
+function UnitFrame:updateIcons()
+
+	local unitDetails = Inspect.Unit.Detail(self.unitName)
+	if(unitDetails)then
+		local role = unitDetails.role
+		if(role)then
+			self.bottomRightIcon:SetVisible(true)
+			if(role=="dps")then
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/dps.tga")
+			elseif(role=="support")then
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/support.tga")
+			elseif(role=="heal")then
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/heals.tga")
+			elseif(role=="tank")then
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/tank.tga")
+			else
+				self.bottomRightIcon:SetVisible(false)
+			end
+		else
+			--print("no role")
+			self.bottomRightIcon:SetVisible(false)
+		end	
+	end
 end
 
 --
@@ -217,8 +292,7 @@ function UnitFrame:setUFrameVisible (toggle)
 	-- store visiblity
 	self.visible = toggle
 	self.frame:SetVisible(self.visible)
-		
-		
+	
 	--
 	-- Secure Mode Workaround?
 	--
@@ -283,13 +357,14 @@ function UnitFrame:refresh ( )
 	end
 
 	--
-	-- Unit Details Weeeee
+	-- Unit Details
 	-- 
 	if(unitDetails) then
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
 		self:updateReactionColoring(unitDetails.relation)
 		self:refreshBarValues()
+		self:updateIcons()
 	else
 		self:setUFrameVisible(false)
 	end
@@ -314,7 +389,7 @@ function UnitFrame:refreshBarValues()
 			self:updateComboPointsBar()
 		end
 		if(barType == "text") then
-			self.bars["text"]:updateTextItems()
+			self:updateUnitTextBar()
 		end
 		if(barType == "charge") then
 			self:updateChargeBar()
@@ -328,7 +403,6 @@ end
 function UnitFrame:updateReactionColoring( relation )
 	-- Set Reaction Coloring of Target/etc but not player
 	if not ( self.unitName == "player" ) then
-		
 		-- Colour the unit text background based on reaction (if one exists)
 		if (self.bars["text"])then
 			if ( relation == "friendly" ) then
@@ -354,8 +428,16 @@ end
 --
 function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location )
 	local bbars = nil
+	
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
-
+	
+	--print("pre scale buff width", barWidth)
+	-- if this unit has a scale value
+	if(MinUIConfig.frames[self.unitName].scale)then
+		barWidth = barWidth * MinUIConfig.frames[self.unitName].scale
+	end
+	--print("post scale buff width", barWidth)
+	
 	-- create bar in correct location
 	if( location == "above") then
 		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
@@ -414,6 +496,17 @@ function UnitFrame:tickBuffBars(time)
 		if(self.debuffs)  then
 			self.debuffs:tickBars(time)
 		end
+	end
+end
+
+--
+-- Update the Unit's Text Values
+--
+function UnitFrame:updateUnitTextBar()
+	local bar = self.bars["text"]
+	-- if this frame has a health bar
+	if (bar) then
+		bar:updateTextItems()
 	end
 end
 
@@ -768,6 +861,12 @@ function UnitFrame:addUnitTextBar()
 	local fontSize = MinUIConfig.frames[self.unitName].unitTextFontSize
 	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
 
+	-- if this unit has a scale value
+	if(MinUIConfig.frames[self.unitName].scale)then
+		barWidth = barWidth * MinUIConfig.frames[self.unitName].scale
+		fontSize = fontSize * MinUIConfig.frames[self.unitName].scale
+	end
+	
 	-- we have an anchor point
 	if(self.nextAnchor) then
 		-- add unit text bar
@@ -795,7 +894,7 @@ function UnitFrame:addHealthBar()
 	local barHeight = MinUIConfig.frames[self.unitName].barHeight
 	local fontSize = MinUIConfig.frames[self.unitName].barFontSize
 	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
-
+	
 	-- we have an anchor point
 	if(self.nextAnchor) then
 		-- add health bar
@@ -829,7 +928,7 @@ function UnitFrame:addChargeBar()
 	local barHeight = MinUIConfig.frames[self.unitName].mageChargeBarHeight
 	local fontSize = MinUIConfig.frames[self.unitName].mageChargeFontSize
 	local itemOffset = MinUIConfig.frames[self.unitName].itemOffset
-	
+
 	if(self.nextAnchor) then
 		-- add resources bar
 		self:addUnitBar( "charge", barWidth, barHeight, fontSize, "TOPLEFT", "BOTTOMLEFT", self.nextAnchor, 0, itemOffset)
@@ -914,11 +1013,20 @@ end
 
 --
 -- Add a bar to this UnitFrame
---
-function UnitFrame:addUnitBar( barType, width, height, texture, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
+--                             
+function UnitFrame:addUnitBar( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
 	----debugPrint ("Adding Unit Bar", barType, " to ", self.unitName)
 
-	newBar = UnitBar.new( barType, width, height, texture, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
+	--print ("pre scale", width,height,fontSize)
+	-- if this unit has a scale value
+	if(MinUIConfig.frames[self.unitName].scale)then
+		width = width * MinUIConfig.frames[self.unitName].scale
+		height = height * MinUIConfig.frames[self.unitName].scale
+		fontSize = fontSize * MinUIConfig.frames[self.unitName].scale
+	end
+	--print ("post scale", width,height,fontSize)
+
+	newBar = UnitBar.new( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	
 	-- store bar in unit frame
 	self.bars[barType] = newBar

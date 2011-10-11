@@ -20,13 +20,20 @@ local mageChargeFontSizeDefault = 10
 MinUIConfigDefaults = {
 	-- Frames Locked
 	unitFramesLocked = true,
+	-- Global Text Font
 	globalTextFont = "arial_round",
+	-- Global Texture
+	barTexture = "Aluminium",
+	-- Background Color
+	backgroundColor = {r=0,g=0,b=0,a=0.3},
+	
 	-- Frame Settings
 	frames = {
 		["player"] =
 		{ 
 			x = 600, -- x location 
-			y = 500, -- y location 
+			y = 500, -- y location
+			scale = 1.0, -- frame scale
 			frameEnabled = true, -- determines if the frame is created on loading
 			-- default sizes
 			barWidth = barWidthDefault, -- the width of the bars 
@@ -56,6 +63,7 @@ MinUIConfigDefaults = {
 		["player.target"] = {
 			x = 1100,
 			y = 500,
+			scale = 1.0,
 			frameEnabled = true,
 			-- default sizes
 			barWidth = barWidthDefault,
@@ -85,6 +93,7 @@ MinUIConfigDefaults = {
 		["player.target.target"] = {
 			x = 1400,
 			y = 500,
+			scale = 1.0, 
 			frameEnabled = true,
 			-- default sizes
 			barWidth = barWidthDefault,
@@ -114,6 +123,7 @@ MinUIConfigDefaults = {
 		["focus"] = {
 			x = 1400,
 			y = 600,
+			scale = 1.0, 
 			frameEnabled = true,
 			-- default sizes
 			barWidth = barWidthDefault,
@@ -143,6 +153,7 @@ MinUIConfigDefaults = {
 		["player.pet"] = {
 			x = 300,
 			y = 500,
+			scale = 1.0,
 			frameEnabled = true,
 			-- default sizes
 			barWidth = barWidthDefault,
@@ -179,7 +190,7 @@ MinUIConfig = MinUIConfigDefaults
 -- lock frames
 --
 function lockFrames()
-	print("Frames locked")
+	debugPrint("Frames locked")
 	MinUIConfig.unitFramesLocked = true
 end
 
@@ -187,7 +198,7 @@ end
 -- unlock frames
 --
 function unlockFrames()
-	print("Frames unlocked")
+	debugPrint("Frames unlocked")
 	MinUIConfig.unitFramesLocked = false
 end
 
@@ -195,8 +206,30 @@ end
 -- reset everything to default
 --
 function reset()
-	print("Restoring factory default settings ;)")
+	debugPrint("Restoring factory default settings ;)")
 	MinUIConfig = MinUIConfigDefaults
+end
+
+function showGlobalSettings()
+
+	debugPrint ("*** global settings")
+	
+	debugPrint ("unitFramesLocked? ", MinUIConfig.unitFramesLocked)
+	if(MinUIConfig.backgroundColor)then
+		debugPrint ("globalTextFont: ", MinUIConfig.globalTextFont)
+	else
+		debugPrint ("globalTextFont: Not Set")
+	end
+	if(MinUIConfig.backgroundColor)then
+		debugPrint ("barTexture: ", MinUIConfig.barTexture)
+	else
+		debugPrint ("barTexture: Not Set")
+	end
+	if(MinUIConfig.backgroundColor)then
+		debugPrint ("backgroundColor: ", MinUIConfig.backgroundColor.r,MinUIConfig.backgroundColor.g,MinUIConfig.backgroundColor.b,MinUIConfig.backgroundColor.a)
+	else
+		debugPrint ("backgroundColor: Not Set")
+	end
 end
 
 --
@@ -204,31 +237,32 @@ end
 --
 function showCurrentSettings(unitFrame)
 	if(MinUIConfig.frames[unitFrame]) then
-		print("*** Settings for ", unitFrame)
-		print("x: ", MinUIConfig.frames[unitFrame].x)
-		print("y: ", MinUIConfig.frames[unitFrame].y)
-		print("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
-		print("enabled?: ", MinUIConfig.frames[unitFrame].frameEnabled)
-		print("barWidth: ", MinUIConfig.frames[unitFrame].barWidth)
-		print("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
-		print("comboPointsBarHeight: ", MinUIConfig.frames[unitFrame].comboPointsBarHeight)
-		print("mageChargeBarHeight: ", MinUIConfig.frames[unitFrame].mageChargeBarHeight)
+		debugPrint("*** Settings for ", unitFrame)
+		debugPrint("x: ", MinUIConfig.frames[unitFrame].x)
+		debugPrint("y: ", MinUIConfig.frames[unitFrame].y)
+		debugPrint("scale: ", MinUIConfig.frames[unitFrame].scale)
+		debugPrint("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
+		debugPrint("enabled?: ", MinUIConfig.frames[unitFrame].frameEnabled)
+		debugPrint("barWidth: ", MinUIConfig.frames[unitFrame].barWidth)
+		debugPrint("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
+		debugPrint("comboPointsBarHeight: ", MinUIConfig.frames[unitFrame].comboPointsBarHeight)
+		debugPrint("mageChargeBarHeight: ", MinUIConfig.frames[unitFrame].mageChargeBarHeight)
 
 		for position, bar in pairs(MinUIConfig.frames[unitFrame].bars) do
-			print ("Bar ", bar, " enabled in position ", position)
+			debugPrint ("Bar ", bar, " enabled in position ", position)
 		end		
 		
 		for _, text in pairs(MinUIConfig.frames[unitFrame].texts) do
-			print("Unit Text ", text, " enabled")
+			debugPrint("Unit Text ", text, " enabled")
 		end
-		print("unitTextPosition: ", MinUIConfig.frames[unitFrame].unitTextPosition)
+		debugPrint("unitTextPosition: ", MinUIConfig.frames[unitFrame].unitTextPosition)
 		
-		print("buffLocation: ", MinUIConfig.frames[unitFrame].buffLocation)
-		print("buffVisibilityOptions: ", MinUIConfig.frames[unitFrame].buffVisibilityOptions)
-		print("debuffVisibilityOptions: ", MinUIConfig.frames[unitFrame].debuffVisibilityOptions)
-		print("buffThreshold: ", MinUIConfig.frames[unitFrame].buffThreshold)
-		print("debuffThreshold: ", MinUIConfig.frames[unitFrame].debuffThreshold)
+		debugPrint("buffLocation: ", MinUIConfig.frames[unitFrame].buffLocation)
+		debugPrint("buffVisibilityOptions: ", MinUIConfig.frames[unitFrame].buffVisibilityOptions)
+		debugPrint("debuffVisibilityOptions: ", MinUIConfig.frames[unitFrame].debuffVisibilityOptions)
+		debugPrint("buffThreshold: ", MinUIConfig.frames[unitFrame].buffThreshold)
+		debugPrint("debuffThreshold: ", MinUIConfig.frames[unitFrame].debuffThreshold)
 	else
-		print "??? unknown frame name"
+		debugPrint "??? unknown frame name"
 	end
 end

@@ -68,7 +68,7 @@ local function printHelpText()
 	print("\'/mui buffThreshold [frame] [number]\' set the time threshold of the buffs on the frame.")
 	print("\'/mui debuffThreshold [frame] [number]\' set the time threshold of the debuffs on the frame.")
 	print("---")
-	print("Allowed Bars: health,resources,warriorComboPointsBar,rogueComboPointsBar,charge,text")
+	print("Allowed Bars: health,resources,warriorComboPoints,rogueComboPoints,charge,text")
 	print("Allowed Texts: name,level,guild,vitality,planar")
 	print("\'/mui bars [frame] [comma,separated,bar,list]\' set the bars shown on the frame to those in the list.")
 	print("\'/mui texts [frame] [comma,separated,text,list]\' set the texts shown on the frame \'s unit text bar to those in the list.")
@@ -114,7 +114,7 @@ local function muiCommandInterface(commandline)
 			-- Multi Token Commands
 			--
 			-- enable, disable, barWidth, barHeight, ... (one for each of the MinUIConfig items)
-			elseif(	token == "enable" or token == "disable" or token == "barWidth" or token == "barHeight" or token == "barFontSize" 
+			elseif(	token == "enable" or token == "disable" or token == "backgroundColor"  or token == "barTexture" or token == "barWidth" or token == "barHeight" or token == "barFontSize" or token == "scale"
 					or token == "buffFontSize" or token == "unitTextFontSize" or token == "comboPointsBarHeight" or token == "mageChargeBarHeight" 
 					or token == "mageChargeFontSize" or token == "itemOffset" or token == "bars" or token == "texts" 
 					or token == "buffsEnabled" or token == "debuffsEnabled" or token == "buffLocation" or token == "debuffLocation"
@@ -139,6 +139,41 @@ local function muiCommandInterface(commandline)
 					MinUIConfig.globalTextFont = token
 					refreshRequired = true
 				end
+			-- Set Global Texture 
+			elseif (command == "barTexture") then
+				if(token)then
+					print("Setting bar texture to ", token)
+					MinUIConfig.barTexture = token
+					refreshRequired = true
+				end
+			-- Set Background Color
+			elseif(command == "backgroundColor")then
+				local backgroundColor = {r=0,g=0,b=0,a=0}
+				local index = 1
+				if(token)then
+					for color in string.gmatch(token, "[^%s,]+") do
+						local value = tonumber(color)
+						if ( value ) then
+							if ( value >= 0 ) then
+								if(index == 1)then
+									backgroundColor.r = value
+								elseif(index == 2)then
+									backgroundColor.g = value
+								elseif(index == 3)then
+									backgroundColor.b = value
+								elseif(index == 4)then
+									backgroundColor.a = value
+								end
+							end
+						end
+						index = index+1
+					end
+					
+					-- sanity check teh value
+					print("Setting background color values to, ", backgroundColor.r,backgroundColor.g,backgroundColor.b,backgroundColor.a)
+					MinUIConfig.backgroundColor = backgroundColor
+					refreshRequired = true
+				end
 			-- Configure Frame
 			elseif(MinUIConfig.frames[token])then
 				--
@@ -158,7 +193,7 @@ local function muiCommandInterface(commandline)
 				-- Commands with Parameters
 				--
 				-- set barWidth, barHeight, barFontSize, buffFontSize, buffFontSize, unitTextFontSize
-				elseif (command == "barWidth" or command == "barHeight" or command == "barFontSize" or command == "buffFontSize" 
+				elseif (command == "barWidth" or command == "barHeight" or command == "barFontSize" or command == "buffFontSize" or command == "scale"
 						or command == "unitTextFontSize" or command == "comboPointsBarHeight" or command == "mageChargeBarHeight"
 						or command == "mageChargeFontSize" or command == "itemOffset" or command == "bars"  or command == "texts" 
 						or command == "buffsEnabled" or command == "debuffsEnabled" or command == "buffLocation" or command == "debuffLocation"
@@ -190,6 +225,14 @@ local function muiCommandInterface(commandline)
 				print ("Setting bar height to ", barHeight, " on ", frameToConfig)
 				if(barHeight > 0)then
 					MinUIConfig.frames[frameToConfig].barHeight = barHeight
+					refreshRequired = true
+				end
+			-- set frame scale value
+			elseif (command == "scale") then
+				local scale = tonumber(token)
+				print ("Setting scale to ", scale, " on ", frameToConfig)
+				if(scale > 0)then
+					MinUIConfig.frames[frameToConfig].scale = scale
 					refreshRequired = true
 				end
 			-- set bar fontSize
@@ -416,13 +459,25 @@ end
 -- Based on Config Create desired unitFrames
 --
 local function createUnitFrames()
+	debugPrint(showGlobalSettings())
 	-- Create Unit Frames based on MinUIConfig Saved Settings
 	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
 		-- if the frame is enabled
 		if(unitSavedValues.frameEnabled) then
-			--debugPrint("Creating ", unitName)
+			print("Creating ", unitName)
+			debugPrint(showCurrentSettings(unitName))
 			-- create new unitframe
-			local newFrame = UnitFrame.new( unitName, unitSavedValues.barWidth + (unitSavedValues.itemOffset*2), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
+			local newFrame = nil
+			if (unitSavedValues.scale) then
+				debugPrint("Scale: ",unitSavedValues.scale)
+				local scaledWidth = (unitSavedValues.barWidth + (unitSavedValues.itemOffset*2)) * unitSavedValues.scale
+				local scaledHeight = unitSavedValues.barHeight * unitSavedValues.scale
+				newFrame = UnitFrame.new( unitName, scaledWidth, scaledHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
+			else	
+				debugPrint("Scale: Not Set")
+				newFrame = UnitFrame.new( unitName, (unitSavedValues.barWidth + (unitSavedValues.itemOffset*2)), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
+			end
+			
 			
 			local enabledBars = unitSavedValues.bars
 			local enabledTexts = unitSavedValues.texts
@@ -546,6 +601,129 @@ local function leaveSecureMode()
 	MinUI.secureMode = false
 end
 
+--
+-- Check saved vars are all good
+--
+local function variablesLoaded( addon )
+	if not (addon == "MinUI") then
+		return
+	end
+	
+	--
+	-- Ensure the Saved Variables do not contain nil values (because of new additions or w.e.)
+	--
+	if not MinUIConfig.unitFramesLocked then
+		print("New config setting unitFramesLocked added")
+		MinUIConfig.unitFramesLocked = MinUIConfigDefaults.unitFramesLocked
+	end
+	if not MinUIConfig.globalTextFont then
+		print("New config setting globalTextFont added")
+		MinUIConfig.globalTextFont = MinUIConfigDefaults.globalTextFont
+	end
+	if not MinUIConfig.barTexture then
+		print("New config setting barTexture added")
+		MinUIConfig.barTexture = MinUIConfigDefaults.barTexture
+	end
+	if not MinUIConfig.backgroundColor then
+		print("New config setting backgroundColor added")
+		MinUIConfig.backgroundColor = MinUIConfigDefaults.backgroundColor
+	end
+
+	
+	if not MinUIConfig.frames then -- if this happens the version is probably epically old anyawys
+		print("Restored frames from Default - did not exist in MinUIConfig")
+		MinUIConfig.frames = MinUIConfigDefaults.frames
+	end
+
+	--
+	-- For all Frames in MinUIConfig.frames, check that we aren't missing any values (because of new options or w.e.)
+	--
+	for key,_ in pairs(MinUIConfig.frames) do
+		debugPrint("Checking: ",key, " saved variables")
+		
+		if not MinUIConfig.frames[key].x then
+			print("Restored ",key, " x value from defaults")
+			MinUIConfig.frames[key].x = MinUIConfigDefaults.frames[key].x
+		end
+		if not MinUIConfig.frames[key].y then
+			print("Restored ",key, " y value from defaults")
+			MinUIConfig.frames[key].y = MinUIConfigDefaults.frames[key].y
+		end
+		if not MinUIConfig.frames[key].scale then
+			print("Restored ",key, " scale value from defaults")
+			MinUIConfig.frames[key].scale = MinUIConfigDefaults.frames[key].scale
+		end
+		if not MinUIConfig.frames[key].barWidth then
+			print("Restored ",key, " frameEnabled value from defaults")
+			MinUIConfig.frames[key].barWidth = MinUIConfigDefaults.frames[key].barWidth
+		end
+		if not MinUIConfig.frames[key].barHeight then
+			print("Restored ",key, " barHeight value from defaults")
+			MinUIConfig.frames[key].barHeight = MinUIConfigDefaults.frames[key].barHeight
+		end
+		if not MinUIConfig.frames[key].barFontSize then
+			print("Restored ",key, " barFontSize value from defaults")
+			MinUIConfig.frames[key].barFontSize = MinUIConfigDefaults.frames[key].barFontSize
+		end
+		if not MinUIConfig.frames[key].buffFontSize then
+			print("Restored ",key, " buffFontSize value from defaults")
+			MinUIConfig.frames[key].buffFontSize = MinUIConfigDefaults.frames[key].buffFontSize
+		end
+		if not MinUIConfig.frames[key].unitTextFontSize then
+			print("Restored ",key, " unitTextFontSize value from defaults")
+			MinUIConfig.frames[key].unitTextFontSize = MinUIConfigDefaults.frames[key].unitTextFontSize
+		end
+		if not MinUIConfig.frames[key].comboPointsBarHeight then
+			print("Restored ",key, " comboPointsBarHeight value from defaults")
+			MinUIConfig.frames[key].comboPointsBarHeight = MinUIConfigDefaults.frames[key].comboPointsBarHeight
+		end
+		if not MinUIConfig.frames[key].mageChargeBarHeight then
+			print("Restored ",key, " mageChargeBarHeight value from defaults")
+			MinUIConfig.frames[key].mageChargeBarHeight = MinUIConfigDefaults.frames[key].mageChargeBarHeight
+		end
+		if not MinUIConfig.frames[key].mageChargeFontSize then
+			print("Restored ",key, " mageChargeFontSize value from defaults")
+			MinUIConfig.frames[key].mageChargeFontSize = MinUIConfigDefaults.frames[key].mageChargeFontSize
+		end
+		if not MinUIConfig.frames[key].itemOffset then
+			print("Restored ",key, " itemOffset value from defaults")
+			MinUIConfig.frames[key].itemOffset = MinUIConfigDefaults.frames[key].itemOffset
+		end	
+		if not MinUIConfig.frames[key].bars then
+			print("Restored ",key, " bars from defaults")
+			MinUIConfig.frames[key].bars = MinUIConfigDefaults.frames[key].bars
+		end		
+		if not MinUIConfig.frames[key].texts then
+			print("Restored ",key, " texts from defaults")
+			MinUIConfig.frames[key].texts = MinUIConfigDefaults.frames[key].texts
+		end	
+		if not MinUIConfig.frames[key].buffLocation then
+			print("Restored ",key, " buffLocation value from defaults")
+			MinUIConfig.frames[key].buffLocation = MinUIConfigDefaults.frames[key].buffLocation
+		end	
+		if not MinUIConfig.frames[key].debuffLocation then
+			print("Restored ",key, " debuffLocation value from defaults")
+			MinUIConfig.frames[key].debuffLocation = MinUIConfigDefaults.frames[key].debuffLocation
+		end	
+		if not MinUIConfig.frames[key].buffVisibilityOptions then
+			print("Restored ",key, " buffVisibilityOptions value from defaults")
+			MinUIConfig.frames[key].buffVisibilityOptions = MinUIConfigDefaults.frames[key].buffVisibilityOptions
+		end	
+		if not MinUIConfig.frames[key].debuffVisibilityOptions then
+			print("Restored ",key, " debuffVisibilityOptions value from defaults")
+			MinUIConfig.frames[key].debuffVisibilityOptions = MinUIConfigDefaults.frames[key].debuffVisibilityOptions
+		end	
+		if not MinUIConfig.frames[key].buffThreshold then
+			print("Restored ",key, " buffThreshold value from defaults")
+			MinUIConfig.frames[key].buffThreshold = MinUIConfigDefaults.frames[key].buffThreshold
+		end	
+		if not MinUIConfig.frames[key].debuffThreshold then
+			print("Restored ",key, " debuffThreshold value from defaults")
+			MinUIConfig.frames[key].debuffThreshold = MinUIConfigDefaults.frames[key].debuffThreshold
+		end		
+	end
+end
+
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- Startup
@@ -565,6 +743,9 @@ local function startup()
 	
 	table.insert (Event.Addon.Load.Begin, {function () print("Loaded ["..MinUI.version.."]. Type /mui for help.") end, "MinUI", "loaded"})
 	
+	-- saved vars laoded
+	table.insert(Event.Addon.SavedVariables.Load.End, { variablesLoaded, "MinUI", "variables loaded" })
+	
 	-- Handle User Customisation
 	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
 
@@ -580,6 +761,7 @@ local function startup()
 	table.insert(Event.Buff.Remove, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffRemove"})
 	
 	-- Main Loop Event
+	--createUnitFrames()
 	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
 end
 

@@ -29,7 +29,7 @@ UnitBar.__index = UnitBar
 -- offsetX:
 -- offsetY:
 --
-function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
+function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	local uBar = {}             		-- our new object
 	setmetatable(uBar, UnitBar)      	-- make UnitBar handle lookup
 	
@@ -58,7 +58,12 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 	
 	-- Create textured component that resizes
 	uBar.tex = UI.CreateFrame("Texture", name.."_text", parentItem)
-	uBar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+	if ( MinUIConfig.barTexture ) then
+		--print("config has texture")
+		uBar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
+	else
+		uBar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+	end
 	uBar.tex:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBar.tex:SetWidth(uBar.width)
 	uBar.tex:SetLayer(2)
@@ -137,6 +142,7 @@ function UnitBar.new( name, width, height,fontSize, anchorThis, anchorParent, pa
 		uBar.height = uBar.leftText:GetFullHeight()
 		uBar.bar:SetHeight(uBar.height)
 		uBar.solid:SetHeight(uBar.height)
+		uBar.tex:SetHeight(uBar.height)
 		uBar.leftText:SetHeight(uBar.height)
 		uBar.leftTextShadow:SetHeight(uBar.height)
 	end
@@ -150,11 +156,15 @@ end
 function UnitBar:setUBarColor( r,g,b )
 	self.bar:SetBackgroundColor(r,g,b, 0.2)
 	self.solid:SetBackgroundColor(r,g,b, 0.6)
+	self.tex:SetVisible(true)
 end
 
 function UnitBar:setUBarColorAlpha(r,g,b,a)
 	self.bar:SetBackgroundColor(r,g,b,a)
 	self.solid:SetBackgroundColor(r,g,b,a)
+	if(a == 0)then
+		self.tex:SetVisible(false)
+	end
 end
 
 --

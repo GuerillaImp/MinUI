@@ -47,7 +47,10 @@ function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, par
 	cpBar.frame:SetVisible( cpBar.enabled )
 	cpBar.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
+	
+	
 	cpBar.pointBars = {}
+	cpBar.pointBarsTextures = {}
 	cpBar.pointGap = 2
 	
 	-- determine the bar width for a "point"
@@ -56,11 +59,22 @@ function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, par
 	
 	-- create "point bars"
 	for i=0, (cpBar.maxPoints-1) do
-		cpBar.pointBars[i] = UI.CreateFrame("Frame", "comboPoint_1", cpBar.frame)
+		cpBar.pointBars[i] = UI.CreateFrame("Frame", "comboPoint_"..i, cpBar.frame)
 		cpBar.pointBars[i]:SetWidth(pointWidth)
 		cpBar.pointBars[i]:SetHeight(cpBar.height)
 		cpBar.pointBars[i]:SetLayer(2)
 		cpBar.pointBars[i]:SetVisible(false)
+		-- texture
+		cpBar.pointBarsTextures[i]  = UI.CreateFrame("Texture", "comboPoint_texture_"..i, cpBar.frame)
+		if ( MinUIConfig.barTexture ) then
+			cpBar.pointBarsTextures[i]:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
+		else
+			cpBar.pointBarsTextures[i]:SetTexture("MinUI", "Media/Aluminium.tga")
+		end
+		cpBar.pointBarsTextures[i]:SetWidth(pointWidth)
+		cpBar.pointBarsTextures[i]:SetLayer(1)
+		cpBar.pointBarsTextures[i]:SetHeight(cpBar.height)
+		cpBar.pointBarsTextures[i]:SetVisible(false)
 		
 		-- rogue
 		if( calling == "rogue") then
@@ -71,6 +85,7 @@ function UnitComboBar.new( width, height, calling, anchorThis, anchorParent, par
 		end
 		-- Attach Point Bars
 		cpBar.pointBars[i]:SetPoint("CENTERLEFT", cpBar.frame, "CENTERLEFT", (cpBar.pointGap*i) + (pointWidth*i), 0 )
+		cpBar.pointBarsTextures[i]:SetPoint("CENTERLEFT", cpBar.frame, "CENTERLEFT", (cpBar.pointGap*i) + (pointWidth*i), 0 )
 	end
 	
 	return cpBar
@@ -112,6 +127,7 @@ function UnitComboBar:updateComboPoints(points)
 	-- hide all points
 	for i=0, (self.maxPoints-1) do
 		self.pointBars[i]:SetVisible(false)
+		self.pointBarsTextures[i]:SetVisible(false)
 	end
 	
 	-- guard against people adding comboPoints bar to things they shouldnt
@@ -120,6 +136,7 @@ function UnitComboBar:updateComboPoints(points)
 		if (points > 0) then
 			for i=0, (points-1) do
 				self.pointBars[i]:SetVisible(true)
+				self.pointBarsTextures[i]:SetVisible(true)
 			end
 		end
 	end
