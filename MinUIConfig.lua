@@ -23,10 +23,9 @@ MinUIConfigDefaults = {
 	-- Global Text Font
 	globalTextFont = "arial_round",
 	-- Global Texture
-	barTexture = "Aluminium",
+	barTexture = "minimalist",
 	-- Background Color
-	backgroundColor = {r=0,g=0,b=0,a=0.3},
-	
+	backgroundColor = {r=0,g=0,b=0,a=0.9},
 	-- Frame Settings
 	frames = {
 		["player"] =
@@ -51,7 +50,9 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = true, -- true/false
 			debuffsEnabled = true, -- true/false
-			buffLocation = "below", -- can only be below or above at the moment
+			buffsMax = 10, -- max number of buffs/debuffs
+			debuffsMax = 10,
+			buffLocation = "above", -- can only be below or above at the moment
 			debuffLocation = "above", -- can only be below or above at the moment
 			buffVisibilityOptions = "all", -- "player" cast or "all"
 			debuffVisibilityOptions = "all",-- "player" cast or "all"
@@ -81,7 +82,9 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = true,
 			debuffsEnabled = true,
-			buffLocation = "below",
+			buffsMax = 10,
+			debuffsMax = 10,
+			buffLocation = "above",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
 			debuffVisibilityOptions = "all",
@@ -111,6 +114,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffsMax = 10,
+			debuffsMax = 10,
 			buffLocation = "below",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
@@ -141,6 +146,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffsMax = 10,
+			debuffsMax = 10,
 			buffLocation = "below",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
@@ -171,6 +178,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffsMax = 10,
+			debuffsMax = 10,
 			buffLocation = "below",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
@@ -212,24 +221,16 @@ end
 
 function showGlobalSettings()
 
-	debugPrint ("*** global settings")
+	print ("*** global settings")
 	
-	debugPrint ("unitFramesLocked? ", MinUIConfig.unitFramesLocked)
-	if(MinUIConfig.backgroundColor)then
-		debugPrint ("globalTextFont: ", MinUIConfig.globalTextFont)
-	else
-		debugPrint ("globalTextFont: Not Set")
-	end
-	if(MinUIConfig.backgroundColor)then
-		debugPrint ("barTexture: ", MinUIConfig.barTexture)
-	else
-		debugPrint ("barTexture: Not Set")
-	end
-	if(MinUIConfig.backgroundColor)then
-		debugPrint ("backgroundColor: ", MinUIConfig.backgroundColor.r,MinUIConfig.backgroundColor.g,MinUIConfig.backgroundColor.b,MinUIConfig.backgroundColor.a)
-	else
-		debugPrint ("backgroundColor: Not Set")
-	end
+	print ("unitFramesLocked? ", MinUIConfig.unitFramesLocked)
+
+	print ("globalTextFont: ", MinUIConfig.globalTextFont)
+
+	print ("barTexture: ", MinUIConfig.barTexture)
+
+	print ("backgroundColor: ", MinUIConfig.backgroundColor.r,MinUIConfig.backgroundColor.g,MinUIConfig.backgroundColor.b,MinUIConfig.backgroundColor.a)
+
 end
 
 --

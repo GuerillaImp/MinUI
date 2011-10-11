@@ -40,6 +40,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	-- store buffs
 	uBBars.activeBuffBars = {}
 	uBBars.zombieBuffBars = {}
+	uBBars.numActiveBars = 0
 
 	-- create the frame
 	uBBars.frame = UI.CreateFrame("Frame", "buffBars_"..buffType, parentItem)
@@ -162,8 +163,8 @@ function UnitBuffBars:addBuffBar(buff, time)
 				self.solid:SetBackgroundColor(1.0, 0.0, 0.0, 0.6)
 			-- Set Buff Color
 			else
-				self:SetBackgroundColor(0.4, 0.4, 1.0, 0.2)
-				self.solid:SetBackgroundColor(0.4, 0.4,1.0,0.6)
+				self:SetBackgroundColor(0.2, 0.2, 1.0, 0.2)
+				self.solid:SetBackgroundColor(0.2, 0.2,1.0,0.6)
 			end
 		  
 			-- if we are showing all buffs/debuffs distinguish player buffs
@@ -345,6 +346,9 @@ function UnitBuffBars:update(time)
 		local buffdetails = Inspect.Buff.Detail(self.unitName, bufflist)
 		self:resetBuffBars(self.unitName)
 		
+		local buffCount = 0
+		local debuffCount = 0
+		
 		-- We want to order buffs by their time remaining
 		-- splitting apart buffs and debuffs.
 		local bbars = {}
@@ -358,122 +362,152 @@ function UnitBuffBars:update(time)
 			if (buff.debuff) then
 				-- If we are showing buffType debuffs
 				if (self.buffType == "debuffs") then
-					-- Showing all debuffs
-					if(self.visibilityOptions == "all") then
-						--debugPrint(buff.duration)
-						-- Check the debuff is lessthan/equal to threshold length
-						if(buff.duration) then
-							if(buff.duration <= self.lengthThreshold)then
-								table.insert(bbars, buff)
-							end
-						-- or we have auras
-						elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-							table.insert(bbars, buff)
-						end
-					-- Showing player debuffs
-					elseif (self.visibilityOptions == "player") then
-						-- Check debuff was cast by player
-						if (buff.caster == Inspect.Unit.Lookup("player")) then
-							-- Check the buff is lessthan/equal to threshold length
+					if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
+						-- Showing all debuffs
+						if(self.visibilityOptions == "all") then
+							--debugPrint(buff.duration)
+							-- Check the debuff is lessthan/equal to threshold length
 							if(buff.duration) then
 								if(buff.duration <= self.lengthThreshold)then
 									table.insert(bbars, buff)
+									debuffCount = debuffCount + 1 
 								end
 							-- or we have auras
 							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
 								table.insert(bbars, buff)
+								debuffCount = debuffCount + 1 
+							end
+						-- Showing player debuffs
+						elseif (self.visibilityOptions == "player") then
+							-- Check debuff was cast by player
+							if (buff.caster == Inspect.Unit.Lookup("player")) then
+								-- Check the buff is lessthan/equal to threshold length
+								if(buff.duration) then
+									if(buff.duration <= self.lengthThreshold)then
+										table.insert(bbars, buff)
+									end
+								-- or we have auras
+								elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+									table.insert(bbars, buff)
+								end
 							end
 						end
+						
+						--print("debuff count " , debuffCount )
 					end
 				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
 				elseif (self.buffType == "merged") then
-					-- Showing all debuffs
-					if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
-						--debugPrint(buff.duration)
-						-- Check the debuff is lessthan/equal to threshold length
-						if(buff.duration) then
-							if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
-								table.insert(bbars, buff)
-							end
-						-- or we have auras
-						elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-							table.insert(bbars, buff)
-						end
-					-- Showing player debuffs
-					elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
-						-- Check debuff was cast by player
-						if (buff.caster == Inspect.Unit.Lookup("player")) then
-							-- Check the buff is lessthan/equal to threshold length
+					if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
+						-- Showing all debuffs
+						if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
+							--debugPrint(buff.duration)
+							-- Check the debuff is lessthan/equal to threshold length
 							if(buff.duration) then
-								if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
+								if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
 									table.insert(bbars, buff)
+									debuffCount = debuffCount + 1 
 								end
 							-- or we have auras
 							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
 								table.insert(bbars, buff)
+								debuffCount = debuffCount + 1 
+							end
+						-- Showing player debuffs
+						elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
+							-- Check debuff was cast by player
+							if (buff.caster == Inspect.Unit.Lookup("player")) then
+								-- Check the buff is lessthan/equal to threshold length
+								if(buff.duration) then
+									if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
+										table.insert(bbars, buff)
+										debuffCount = debuffCount + 1 
+									end
+								-- or we have auras
+								elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+									table.insert(bbars, buff)
+									debuffCount = debuffCount + 1 
+								end
 							end
 						end
+						
+						--print("debuff count " , debuffCount )
 					end
 				end
 			else
 				-- if we are showing buffType buffs
 				if (self.buffType == "buffs") then
-					-- Showing all buffs
-					if(self.visibilityOptions == "all") then
-						--debugPrint(buff.duration)
-						-- Check the buff is lessthan/equal to threshold length
-						if(buff.duration)then
-							if(buff.duration <= self.lengthThreshold)then
-								table.insert(bbars, buff)
-							end
-						-- or if we have auras
-						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-							table.insert(bbars, buff)
-						end	
-					-- Showing player buffs
-					elseif (self.visibilityOptions == "player") then
-						-- Check buff was cast by player
-						if (buff.caster == Inspect.Unit.Lookup("player")) then
+					if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
+						-- Showing all buffs
+						if(self.visibilityOptions == "all") then
+							--debugPrint(buff.duration)
 							-- Check the buff is lessthan/equal to threshold length
-							-- Check the debuff is lessthan/equal to threshold length
 							if(buff.duration)then
 								if(buff.duration <= self.lengthThreshold)then
 									table.insert(bbars, buff)
+									buffCount = buffCount + 1 
 								end
 							-- or if we have auras
 							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
 								table.insert(bbars, buff)
-							end							
+								buffCount = buffCount + 1 
+							end	
+						-- Showing player buffs
+						elseif (self.visibilityOptions == "player") then
+							-- Check buff was cast by player
+							if (buff.caster == Inspect.Unit.Lookup("player")) then
+								-- Check the buff is lessthan/equal to threshold length
+								-- Check the debuff is lessthan/equal to threshold length
+								if(buff.duration)then
+									if(buff.duration <= self.lengthThreshold)then
+										table.insert(bbars, buff)
+										buffCount = buffCount + 1 
+									end
+								-- or if we have auras
+								elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+									table.insert(bbars, buff)
+									buffCount = buffCount + 1 
+								end							
+							end
 						end
+						
+						--print("buff count " , buffCount )
 					end
 				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
 				elseif (self.buffType == "merged") then
-					-- Showing all debuffs
-					if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
-						--debugPrint(buff.duration)
-						-- Check the debuff is lessthan/equal to threshold length
-						if(buff.duration) then
-							if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
-								table.insert(bbars, buff)
-							end
-						-- or if we have auras
-						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-							table.insert(bbars, buff)
-						end						
-					-- Showing player debuffs
-					elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
-						-- Check debuff was cast by player
-						if (buff.caster == Inspect.Unit.Lookup("player")) then
-							-- Check the buff is lessthan/equal to threshold length
+					if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
+						-- Showing all debuffs
+						if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
+							--debugPrint(buff.duration)
+							-- Check the debuff is lessthan/equal to threshold length
 							if(buff.duration) then
-								if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold)then
+								if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
 									table.insert(bbars, buff)
+									buffCount = buffCount + 1 
 								end
-							end
-						-- or if we have auras
-						elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-							table.insert(bbars, buff)
-						end						
+							-- or if we have auras
+							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+								table.insert(bbars, buff)
+								buffCount = buffCount + 1 
+							end						
+						-- Showing player debuffs
+						elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
+							-- Check debuff was cast by player
+							if (buff.caster == Inspect.Unit.Lookup("player")) then
+								-- Check the buff is lessthan/equal to threshold length
+								if(buff.duration) then
+									if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold)then
+										table.insert(bbars, buff)
+										buffCount = buffCount + 1 
+									end
+								end
+							-- or if we have auras
+							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+								table.insert(bbars, buff)
+								buffCount = buffCount + 1 
+							end						
+						end
+						
+						--print("buff count " , buffCount )
 					end
 				end
 			end

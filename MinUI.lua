@@ -26,7 +26,7 @@ MinUI.initialised = false
 -- Are we current in secure mode?
 MinUI.secureMode = false
 
-MinUI.version = "1.2a"
+MinUI.version = "1.3"
 
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -721,6 +721,14 @@ local function variablesLoaded( addon )
 			print("Restored ",key, " debuffThreshold value from defaults")
 			MinUIConfig.frames[key].debuffThreshold = MinUIConfigDefaults.frames[key].debuffThreshold
 		end		
+		if not MinUIConfig.frames[key].buffsMax then
+			print("Restored ",key, " buffsMax value from defaults")
+			MinUIConfig.frames[key].buffsMax = MinUIConfigDefaults.frames[key].buffsMax
+		end	
+		if not MinUIConfig.frames[key].debuffsMax then
+			print("Restored ",key, " debuffsMax value from defaults")
+			MinUIConfig.frames[key].debuffsMax = MinUIConfigDefaults.frames[key].debuffsMax
+		end	
 	end
 end
 
