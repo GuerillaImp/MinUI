@@ -459,13 +459,11 @@ end
 -- Based on Config Create desired unitFrames
 --
 local function createUnitFrames()
-	debugPrint(showGlobalSettings())
 	-- Create Unit Frames based on MinUIConfig Saved Settings
 	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
 		-- if the frame is enabled
 		if(unitSavedValues.frameEnabled) then
 			print("Creating ", unitName)
-			debugPrint(showCurrentSettings(unitName))
 			-- create new unitframe
 			local newFrame = nil
 			if (unitSavedValues.scale) then
@@ -484,6 +482,7 @@ local function createUnitFrames()
 			
 			-- add enabled bars
 			for position,barType in ipairs(enabledBars) do
+				print("creating bar ", barType, " at position ", position)
 				-- Check player is a calling that has combo points
 				if ( barType == "warriorComboPoints" ) then
 					if ( MinUI.playerCalling  == "warrior" ) then
@@ -561,6 +560,7 @@ local function update()
 		--
 		if (MinUI.initialised == false) then
 			debugPrint("we have details (at least for the player) so lets create the frames now")
+			
 			-- Create the Unit Frames
 			createUnitFrames()
 			
@@ -580,13 +580,16 @@ local function update()
 			if(MinUI.resyncBuffs)then
 				for unitName, unitFrame in pairs(MinUI.unitFrames) do
 					unitFrame:updateBuffBars()
+					unitFrame:animate()
 				end
 				MinUI.resyncBuffs = false
 			else
 				for unitName, unitFrame in pairs(MinUI.unitFrames) do
-					unitFrame:animateBuffs()
+					unitFrame:animate()
 				end
 			end
+			
+			
 		end
 	end
 end
@@ -730,6 +733,11 @@ local function variablesLoaded( addon )
 			MinUIConfig.frames[key].debuffsMax = MinUIConfigDefaults.frames[key].debuffsMax
 		end	
 	end
+		
+	--	
+	-- Then Start the Main update Loop
+	--
+	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
 end
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -748,7 +756,6 @@ local function startup()
 	--
 	-- Event Hooks
 	--
-	
 	table.insert (Event.Addon.Load.Begin, {function () print("Loaded ["..MinUI.version.."]. Type /mui for help.") end, "MinUI", "loaded"})
 	
 	-- saved vars laoded
@@ -767,10 +774,6 @@ local function startup()
 	table.insert(Event.Buff.Add, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffAdd"})
 	table.insert(Event.Buff.Change, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffChange"})
 	table.insert(Event.Buff.Remove, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffRemove"})
-	
-	-- Main Loop Event
-	--createUnitFrames()
-	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
 end
 
 -- Start the UnitFrame

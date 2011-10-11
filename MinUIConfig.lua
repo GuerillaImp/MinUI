@@ -11,10 +11,10 @@ local itemOffsetDefault = 2
 local comboPointsBarHeightDefault = 7
 local mageChargeBarHeightDefault = 15
 
-local barFontSizeDefault = 14
-local buffFontSizeDefault = 12
+local barFontSizeDefault = 16
+local buffFontSizeDefault = 14
 local unitTextFontSizeDefault = 12
-local mageChargeFontSizeDefault = 10
+local mageChargeFontSizeDefault = 12
 
 -- Defaults for Frame Configuration
 MinUIConfigDefaults = {
@@ -23,9 +23,9 @@ MinUIConfigDefaults = {
 	-- Global Text Font
 	globalTextFont = "arial_round",
 	-- Global Texture
-	barTexture = "minimalist",
+	barTexture = "otravi",
 	-- Background Color
-	backgroundColor = {r=0,g=0,b=0,a=0.9},
+	backgroundColor = {r=0,g=0,b=0,a=0.3},
 	-- Frame Settings
 	frames = {
 		["player"] =
@@ -216,21 +216,8 @@ end
 --
 function reset()
 	debugPrint("Restoring factory default settings ;)")
+	MinUIConfig = {}
 	MinUIConfig = MinUIConfigDefaults
-end
-
-function showGlobalSettings()
-
-	print ("*** global settings")
-	
-	print ("unitFramesLocked? ", MinUIConfig.unitFramesLocked)
-
-	print ("globalTextFont: ", MinUIConfig.globalTextFont)
-
-	print ("barTexture: ", MinUIConfig.barTexture)
-
-	print ("backgroundColor: ", MinUIConfig.backgroundColor.r,MinUIConfig.backgroundColor.g,MinUIConfig.backgroundColor.b,MinUIConfig.backgroundColor.a)
-
 end
 
 --

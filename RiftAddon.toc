@@ -32,6 +32,8 @@ RunOnStartup = {
 	"UnitText.lua",
 	"UnitComboBar.lua",
 	"UnitBuffBars.lua",
+	"UnitBuffIcons.lua",
+	"UnitCastBar.lua",
 	"UnitFrame.lua",
 	"MinUI.lua"
 }

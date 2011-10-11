@@ -27,10 +27,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	-- buffbars
 	uFrame.buffs = nil
 	uFrame.debuffs = nil
-	
-	-- castbar
-	uFrame.castbar = nil -- TODO
-	
+
 	-- the next "thing" a UnitBar (or equivillent) should anchor on
 	uFrame.nextAnchor = nil
 	
@@ -47,6 +44,13 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetHeight(uFrame.height)
 	uFrame.frame:SetLayer(0)
 	uFrame.frame:SetVisible(uFrame.visible)
+	
+	-- create a castbar
+	uFrame.castBar = UnitCastBar.new( uFrame.unitName, MinUIConfig.frames[uFrame.unitName].barWidth, MinUIConfig.frames[uFrame.unitName].barHeight,"TOPLEFT","BOTTOMLEFT", uFrame.frame, 0, MinUIConfig.frames[uFrame.unitName].barHeight)
+	
+	--
+	-- frame background
+	--
 	
 	local configColor = MinUIConfig.backgroundColor
 	if(configColor)then
@@ -68,38 +72,18 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	--
 	uFrame.bottomRightIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
 	uFrame.bottomRightIcon:SetPoint("BOTTOMRIGHT", uFrame.frame, "BOTTOMRIGHT", -uFrame.itemOffset,-uFrame.itemOffset) -- top right icon
-	uFrame.bottomRightIcon:SetWidth(18)
-	uFrame.bottomRightIcon:SetHeight(18)
+	uFrame.bottomRightIcon:SetWidth(15)
+	uFrame.bottomRightIcon:SetHeight(15)
 	uFrame.bottomRightIcon:SetLayer(1)
 	uFrame.bottomRightIcon:SetVisible(true)
 	
 	uFrame.bottomLeftIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomLeftIcon", uFrame.frame)
 	uFrame.bottomLeftIcon:SetPoint("BOTTOMLEFT",  uFrame.frame, "BOTTOMLEFT", uFrame.itemOffset, -uFrame.itemOffset) -- top left icon
-	uFrame.bottomLeftIcon:SetWidth(18)
-	uFrame.bottomLeftIcon:SetHeight(18)
+	uFrame.bottomLeftIcon:SetWidth(15)
+	uFrame.bottomLeftIcon:SetHeight(15)
 	uFrame.bottomLeftIcon:SetLayer(1)
 	uFrame.bottomLeftIcon:SetVisible(false)
-	
-	--
-	-- Anchors for Items, want to add more anchor points for things
-	--
-	uFrame.belowCenterItem = UI.CreateFrame("Frame", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
-	uFrame.belowCenterItem:SetPoint("TOPCENTER",  uFrame.frame, "BOTTOMCENTER", 0, uFrame.itemOffset) 
-	uFrame.belowCenterItem:SetWidth(20)
-	uFrame.belowCenterItem:SetHeight(20)
-	uFrame.belowCenterItem:SetLayer(1)
-	uFrame.belowCenterItem:SetBackgroundColor(0,0,0,0.3)
-	uFrame.belowCenterItem:SetVisible(false) 
-	
-	uFrame.aboveCenterItem = UI.CreateFrame("Frame", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
-	uFrame.aboveCenterItem:SetPoint("BOTTOMCENTER",  uFrame.frame, "TOPCENTER", 0, -uFrame.itemOffset) 
-	uFrame.aboveCenterItem:SetWidth(20)
-	uFrame.aboveCenterItem:SetHeight(20)
-	uFrame.aboveCenterItem:SetLayer(1)
-	uFrame.aboveCenterItem:SetBackgroundColor(0,0,0,0.3)
-	uFrame.aboveCenterItem:SetVisible(false)
-	
-	-- debugPrint(unitName)
+
 	
 	--
 	-- Make the frame restricted such that we can ues mouesover macros on them
@@ -142,6 +126,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 	-- things that effect icons
 	table.insert(Event.Unit.Detail.Role, {function ( unitIDs ) uFrame:updateIcons( unitIDs ) end, "MinUI", uFrame.unitName.."_updateIcons"})
+	
 	
 	--
 	-- Mouse Interaction Code
@@ -188,14 +173,14 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 	-- mouse hover colors
 	function uFrame.frame.Event:MouseIn()
-		if(uFrame.visible)then
+		--if(uFrame.visible)then
 			uFrame.highlightBar:SetBackgroundColor(1.0, 1.0, 0.0, 0.3)
-		end
+		--end
 	end
 	function uFrame.frame.Event:MouseOut()
-		if(uFrame.visible)then
+		--if(uFrame.visible)then
 			uFrame.highlightBar:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
-		end
+		--end
 	end
 	
 	function uFrame.frame.Event:LeftUp()
@@ -224,14 +209,24 @@ end
 --
 -- Animation Loop
 --
-function UnitFrame:animateBuffs( )
+function UnitFrame:animate( )
 	local curTime = Inspect.Time.Frame()
 	--
 	-- Anything that needs updating, should get done here :-)
 	--
 	if ( self.visible ) then
-		-- tick buff bars
-		self:tickBuffBars( curTime )
+		-- Animate Visible Buff Bars
+		if(self.buffs) then
+			self.buffs:animate(curTime)
+		end
+		if(self.debuffs)  then
+			self.debuffs:animate(curTime)
+		end
+		
+		-- animate cast bar
+		if(self.castBar)then
+			self.castBar:animate()
+		end
 	end
 end
 
@@ -440,9 +435,11 @@ function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, lo
 	
 	-- create bar in correct location
 	if( location == "above") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
+		--bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
+		bbars = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
 	elseif ( location == "below") then
-		bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
+		--bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
+		bbars = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
 	end
 	
 	-- store frame
@@ -481,20 +478,6 @@ function UnitFrame:updateBuffBars( )
 		if(self.debuffs)  then
 			debugPrint("updateBuffBars debuffs on ", self.unitName)
 			self.debuffs:update(Inspect.Time.Frame())
-		end
-	end
-end
-
---
--- Tick the timers on the buff bars
---
-function UnitFrame:tickBuffBars(time)
-	if(self.visible) then
-		if(self.buffs) then
-			self.buffs:tickBars(time)
-		end
-		if(self.debuffs)  then
-			self.debuffs:tickBars(time)
 		end
 	end
 end
@@ -557,31 +540,37 @@ function UnitFrame:updateHealth( )
 			local health = unitDetails.health
 			-- guard against wierdness when zoning
 			if (health) then
-				local largeHealth = false
-				local largeHealthMax = false
 				local healthMax = unitDetails.healthMax
 				if (healthMax) then
 					local healthRatio = health/healthMax
 					healthPercent = math.floor(healthRatio * 100)
 					
-					-- Convert large numbers to small versions
-					if (health >= 10000) then
-						health = health/1000
-						largeHealth = true
-					end
-					if (healthMax >= 10000) then
-						healthMax = healthMax/1000
-						largeHealthMax = true
+					local healthMillions = math.floor(health / 1000000)
+					local healthTenThousands = math.floor(health / 10000)
+					local healthMaxMillions = math.floor(healthMax / 1000000)
+					local healthMaxTenThousands = math.floor(healthMax / 10000)
+					
+					healthText = ""
+					if(healthMillions > 0)then
+						healthText = healthText .. string.format("%s", healthMillions)
+						if(healthTenThousands > 0)then
+							healthText = healthText .. string.format(".%sm", healthTenThousands)
+						end
+					elseif(healthTenThousands > 0)then
+						healthText = healthText .. string.format("%s (ten k) gotta fix this :P", healthTenThousands)
+					else
+						healthText = healthText .. string.format("%s", health)
 					end
 					
-					local healthText = ""
-					if ( largeHealth )then
-						healthText = string.format("%sk / ", health)
-					else
-						healthText = string.format("%s / ", health)
-					end
-					if( largeHealthMax ) then
-						healthText = healthText .. string.format("%sk", healthMax)
+					healthText = healthText .. " / "
+						
+					if(healthMaxMillions > 0)then
+						healthText = healthText .. string.format("%s", healthMaxMillions)
+						if(healthMaxTenThousands > 0)then
+							healthText = healthText .. string.format(".%sm", healthMaxTenThousands)
+						end
+					elseif(healthMaxTenThousands > 0)then
+						healthText = healthText .. string.format("%sk", healthMaxTenThousands)
 					else
 						healthText = healthText .. string.format("%s", healthMax)
 					end
@@ -790,6 +779,7 @@ end
 --
 function UnitFrame:createEnabledBars()
 	for _,barType in pairs(self.barsEnabled) do
+		print("creating enabled bars, ", barType)
 		if ( barType == "health" ) then
 			self:addHealthBar()
 		end
@@ -921,7 +911,7 @@ end
 -- A charge bar for a Mage calling class
 --
 function UnitFrame:addChargeBar()
-	------debugPrint("Add charge Bar", self.unitName)
+	print("Add charge Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
@@ -1034,171 +1024,3 @@ function UnitFrame:addUnitBar( barType, width, height, fontSize, anchorThis, anc
 	-- resize based on bars currently enabled
 	self:resize()
 end
-
-
-
-
---
--- I attempted to be smart, and not poll the unit's every frame, but ...
--- It's a bit of a waste of time since tab targetting doesnt give unitDetails, and events don't fire for 
--- target of target - making the entire excersize a waste of time
---
-
---
--- Refresh ToT
---
---[[
-local function refreshToT()
-	if(MinUI.unitFrames["player.target.target"])then
-		MinUI.unitFrames["player.target.target"]:refresh()
-		MinUI.unitFrames["player.target.target"]:resetBuffBars()
-	end
-end
-
---
--- Refresh Target
---
-local function refreshTarget()
-	if(MinUI.unitFrames["player.target"])then
-		MinUI.unitFrames["player.target"]:refresh()
-		MinUI.unitFrames["player.target"]:resetBuffBars()
-	end
-end
---
--- If our target changes, refresh the target/tot frames and resync buffs
---
-local function refreshTargets ( units )
-
-	MinUI.resyncBuffs = true
-	
-	--
-	-- Update Target/TOT
-	--
-	refreshTarget()
-	refreshToT()
-end
-
-
-
---
--- Update Unit's Health Values
---
-local function unitHealthChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("health changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateHealth()
-			end
-		end 
-	end
-	
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
---
--- Update Unit's Max Health Values
---
-local function unitHealthMaxChanged( units )
-	unitHealthChanged ( units )
-end
-
-local function unitManaChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("mana changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitManaMaxChanged( units )
-	unitManaChanged(units)
-end
-
-local function unitPowerChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("power changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitEnergyChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("energy changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateResources()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitEnergyMaxChanged( units )
-	unitEnergyChanged (units)
-end
-
-local function unitComboChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("combo changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateComboPointsBar()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-
-local function unitComboUnitChanged( units )
-	unitComboChanged ( units )
-end
-
-local function unitChargeChanged( units )
-	for unitID,_ in pairs(units) do
-		local unitChanged = Inspect.Unit.Lookup (unitID)
-		------debugPrint("charge changed", unitChanged)
-		for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			if(unitName == unitChanged) then
-				unitFrame:updateChargeBar()
-			end
-		end 
-	end
-	
-		
-	-- Target of Target never has these events fired for them
-	-- So we need to refresh it manually
-	refreshToT()
-end
-]]

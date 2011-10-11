@@ -6,244 +6,202 @@
 --
 -----------------------------------------------------------------------------------------------------------------------------
 
-UnitBuffBars = {}
-UnitBuffBars.__index = UnitBuffBars
+UnitBuffIcons = {}
+UnitBuffIcons.__index = UnitBuffIcons
 
 --
-function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshold, direction, width, anchorThis, anchorParent, parentItem, offsetX, offsetY )
-	local uBBars = {}             			-- our new object
-	setmetatable(uBBars, UnitBuffBars)      	-- make UnitBar handle lookup
+function UnitBuffIcons.new( unitName, buffType, visibilityOptions, lengthThreshold, direction, width, anchorThis, anchorParent, parentItem, offsetX, offsetY )
+	local uBIcons = {}             			-- our new object
+	setmetatable(uBIcons, UnitBuffIcons)      	-- make UnitBar handle lookup
 	
 	--debugPrint("creating buff bars for ",unitName, buffType, visibilityOptions, lengthThreshold, direction)
 	
 	-- store values for the bar
-	uBBars.width = width
-	uBBars.anchorThis = anchorThis
-	uBBars.anchorParent = anchorParent
-	uBBars.parentItem = parentItem
-	uBBars.offsetX = offsetX
-	uBBars.offsetY = offsetY
-	uBBars.fontSize = MinUIConfig.frames[unitName].buffFontSize
-
+	uBIcons.width = width
+	uBIcons.anchorThis = anchorThis
+	uBIcons.anchorParent = anchorParent
+	uBIcons.parentItem = parentItem
+	uBIcons.offsetX = offsetX
+	uBIcons.offsetY = offsetY
+	uBIcons.fontSize = 12
+	uBIcons.unitName = unitName
+	uBIcons.itemOffset = MinUIConfig.frames[uBIcons.unitName].itemOffset
+	
 	-- buff values
-	uBBars.direction = direction
-	uBBars.unitName = unitName
-	uBBars.buffType = buffType
-	uBBars.visibilityOptions = visibilityOptions
-	uBBars.lengthThreshold = lengthThreshold
+	uBIcons.direction = direction
+	uBIcons.buffType = buffType
+	uBIcons.visibilityOptions = visibilityOptions
+	uBIcons.lengthThreshold = lengthThreshold
 		
 	-- scale font size if we have a scale
-	if ( MinUIConfig.frames[uBBars.unitName].scale ) then
-		uBBars.fontSize = uBBars.fontSize * MinUIConfig.frames[uBBars.unitName].scale
+	if ( MinUIConfig.frames[uBIcons.unitName].scale ) then
+		uBIcons.fontSize = uBIcons.fontSize * MinUIConfig.frames[uBIcons.unitName].scale
 	end
 	
 	-- store buffs
-	uBBars.activeBuffBars = {}
-	uBBars.zombieBuffBars = {}
-	uBBars.numActiveBars = 0
+	uBIcons.activeBuffIcons = {}
+	uBIcons.zombieBuffIcons = {}
+	uBIcons.numActiveBars = 0
 
 	-- create the frame
-	uBBars.frame = UI.CreateFrame("Frame", "buffBars_"..buffType, parentItem)
-	uBBars.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
-	uBBars.frame:SetWidth(uBBars.width + (MinUIConfig.frames[uBBars.unitName].itemOffset*2)) -- give "breathing room" at either end
-	uBBars.frame:SetHeight(MinUIConfig.frames[uBBars.unitName].itemOffset)
-	uBBars.frame:SetLayer(-1)
-	uBBars.frame:SetVisible(true)
-	uBBars.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
+	uBIcons.frame = UI.CreateFrame("Frame", "buffIcons_"..buffType, parentItem)
+	uBIcons.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
+	uBIcons.frame:SetWidth(uBIcons.width + (uBIcons.itemOffset*2)) -- give "breathing room" at either end
+	uBIcons.frame:SetHeight(uBIcons.itemOffset)
+	uBIcons.frame:SetLayer(-1)
+	uBIcons.frame:SetVisible(true)
+	uBIcons.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
 	
-	--debugPrint(uBBars)
-	return uBBars
+	
+	-- calculate max icons per "row"
+	uBIcons.maxIconsPerRow = math.floor(uBIcons.width / 32)
+	uBIcons.curIconsInRow = 0
+	uBIcons.numRows = 0
+	
+	--debugPrint(uBIcons)
+	return uBIcons
 end
 
 --
--- Create or Add Existing Buff Bar to the UnitBuffBars Anchor
+-- Create or Add Existing Buff Bar to the UnitBuffIcons Anchor
 --
-function UnitBuffBars:addBuffBar(buff, time)
+function UnitBuffIcons:addBuffIcon(buff, time)
 
 	-- attempt to reuse an old bar
-	local bar = table.remove(self.zombieBuffBars)
+	local buffIcon = table.remove(self.zombieBuffIcons)
 	
 	local unitName = self.unitName
 	local width = self.width
 	local fontSize = self.fontSize
+	local itemOffset = self.itemOffset
 	
 	-- if no bar exist in our pool of bars then create one
-	if not bar then
+	if not buffIcon then
 		-- We don't have any bars remaining, so we create a new one.
 		-- Our Bars are considered single objects that can be dealt with atomically. Each one has the functionality needed to update itself.
-		bar = UI.CreateFrame("Frame", "Bar", MinUI.context)
+		buffIcon = UI.CreateFrame("Frame", "Bar", MinUI.context)
 
 		-- Set location
 		if(self.direction == "up")then
-			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER")
+			buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT")
 		elseif(self.direction == "down")then
-			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
+			buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT")
 		end
+		
+		buffIcon.timer = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.timerShadow = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.timer:SetLayer(4)
+		buffIcon.timerShadow:SetLayer(3)
+		
+		buffIcon.icon = UI.CreateFrame("Texture", "Icon", buffIcon)
+		buffIcon.icon:SetLayer(1)
 
-		bar.text = UI.CreateFrame("Text", "Text", bar)
-		bar.textShadow = UI.CreateFrame("Text", "Text", bar)
-		bar.text:SetLayer(2)
-		bar.textShadow:SetLayer(1)
-		
-		bar.timer = UI.CreateFrame("Text", "Timer", bar)
-		bar.timerShadow = UI.CreateFrame("Text", "Timer", bar)
-		bar.timer:SetLayer(2)
-		bar.timerShadow:SetLayer(1)
-		
-		bar.timer:SetHeight(bar.text:GetFullHeight())
-		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
-		
-		
-		bar.icon = UI.CreateFrame("Texture", "Icon", bar)
+		buffIcon.tex = UI.CreateFrame("Texture", "tex", buffIcon)
+		buffIcon.tex:SetTexture("MinUI", "Media/Icons/BuffBorder.tga")
+		buffIcon.tex:SetLayer(2)
 
-		-- Solid background - this is the actual "bar" part of it.
-		bar.solid = UI.CreateFrame("Frame", "Solid", bar)
-		bar.solid:SetLayer(-1)  -- Put it behind every other element.
-		
-		bar.tex = UI.CreateFrame("Texture", "Texture", bar)
-		if ( MinUIConfig.barTexture ) then
-			bar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
-		else
-			bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
-		end
-	
-		bar.tex:SetLayer(-2)
-
-		
-		bar.text:SetText("???")
-		bar.text:SetFontSize(fontSize)
-		bar.textShadow:SetFontSize(fontSize)
-		bar.textShadow:SetFontColor(0,0,0,1)
 
 		-- Set Fonts
 		if (MinUIConfig.globalTextFont) then
-			bar.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 		end
 		
-		bar.text:SetHeight(bar.text:GetFullHeight())
-		bar.textShadow:SetHeight(bar.text:GetFullHeight())
+		buffIcon.timer:SetText("??")
+		buffIcon.timer:SetFontSize(12)
+		buffIcon.timer:SetFontColor(1,1,1,1)
+		buffIcon.timerShadow:SetFontSize(12)
+		buffIcon.timerShadow:SetFontColor(0,0,0,1)
 		
-		bar.timerShadow:SetFontSize(fontSize)
-		bar.timerShadow:SetFontColor(0,0,0,1)
-		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
+		buffIcon.timer:SetHeight(buffIcon.timer:GetFullHeight())
+		buffIcon.timer:SetWidth(buffIcon.timer:GetFullWidth())
+		buffIcon.timerShadow:SetHeight(buffIcon.timer:GetFullHeight())
+		buffIcon.timerShadow:SetWidth(buffIcon.timer:GetFullWidth())
 		
-		bar:SetHeight(bar.text:GetFullHeight())
-		bar.solid:SetHeight(bar.text:GetFullHeight())
-		bar.tex:SetHeight(bar.text:GetFullHeight())
+		-- icon fills the buffIcon
+		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
+		buffIcon.icon:SetPoint("BOTTOMRIGHT", buffIcon, "BOTTOMRIGHT")
+		
+		
+		if(self.direction == "up")then
+			buffIcon.timer:SetPoint("BOTTOMCENTER", buffIcon, "TOPCENTER", 0, -itemOffset )
+			buffIcon.timerShadow:SetPoint("BOTTOMCENTER", buffIcon, "TOPCENTER", 1.5, -itemOffset+1.5) 
+		else
+			buffIcon.timer:SetPoint("TOPCENTER", buffIcon, "BOTTOMCENTER",0,itemOffset)
+			buffIcon.timerShadow:SetPoint("TOPCENTER", buffIcon, "BOTTOMCENTER", 1.5, itemOffset-1.5) 
 
-		bar.icon:SetPoint("TOPLEFT", bar, "TOPLEFT") -- The icon is pinned to the top-left corner of the bar.
-		bar.icon:SetPoint("BOTTOM", bar, "BOTTOM") -- Vertically, it always fills the entire bar.
-
-		bar.text:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT") -- The text is pinned to the top-right corner of the icon.
-		bar.textShadow:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT", 1.5, 1.5) -- The textShadow is pinned to the top-right corner of the icon. yoffset by 2
-		--bar:SetPoint("BOTTOM", bar.text, "BOTTOM")  -- The bar is set to always be as high as the text is.
-
-		bar.timer:SetPoint("TOPRIGHT", bar, "TOPRIGHT") -- The timer is pinned to the top-right corner.
-		bar.timerShadow:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 1.5, 1.5) -- The timerShadow is pinned to the top-right corner. yoffset by 2
-
-		bar.text:SetPoint("RIGHT", bar.timer, "LEFT") -- Make sure the text doesn't overrun the timer. We'll be changing the text's height based on the contents, but we'll leave the width calculated this way.
-
-		-- Set the solid bar to fill the entire buff bar.
-		bar.solid:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
-		bar.tex:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
-		bar:SetWidth( self.width + MinUIConfig.frames[unitName].itemOffset )
+		end
+		-- default size
+		buffIcon:SetWidth( 32 )
+		buffIcon:SetHeight( 32 )
 		
 		--
 		-- Set Buff - requires a buff and a timestamp
 		--
-		function bar:SetBuff(buff, time)
-			-- Set Debuff Color
-			if buff.debuff then
-				self:SetBackgroundColor(1.0, 0.0, 0.0, 0.2)
-				self.solid:SetBackgroundColor(1.0, 0.0, 0.0, 0.6)
-			-- Set Buff Color
-			else
-				self:SetBackgroundColor(0.2, 0.2, 1.0, 0.2)
-				self.solid:SetBackgroundColor(0.2, 0.2,1.0,0.6)
-			end
-		  
+		function buffIcon:SetBuff(buff, time)
+	  
 			-- if we are showing all buffs/debuffs distinguish player buffs
 			if(self.visibilityOptions == "all")then
 				if (buff.caster == Inspect.Unit.Lookup("player")) then
-					self.text:SetFontSize(fontSize)
 					self.timer:SetFontSize(fontSize)
-					self.textShadow:SetFontSize(fontSize)
 					self.timerShadow:SetFontSize(fontSize)
 				else
-					self.text:SetFontSize(fontSize - 2)
-					self.timer:SetFontSize(fontSize - 2)
-					self.textShadow:SetFontSize(fontSize - 2)
-					self.timerShadow:SetFontSize(fontSize - 2)
+					self.timer:SetFontSize(fontSize -2)
+					self.timerShadow:SetFontSize(fontSize -2)
 				end
 			else
-				self.text:SetFontSize(fontSize)
 				self.timer:SetFontSize(fontSize)
-				self.textShadow:SetFontSize(fontSize)
 				self.timerShadow:SetFontSize(fontSize)
 			end
-			
-			-- Set Heights
-			self.text:SetHeight(self.text:GetFullHeight())
-			self.timer:SetHeight(self.text:GetFullHeight())
-			self.textShadow:SetHeight(self.text:GetFullHeight())
-			self.timerShadow:SetHeight(self.text:GetFullHeight())
-			self:SetHeight(self.text:GetFullHeight())
-			self.solid:SetHeight(self.text:GetFullHeight())
-			self.tex:SetHeight(self.text:GetFullHeight())
-			
-		  
-		  -- Re-square and set the icon
-		  self.icon:SetWidth(self.icon:GetHeight())
-		  self.icon:SetTexture("Rift", buff.icon)
 
-		  -- Display our stacking multiple.
-		  if buff.stack then
-			self.text:SetText(buff.name .. " (" .. buff.stack .. ")")
-			self.textShadow:SetText(buff.name .. " (" .. buff.stack .. ")")
-		  else
-			self.text:SetText(buff.name)
-			self.textShadow:SetText(buff.name)
-		  end
 		  
-		  self.text:SetWidth(width)
-		  self.textShadow:SetWidth(width)
+			-- Re-square and set the icon
+			self.icon:SetTexture("Rift", buff.icon)
+			self.icon:SetPoint("TOPLEFT", self, "TOPLEFT", 2, 2)
+			self.icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -2, -2)
+			self.icon:SetLayer(2)
+			
+			self.tex:SetTexture("MinUI", "Media/Icons/BuffBorder.tga")
+			self.tex:SetPoint("TOPLEFT", self, "TOPLEFT")
+			self.tex:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT")
+			self.tex:SetLayer(1)
+
+			-- Display our stacking multiple.
+			--[[if buff.stack then
+				self.text:SetText(buff.name .. " (" .. buff.stack .. ")")
+				self.textShadow:SetText(buff.name .. " (" .. buff.stack .. ")")
+			else
+				self.text:SetText(buff.name)
+				self.textShadow:SetText(buff.name)
+			end]]
 		  
-		  if buff.duration then
-			self.completion = buff.begin + buff.duration
-			self.duration = buff.duration
-			
-			-- Display everything we might have hidden.
-			self.solid:SetVisible(true)
-			self.tex:SetVisible(true)
-			self.timer:SetVisible(true)
-			self.timerShadow:SetVisible(true)
-			
-			self:Tick(time)
-		  else
-			self.completion = nil
-			
-			-- This is a permanent buff without a timer, so don't show any of that.
-			self.solid:SetVisible(false)
-			self.tex:SetVisible(false)
-			self.timer:SetVisible(false)
-			self.timer:SetWidth(0)
-			self.timerShadow:SetVisible(false)
-			self.timerShadow:SetWidth(0)
-		  end
-		  
-		  self.debuff = buff.debuff
-		  self.buffid = buff.id
+			if buff.duration then
+				self.completion = buff.begin + buff.duration
+				self.duration = buff.duration
+
+				-- Display everything we might have hidden.
+				self.timer:SetVisible(true)
+				self.timerShadow:SetVisible(true)
+
+				self:Tick(time)
+			else
+				self.completion = nil
+
+				-- This is a permanent buff without a timer, so don't show any of that.
+				self.timer:SetVisible(false)
+				self.timer:SetWidth(0)
+				self.timerShadow:SetVisible(false)
+				self.timerShadow:SetWidth(0)
+			end
+
+			self.debuff = buff.debuff
+			self.buffid = buff.id
 		end
 		
 		--
 		-- This is our update function, called once every frame.
 		--
-		function bar:Tick(time)
+		function buffIcon:Tick(time)
 			if self.completion then
 				local remaining = self.completion - time
 
@@ -251,19 +209,26 @@ function UnitBuffBars:addBuffBar(buff, time)
 					self.timer:SetVisible(false)
 					self.timerShadow:SetVisible(false)
 				else
-				  -- Update our timer.
-					self.tex:SetPoint("RIGHT", bar, remaining / self.duration, nil)
-					self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
-	
-				  -- Generate the timer text string.
-				  if remaining >= 3600 then
-					self.timerShadow:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-					self.timer:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-				  else
-					self.timerShadow:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
-					self.timer:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
+					-- Update our timer.
+
+
+					local hours = math.floor(remaining / 3600)
+					local minutes = math.floor(remaining / 60)
+					local seconds = math.floor(remaining) % 60
+
+
+					if(hours > 0)then
+						self.timerShadow:SetText(string.format("%dh", hours))
+						self.timer:SetText(string.format("%dh", hours))
+					elseif(minutes > 0)then
+						self.timerShadow:SetText(string.format("%dm", minutes))
+						self.timer:SetText(string.format("%dm", minutes))
+					elseif(seconds > 0)then
+						self.timerShadow:SetText(string.format("%ds", seconds))
+						self.timer:SetText(string.format("%ds", seconds))
+					end
 					
-				  end
+				  
 				  
 				  -- Update the width to avoid truncation.
 				  self.timerShadow:SetWidth(self.timer:GetFullWidth())
@@ -276,67 +241,91 @@ function UnitBuffBars:addBuffBar(buff, time)
 		--
 		-- Finally, if we're clicked, we want to cancel whatever buff is on us.
 		--
-		function bar.Event:RightDown()
+		function buffIcon.Event:RightDown()
 		  Command.Buff.Cancel(self.buffid)
 		end
 	end
 	
-	table.insert(self.activeBuffBars, bar)
+	table.insert(self.activeBuffIcons, buffIcon)
 
-	-- Show the bar and set the data.
-	bar:SetVisible(true)
-	bar:SetBuff(buff, time)
+	-- Show the buffIcon and set the data.
+	buffIcon:SetVisible(true)
+	buffIcon:SetBuff(buff, time)
 	
 	-- Attach it to the right spot.
 	if not self.lastAttach then
-		-- This is our first bar, so we're pinning it to the unit frame it belongs too
+		-- This is our first buffIcon, so we're pinning it to the unit frame it belongs too
 		if (self.direction == "up") then
-			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER", 0, 0)
+			buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, 0)
 		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER", 0, 0)
+			buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT", 0, 0)
 		end
-	-- This isn't our first bar, so we pin it to the last bar.
+		
+		self.curIconsInRow = 1
+		self.numRows = 0
+		
+	-- This isn't our first buffIcon, so we pin it to the last buffIcon.
 	else
-		if (self.direction == "up") then
-			bar:SetPoint("BOTTOMCENTER", self.lastAttach, "TOPCENTER", 0, -MinUIConfig.frames[unitName].itemOffset)
-		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.lastAttach, "BOTTOMCENTER", 0, MinUIConfig.frames[unitName].itemOffset)
-		end
+			if(self.curIconsInRow == self.maxIconsPerRow)then
+				self.numRows = self.numRows + 1
+				self.curIconsInRow = 0
+				
+				--print ( self.numRows )
+				
+				local rowYOffset = ((32+buffIcon.timer:GetFullHeight())*self.numRows)
+				
+				--print ( rowYOffset )
+				
+				if (self.direction == "up") then
+					buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, -rowYOffset)
+				elseif (self.direction == "down") then
+					buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT", 0, rowYOffset)
+				end
+			else
+				if (self.direction == "up") then
+					buffIcon:SetPoint("CENTERLEFT", self.lastAttach, "CENTERLEFT", 32+itemOffset, 0)
+				elseif (self.direction == "down") then
+					buffIcon:SetPoint("CENTERLEFT", self.lastAttach, "CENTERLEFT", 32+itemOffset, 0)
+				end
+			end
+			
+			self.curIconsInRow = self.curIconsInRow + 1
+
 	end
 	
-	-- store the last bar as the current attachment point
-	self.lastAttach = bar
+	-- store the last buffIcon as the current attachment point
+	self.lastAttach = buffIcon
 end
 
 --
 -- Animate buff bars
 --
-function UnitBuffBars:animate(time)
-	for _, bar in ipairs(self.activeBuffBars) do
-		bar:Tick(time)
+function UnitBuffIcons:animate(time)
+	for _, buffIcon in ipairs(self.activeBuffIcons) do
+		buffIcon:Tick(time)
 	end
 end
 
 --
 -- Reset buff bars
 --
-function UnitBuffBars:resetBuffBars()
+function UnitBuffIcons:resetBuffBars()
 	----debugPrint("resetting buff bars on ", self.unitName)
 	
-	for _, bar in pairs(self.activeBuffBars) do
-		table.insert(self.zombieBuffBars, bar)
-		bar:SetVisible(false)
-		bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
+	for _, buffIcon in pairs(self.activeBuffIcons) do
+		table.insert(self.zombieBuffIcons, buffIcon)
+		buffIcon:SetVisible(false)
+		buffIcon:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
 	end
 
-	self.activeBuffBars = {}
+	self.activeBuffIcons = {}
 	self.lastAttach = nil
 end
 
 -- 
 -- Update the Buff Bars
 --
-function UnitBuffBars:update(time)
+function UnitBuffIcons:update(time)
 	-- inspect buffs for unitName
 	local bufflist = Inspect.Buff.List(self.unitName)
 
@@ -531,7 +520,7 @@ function UnitBuffBars:update(time)
 		
 		-- Now that we have the ordering, we just add the bars one at a time. Done!
 		for k, buff in ipairs(bbars) do
-			self:addBuffBar(buff, time)
+			self:addBuffIcon(buff, time)
 		end
 	else
 		self:resetBuffBars()

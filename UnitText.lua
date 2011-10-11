@@ -159,7 +159,7 @@ function UnitText:updateTextItems()
 				lastWidth = value:GetFullWidth()
 			end
 			
-			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset+1, 2 )
+			value:SetPoint("CENTERLEFT", self.frame, "CENTERLEFT", offset+1.5, 1.5 )
 			value:SetHeight(value:GetFullHeight())
 		end
 		

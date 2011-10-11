@@ -57,7 +57,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	uBar.bar:SetHeight(uBar.height)
 	
 	-- Create textured component that resizes
-	uBar.tex = UI.CreateFrame("Texture", name.."_text", parentItem)
+	uBar.tex = UI.CreateFrame("Texture", name.."_texture", parentItem)
 	if ( MinUIConfig.barTexture ) then
 		--print("config has texture")
 		uBar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
@@ -97,7 +97,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	
 	-- create text shadow 1
 	uBar.leftTextShadow = UI.CreateFrame("Text", name .. "_textshadow1", parentItem )
-	uBar.leftTextShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1, 2 )
+	uBar.leftTextShadow:SetPoint( "CENTERLEFT", uBar.bar, "CENTERLEFT", 1.5, 1.5 )
 	uBar.leftTextShadow:SetLayer(4)
 	uBar.leftTextShadow:SetVisible(true)
 	uBar.leftTextShadow:SetFontSize(fontSize)
@@ -125,7 +125,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	
 	-- create text shadow 2
 	uBar.rightTextShadow = UI.CreateFrame("Text", name .. "_textshadow2", parentItem )
-	uBar.rightTextShadow:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 1, 2 )
+	uBar.rightTextShadow:SetPoint( "CENTERRIGHT", uBar.bar, "CENTERRIGHT", 1.5, 1.5 )
 	uBar.rightTextShadow:SetLayer(4)
 	uBar.rightTextShadow:SetVisible(true)
 	uBar.rightTextShadow:SetFontSize(fontSize)
