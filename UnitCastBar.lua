@@ -13,7 +13,7 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	local uCastBar = {}             			-- our new object
 	setmetatable(uCastBar, UnitCastBar)      	-- make UnitFrame handle lookup
 	
-	uCastBar.width = width
+	uCastBar.width = width - height -- give height room for icon
 	uCastBar.height = height
 	uCastBar.unitName = unitName
 	uCastBar.itemOffset = MinUIConfig.frames[uCastBar.unitName].itemOffset
@@ -28,8 +28,8 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	-- TODO: config location and size and text values etc
 	uCastBar.castbar = {}
 	uCastBar.castbar.bar = UI.CreateFrame("Frame", uCastBar.unitName.."_castBar", parentItem )
-	uCastBar.castbar.bar:SetPoint(thisAnchor, parentItem , parentAnchor, xOffset, yOffset )
-	uCastBar.castbar.bar:SetWidth(uCastBar.width)
+	uCastBar.castbar.bar:SetPoint(thisAnchor, parentItem , parentAnchor, xOffset + uCastBar.height , yOffset ) -- ofset for icon
+	uCastBar.castbar.bar:SetWidth(uCastBar.width) 
 	uCastBar.castbar.bar:SetHeight(uCastBar.height) 
 	uCastBar.castbar.bar:SetLayer(1)
 	uCastBar.castbar.bar:SetVisible(uCastBar.visible)
@@ -110,6 +110,13 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	uCastBar.castbar.rightText:SetHeight(uCastBar.castbar.rightText:GetFullHeight())
 	uCastBar.castbar.rightTextShadow:SetText("???")
 	uCastBar.castbar.rightTextShadow:SetHeight(uCastBar.castbar.rightText:GetFullHeight())
+	
+	-- icon
+	uCastBar.castbar.icon = UI.CreateFrame("Texture", uCastBar.unitName.."_icon", uCastBar.castbar.bar)
+	uCastBar.castbar.icon:SetLayer(5)
+	uCastBar.castbar.icon:SetPoint("CENTERRIGHT", uCastBar.castbar.bar, "CENTERLEFT" )
+	uCastBar.castbar.icon:SetHeight(uCastBar.height)
+	uCastBar.castbar.icon:SetWidth(uCastBar.height)
 		
 	--
 	-- Handle castbar changed events
@@ -179,6 +186,15 @@ function UnitCastBar:updateCastbar( unitIDs )
 				self.castbar.leftText:SetWidth(self.castbar.leftText:GetFullWidth())
 				self.castbar.leftTextShadow:SetText(abilityName)
 				self.castbar.leftTextShadow:SetWidth(self.castbar.leftText:GetFullWidth())
+				
+				local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
+				if(abilityDetails)then
+					if(abilityDetails.icon)then
+						self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+					else
+						self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+					end
+				end
 				
 				if ( uninterruptible ) then
 					self.castbar.bar:SetBackgroundColor(0.2,0.2,0.2,0.3)

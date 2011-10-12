@@ -575,7 +575,7 @@ function UnitFrame:updateHealth( )
 						healthText = healthText .. string.format("%s", healthMax)
 					end]]
 					
-					healthText =  string.format("(%s%%)", health)
+					healthText =  string.format("%s", health)
 					local healthPercentText = string.format("(%s%%)", healthPercent)
 					
 					bar:setUBarLeftText(healthText)

@@ -153,6 +153,21 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 				self.timer:SetFontSize(fontSize)
 				self.timerShadow:SetFontSize(fontSize)
 			end
+			
+			if(buff.debuff)then
+				self.tex:SetTexture("MinUI", "Media/Icons/debuff_physical.tga")
+				if(buff.disease)then
+					print("disease")
+				end
+				if(buff.curse)then
+					print("curse")
+				end
+				if(buff.poison)then
+					print("poison")
+				end
+			else
+				self.tex:SetTexture("MinUI", "Media/Icons/buff.tga")
+			end
 
 		  
 			-- Re-square and set the icon
@@ -160,8 +175,6 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 			self.icon:SetPoint("TOPLEFT", self, "TOPLEFT", 2, 2)
 			self.icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -2, -2)
 			self.icon:SetLayer(2)
-			
-			self.tex:SetTexture("MinUI", "Media/Icons/BuffBorder.tga")
 			self.tex:SetPoint("TOPLEFT", self, "TOPLEFT")
 			self.tex:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT")
 			self.tex:SetLayer(1)
