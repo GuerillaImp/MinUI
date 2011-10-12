@@ -543,14 +543,14 @@ function UnitFrame:updateHealth( )
 				local healthMax = unitDetails.healthMax
 				if (healthMax) then
 					local healthRatio = health/healthMax
-					healthPercent = math.floor(healthRatio * 100)
+					healthPercent = math.ceil(healthRatio * 100) -- lets be more optimistic :P
 					
 					local healthMillions = math.floor(health / 1000000)
 					local healthTenThousands = math.floor(health / 10000)
 					local healthMaxMillions = math.floor(healthMax / 1000000)
 					local healthMaxTenThousands = math.floor(healthMax / 10000)
 					
-					healthText = ""
+					--[[local healthText = ""
 					if(healthMillions > 0)then
 						healthText = healthText .. string.format("%s", healthMillions)
 						if(healthTenThousands > 0)then
@@ -573,8 +573,9 @@ function UnitFrame:updateHealth( )
 						healthText = healthText .. string.format("%sk", healthMaxTenThousands)
 					else
 						healthText = healthText .. string.format("%s", healthMax)
-					end
+					end]]
 					
+					healthText =  string.format("(%s%%)", health)
 					local healthPercentText = string.format("(%s%%)", healthPercent)
 					
 					bar:setUBarLeftText(healthText)
