@@ -187,13 +187,17 @@ function UnitCastBar:updateCastbar( unitIDs )
 				self.castbar.leftTextShadow:SetText(abilityName)
 				self.castbar.leftTextShadow:SetWidth(self.castbar.leftText:GetFullWidth())
 				
-				local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
-				if(abilityDetails)then
-					if(abilityDetails.icon)then
-						self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
-					else
-						self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+				if(unitCastBar.ability)then
+					local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
+					if(abilityDetails)then
+						if(abilityDetails.icon)then
+							self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+						else
+							self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+						end
 					end
+				else
+					self.castbar.icon:SetTexture("Rift", "apple.dds") -- just use a placeholder 
 				end
 				
 				if ( uninterruptible ) then

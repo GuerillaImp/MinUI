@@ -80,6 +80,9 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		-- We don't have any bars remaining, so we create a new one.
 		-- Our Bars are considered single objects that can be dealt with atomically. Each one has the functionality needed to update itself.
 		buffIcon = UI.CreateFrame("Frame", "Bar", MinUI.context)
+		buffIcon:SetWidth(32)
+		buffIcon:SetHeight(32)
+		buffIcon:SetBackgroundColor(0,0,0,0.5)
 
 		-- Set location
 		if(self.direction == "up")then
@@ -93,6 +96,10 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		buffIcon.timer:SetLayer(4)
 		buffIcon.timerShadow:SetLayer(3)
 		
+		buffIcon.stack = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.stack:SetLayer(3)
+		buffIcon.stack:SetPoint("CENTER",buffIcon,"CENTER")
+		
 		buffIcon.icon = UI.CreateFrame("Texture", "Icon", buffIcon)
 		buffIcon.icon:SetLayer(1)
 
@@ -105,6 +112,7 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		if (MinUIConfig.globalTextFont) then
 			buffIcon.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 			buffIcon.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.stack:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 		end
 		
 		buffIcon.timer:SetText("??")
@@ -113,10 +121,17 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		buffIcon.timerShadow:SetFontSize(12)
 		buffIcon.timerShadow:SetFontColor(0,0,0,1)
 		
+		buffIcon.stack:SetText("??")
+		buffIcon.stack:SetFontSize(12)
+		buffIcon.stack:SetVisible(true)
+		buffIcon.stack:SetFontColor(1,1,1,1)
+		
 		buffIcon.timer:SetHeight(buffIcon.timer:GetFullHeight())
 		buffIcon.timer:SetWidth(buffIcon.timer:GetFullWidth())
 		buffIcon.timerShadow:SetHeight(buffIcon.timer:GetFullHeight())
 		buffIcon.timerShadow:SetWidth(buffIcon.timer:GetFullWidth())
+		buffIcon.stack:SetHeight(buffIcon.stack:GetFullHeight())
+		buffIcon.stack:SetWidth(buffIcon.stack:GetFullWidth())
 		
 		-- icon fills the buffIcon
 		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
@@ -155,18 +170,24 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 			end
 			
 			if(buff.debuff)then
-				self.tex:SetTexture("MinUI", "Media/Icons/debuff_physical.tga")
 				if(buff.disease)then
-					print("disease")
-				end
-				if(buff.curse)then
-					print("curse")
-				end
-				if(buff.poison)then
-					print("poison")
+					self.tex:SetTexture("MinUI", "Media/Icons/disease.tga")
+				elseif(buff.curse)then
+					self.tex:SetTexture("MinUI", "Media/Icons/curse.tga")
+				elseif(buff.poison)then
+					self.tex:SetTexture("MinUI", "Media/Icons/poison.tga")
+				else
+					self.tex:SetTexture("MinUI", "Media/Icons/debuff.tga")
 				end
 			else
 				self.tex:SetTexture("MinUI", "Media/Icons/buff.tga")
+			end
+			
+			if(buff.stack)then
+				buffIcon.stack:SetText("("..buff.stack..")")
+				buffIcon.stack:SetVisible(true)
+			else
+				buffIcon.stack:SetVisible(false)
 			end
 
 		  
@@ -283,6 +304,8 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 				self.numRows = self.numRows + 1
 				self.curIconsInRow = 0
 				
+				
+				
 				--print ( self.numRows )
 				
 				local rowYOffset = ((32+buffIcon.timer:GetFullHeight())*self.numRows)
@@ -303,7 +326,6 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 			end
 			
 			self.curIconsInRow = self.curIconsInRow + 1
-
 	end
 	
 	-- store the last buffIcon as the current attachment point
@@ -328,7 +350,12 @@ function UnitBuffIcons:resetBuffBars()
 	for _, buffIcon in pairs(self.activeBuffIcons) do
 		table.insert(self.zombieBuffIcons, buffIcon)
 		buffIcon:SetVisible(false)
-		buffIcon:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
+		-- This is our first buffIcon, so we're pinning it to the unit frame it belongs too
+		if (self.direction == "up") then
+			buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", 0, 0)
+		elseif (self.direction == "down") then
+			buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT", 0, 0)
+		end
 	end
 
 	self.activeBuffIcons = {}

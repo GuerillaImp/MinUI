@@ -326,7 +326,11 @@ function UnitBuffBars:resetBuffBars()
 	for _, bar in pairs(self.activeBuffBars) do
 		table.insert(self.zombieBuffBars, bar)
 		bar:SetVisible(false)
-		bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
+		if (self.direction == "up") then
+			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER", 0, 0)
+		elseif (self.direction == "down") then
+			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER", 0, 0)
+		end
 	end
 
 	self.activeBuffBars = {}
