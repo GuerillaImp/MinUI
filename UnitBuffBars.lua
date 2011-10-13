@@ -45,7 +45,7 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	-- create the frame
 	uBBars.frame = UI.CreateFrame("Frame", "buffBars_"..buffType, parentItem)
 	uBBars.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
-	uBBars.frame:SetWidth(uBBars.width + (MinUIConfig.frames[uBBars.unitName].itemOffset*2)) -- give "breathing room" at either end
+	uBBars.frame:SetWidth(uBBars.width) -- give "breathing room" at either end
 	uBBars.frame:SetHeight(MinUIConfig.frames[uBBars.unitName].itemOffset)
 	uBBars.frame:SetLayer(-1)
 	uBBars.frame:SetVisible(true)
@@ -116,7 +116,7 @@ function UnitBuffBars:addBuffBar(buff, time)
 		bar.textShadow:SetFontColor(0,0,0,1)
 
 		-- Set Fonts
-		if (MinUIConfig.globalTextFont) then
+		if not (MinUIConfig.globalTextFont == "default") then
 			bar.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 			bar.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 			bar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")

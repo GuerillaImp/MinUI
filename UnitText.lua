@@ -83,7 +83,7 @@ function UnitText:addTextItem(textItem)
 	self.textsShadows[textItem]:SetHeight( self.height )
 	
 	-- Set Font
-	if (MinUIConfig.globalTextFont) then
+	if not (MinUIConfig.globalTextFont == "default") then
 		self.texts[textItem]:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 		self.textsShadows[textItem]:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end

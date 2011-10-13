@@ -46,7 +46,7 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.frame:SetVisible(uFrame.visible)
 	
 	-- create a castbar
-	uFrame.castBar = UnitCastBar.new( uFrame.unitName, MinUIConfig.frames[uFrame.unitName].barWidth, MinUIConfig.frames[uFrame.unitName].barHeight,"TOPLEFT","BOTTOMLEFT", uFrame.frame, 0, MinUIConfig.frames[uFrame.unitName].barHeight)
+	uFrame.castBar = nil
 	
 	--
 	-- frame background
@@ -71,18 +71,19 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	-- Icons for Role - XXX: Replace this with one of the new anchors mayhap
 	--
 	uFrame.bottomRightIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomRightIcon", uFrame.frame)
-	uFrame.bottomRightIcon:SetPoint("BOTTOMRIGHT", uFrame.frame, "BOTTOMRIGHT", -uFrame.itemOffset,-uFrame.itemOffset) -- top right icon
+	uFrame.bottomRightIcon:SetPoint("TOPLEFT", uFrame.frame, "BOTTOMRIGHT", -7.5,-7.5) 
 	uFrame.bottomRightIcon:SetWidth(15)
 	uFrame.bottomRightIcon:SetHeight(15)
-	uFrame.bottomRightIcon:SetLayer(1)
+	uFrame.bottomRightIcon:SetLayer(4)
 	uFrame.bottomRightIcon:SetVisible(true)
 	
-	uFrame.bottomLeftIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomLeftIcon", uFrame.frame)
-	uFrame.bottomLeftIcon:SetPoint("BOTTOMLEFT",  uFrame.frame, "BOTTOMLEFT", uFrame.itemOffset, -uFrame.itemOffset) -- top left icon
-	uFrame.bottomLeftIcon:SetWidth(15)
-	uFrame.bottomLeftIcon:SetHeight(15)
-	uFrame.bottomLeftIcon:SetLayer(1)
-	uFrame.bottomLeftIcon:SetVisible(false)
+	uFrame.topRightIcon = UI.CreateFrame("Texture", uFrame.unitName.."_bottomLeftIcon", uFrame.frame)
+	uFrame.topRightIcon:SetPoint("BOTTOMLEFT",  uFrame.frame, "TOPRIGHT", -7.5,7.5)
+	uFrame.topRightIcon:SetWidth(15)
+	uFrame.topRightIcon:SetHeight(15)
+	uFrame.topRightIcon:SetLayer(4)
+	uFrame.topRightIcon:SetVisible(false)
+	uFrame.topRightIcon:SetTexture("MinUI", "Media/Icons/InCombat.png")
 
 	
 	--
@@ -206,6 +207,14 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	return uFrame
 end
 
+function UnitFrame:setInCombat(toggle)
+	if(toggle)then
+		self.topRightIcon:SetVisible(true)
+	else
+		self.topRightIcon:SetVisible(false)
+	end
+end
+
 --
 -- Animation Loop
 --
@@ -242,7 +251,7 @@ function UnitFrame:unitChanged( )
 	--
 	-- Ensure the buffsbars are reset then update
 	--
-	self:resetBuffBars()
+	self:resetBuffs()
 	self:updateBuffBars( )	
 end
 
@@ -257,13 +266,13 @@ function UnitFrame:updateIcons()
 		if(role)then
 			self.bottomRightIcon:SetVisible(true)
 			if(role=="dps")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/dps.tga")
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/dps.png")
 			elseif(role=="support")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/support.tga")
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Support.png")
 			elseif(role=="heal")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/heals.tga")
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Heals.png")
 			elseif(role=="tank")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/tank.tga")
+				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Tank.png")
 			else
 				self.bottomRightIcon:SetVisible(false)
 			end
@@ -271,6 +280,15 @@ function UnitFrame:updateIcons()
 			--print("no role")
 			self.bottomRightIcon:SetVisible(false)
 		end	
+	end
+end
+
+function UnitFrame:addCastBar( castBarType )
+	--print("castbar ", castBarType )
+	if ( castBarType == "above" ) then
+		self.castBar = UnitCastBar.new( self.unitName, MinUIConfig.frames[self.unitName].barWidth, MinUIConfig.frames[self.unitName].barHeight,"BOTTOMLEFT","TOPLEFT", self.frame, MinUIConfig.frames[self.unitName].itemOffset, -MinUIConfig.frames[self.unitName].itemOffset)
+	elseif ( castBarType == "below" ) then
+		self.castBar = UnitCastBar.new( self.unitName, MinUIConfig.frames[self.unitName].barWidth, MinUIConfig.frames[self.unitName].barHeight,"TOPLEFT","BOTTOMLEFT", self.frame, MinUIConfig.frames[self.unitName].itemOffset, MinUIConfig.frames[self.unitName].itemOffset)
 	end
 end
 
@@ -421,47 +439,66 @@ end
 -- lengthThreshold == max time (i.e 30 secs or less)
 --
 --
-function UnitFrame:addBuffBars( buffType, visibilityOptions, lengthThreshold, location )
-	local bbars = nil
-	
+function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThreshold, location )
+	local buffs = nil
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
+	local xOffset = MinUIConfig.frames[self.unitName].itemOffset
+	local widthOffset = MinUIConfig.frames[self.unitName].itemOffset
+	local attachPoint = self.frame
+	local buffView = viewType
 	
-	--print("pre scale buff width", barWidth)
+	print ( "creating buff type, ", buffView)
+	
 	-- if this unit has a scale value
 	if(MinUIConfig.frames[self.unitName].scale)then
 		barWidth = barWidth * MinUIConfig.frames[self.unitName].scale
 	end
-	--print("post scale buff width", barWidth)
+
+	-- check to see if we should actually attach to the castbar rather than the frame itself
+	-- attach to the castbar if we are both above/below the unit
+	local castBar = MinUIConfig.frames[self.unitName].castbar
+	if ( castBar ) then
+		if ( location == castBar ) then
+			attachPoint = self.castBar:getFrame()
+			xOffset = 0 -- cast bar is already offset correctly on the x value
+		end
+	end
 	
 	-- create bar in correct location
 	if( location == "above") then
-		--bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
-		bbars = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth, "BOTTOMCENTER", "TOPCENTER", self.frame, 0, 0 )
-	elseif ( location == "below") then
-		--bbars = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
-		bbars = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth, "TOPCENTER", "BOTTOMCENTER", self.frame, 0, 0 )
+		if(buffView == "icon")then
+			buffs = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth-(widthOffset), "BOTTOMCENTER", "TOPCENTER", attachPoint, xOffset, 0 )
+		elseif(buffView == "bar")then
+			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth-(widthOffset), "BOTTOMCENTER", "TOPCENTER", attachPoint, xOffset, 0 )
+		end
+	elseif ( location == "below") then	
+		if(buffView == "icon")then
+			buffs = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth-(widthOffset), "TOPCENTER", "BOTTOMCENTER", attachPoint, xOffset, 0 )
+		elseif(buffView == "bar")then
+			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth-(widthOffset), "TOPCENTER", "BOTTOMCENTER", attachPoint, xOffset, 0 )
+		end
 	end
 	
 	-- store frame
 	if (buffType == "buffs")then
-		self.buffs = bbars
+		self.buffs = buffs
 	elseif (buffType == "debuffs")then
-		self.debuffs = bbars
+		self.debuffs = buffs
 	elseif(buffType == "merged") then
-		self.buffs = bbars -- just store here
+		self.buffs = buffs -- just store here
 	end
 end
 
 --
 -- Resets the buff bar to contain no buffs
 --
-function UnitFrame:resetBuffBars()
+function UnitFrame:resetBuffs()
 	if(self.buffs) then
-		debugPrint("resetBuffBars buffs on ", self.unitName)
+		debugPrint("resetBuffs buffs on ", self.unitName)
 		self.buffs:resetBuffBars(Inspect.Time.Frame())
 	end
 	if(self.debuffs)  then
-		debugPrint("resetBuffBars buffs on ", self.unitName)
+		debugPrint("resetBuffs buffs on ", self.unitName)
 		self.debuffs:resetBuffBars(Inspect.Time.Frame())
 	end
 end
@@ -759,7 +796,7 @@ end
 --
 function UnitFrame:createEnabledBars()
 	for _,barType in pairs(self.barsEnabled) do
-		print("creating enabled bars, ", barType)
+		debugPrint("creating enabled bars, ", barType)
 		if ( barType == "health" ) then
 			self:addHealthBar()
 		end
@@ -891,7 +928,7 @@ end
 -- A charge bar for a Mage calling class
 --
 function UnitFrame:addChargeBar()
-	print("Add charge Bar", self.unitName)
+	debugPrint("Add charge Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
@@ -987,14 +1024,14 @@ end
 function UnitFrame:addUnitBar( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
 	----debugPrint ("Adding Unit Bar", barType, " to ", self.unitName)
 
-	--print ("pre scale", width,height,fontSize)
+	--debugPrint ("pre scale", width,height,fontSize)
 	-- if this unit has a scale value
 	if(MinUIConfig.frames[self.unitName].scale)then
 		width = width * MinUIConfig.frames[self.unitName].scale
 		height = height * MinUIConfig.frames[self.unitName].scale
 		fontSize = fontSize * MinUIConfig.frames[self.unitName].scale
 	end
-	--print ("post scale", width,height,fontSize)
+	--debugPrint ("post scale", width,height,fontSize)
 
 	newBar = UnitBar.new( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	

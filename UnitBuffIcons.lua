@@ -92,39 +92,53 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		end
 		
 		buffIcon.timer = UI.CreateFrame("Text", "Timer", buffIcon)
-		buffIcon.timerShadow = UI.CreateFrame("Text", "Timer", buffIcon)
 		buffIcon.timer:SetLayer(4)
-		buffIcon.timerShadow:SetLayer(3)
-		
-		buffIcon.stack = UI.CreateFrame("Text", "Timer", buffIcon)
-		buffIcon.stack:SetLayer(3)
-		buffIcon.stack:SetPoint("CENTER",buffIcon,"CENTER")
-		
-		buffIcon.icon = UI.CreateFrame("Texture", "Icon", buffIcon)
-		buffIcon.icon:SetLayer(1)
-
-		buffIcon.tex = UI.CreateFrame("Texture", "tex", buffIcon)
-		buffIcon.tex:SetTexture("MinUI", "Media/Icons/BuffBorder.tga")
-		buffIcon.tex:SetLayer(2)
-
-
-		-- Set Fonts
-		if (MinUIConfig.globalTextFont) then
-			buffIcon.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			buffIcon.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			buffIcon.stack:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-		end
-		
-		buffIcon.timer:SetText("??")
 		buffIcon.timer:SetFontSize(12)
 		buffIcon.timer:SetFontColor(1,1,1,1)
+		
+		buffIcon.timerShadow = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.timerShadow:SetLayer(3)
 		buffIcon.timerShadow:SetFontSize(12)
 		buffIcon.timerShadow:SetFontColor(0,0,0,1)
 		
-		buffIcon.stack:SetText("??")
-		buffIcon.stack:SetFontSize(12)
-		buffIcon.stack:SetVisible(true)
+		buffIcon.stack = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.stack:SetLayer(4)
+		buffIcon.stack:SetPoint("CENTER",buffIcon,"CENTER")
+		buffIcon.stack:SetVisible(false)
 		buffIcon.stack:SetFontColor(1,1,1,1)
+		buffIcon.stack:SetFontSize(14)
+
+		buffIcon.stackShadow = UI.CreateFrame("Text", "Timer", buffIcon)
+		buffIcon.stackShadow:SetLayer(3)
+		buffIcon.stackShadow:SetPoint("CENTER",buffIcon,"CENTER",1,1)
+		buffIcon.stackShadow:SetVisible(false)
+		buffIcon.stackShadow:SetFontColor(0,0,0,1)
+		buffIcon.stackShadow:SetFontSize(14)
+		
+		buffIcon.icon = UI.CreateFrame("Texture", "Icon", buffIcon)
+		buffIcon.icon:SetLayer(1)
+		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
+		buffIcon.icon:SetWidth(32)
+		buffIcon.icon:SetHeight(32)
+
+		buffIcon.tex = UI.CreateFrame("Texture", "tex", buffIcon)
+		buffIcon.tex:SetTexture("MinUI", "Media/Icons/buff.png")
+		buffIcon.tex:SetLayer(2)
+		buffIcon.tex:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
+		buffIcon.tex:SetWidth(32)
+		buffIcon.tex:SetHeight(32)
+
+		-- Set Fonts
+		if not (MinUIConfig.globalTextFont == "default") then
+			buffIcon.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.stack:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+			buffIcon.stackShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		end
+		
+		buffIcon.timer:SetText("0s")
+		buffIcon.stack:SetText("(0)")
+		
 		
 		buffIcon.timer:SetHeight(buffIcon.timer:GetFullHeight())
 		buffIcon.timer:SetWidth(buffIcon.timer:GetFullWidth())
@@ -132,6 +146,8 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		buffIcon.timerShadow:SetWidth(buffIcon.timer:GetFullWidth())
 		buffIcon.stack:SetHeight(buffIcon.stack:GetFullHeight())
 		buffIcon.stack:SetWidth(buffIcon.stack:GetFullWidth())
+		buffIcon.stackShadow:SetHeight(buffIcon.stack:GetFullHeight())
+		buffIcon.stackShadow:SetWidth(buffIcon.stack:GetFullWidth())
 		
 		-- icon fills the buffIcon
 		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
@@ -144,12 +160,8 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		else
 			buffIcon.timer:SetPoint("TOPCENTER", buffIcon, "BOTTOMCENTER",0,itemOffset)
 			buffIcon.timerShadow:SetPoint("TOPCENTER", buffIcon, "BOTTOMCENTER", 1.5, itemOffset-1.5) 
-
 		end
-		-- default size
-		buffIcon:SetWidth( 32 )
-		buffIcon:SetHeight( 32 )
-		
+
 		--
 		-- Set Buff - requires a buff and a timestamp
 		--
@@ -171,43 +183,39 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 			
 			if(buff.debuff)then
 				if(buff.disease)then
-					self.tex:SetTexture("MinUI", "Media/Icons/disease.tga")
+					self.tex:SetTexture("MinUI", "Media/Icons/disease.png")
 				elseif(buff.curse)then
-					self.tex:SetTexture("MinUI", "Media/Icons/curse.tga")
+					self.tex:SetTexture("MinUI", "Media/Icons/curse.png")
 				elseif(buff.poison)then
-					self.tex:SetTexture("MinUI", "Media/Icons/poison.tga")
+					self.tex:SetTexture("MinUI", "Media/Icons/poison.png")
 				else
-					self.tex:SetTexture("MinUI", "Media/Icons/debuff.tga")
+					self.tex:SetTexture("MinUI", "Media/Icons/debuff.png")
 				end
 			else
-				self.tex:SetTexture("MinUI", "Media/Icons/buff.tga")
+				self.tex:SetTexture("MinUI", "Media/Icons/buff.png")
 			end
 			
 			if(buff.stack)then
 				buffIcon.stack:SetText("("..buff.stack..")")
+				buffIcon.stackShadow:SetText("("..buff.stack..")")
+				
+				buffIcon.stack:SetWidth(buffIcon.stack:GetFullWidth())
+				buffIcon.stack:SetHeight(buffIcon.stack:GetFullHeight())
+				buffIcon.stackShadow:SetWidth(buffIcon.stack:GetFullWidth())
+				buffIcon.stackShadow:SetHeight(buffIcon.stack:GetFullHeight())
+				
 				buffIcon.stack:SetVisible(true)
+				buffIcon.stackShadow:SetVisible(true)
 			else
+				buffIcon.stack:SetText("")
+				buffIcon.stackShadow:SetText("")
 				buffIcon.stack:SetVisible(false)
+				buffIcon.stackShadow:SetVisible(true)
 			end
 
 		  
-			-- Re-square and set the icon
+			-- Set the icon
 			self.icon:SetTexture("Rift", buff.icon)
-			self.icon:SetPoint("TOPLEFT", self, "TOPLEFT", 2, 2)
-			self.icon:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT", -2, -2)
-			self.icon:SetLayer(2)
-			self.tex:SetPoint("TOPLEFT", self, "TOPLEFT")
-			self.tex:SetPoint("BOTTOMRIGHT", self, "BOTTOMRIGHT")
-			self.tex:SetLayer(1)
-
-			-- Display our stacking multiple.
-			--[[if buff.stack then
-				self.text:SetText(buff.name .. " (" .. buff.stack .. ")")
-				self.textShadow:SetText(buff.name .. " (" .. buff.stack .. ")")
-			else
-				self.text:SetText(buff.name)
-				self.textShadow:SetText(buff.name)
-			end]]
 		  
 			if buff.duration then
 				self.completion = buff.begin + buff.duration

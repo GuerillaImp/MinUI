@@ -91,7 +91,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	uBar.leftText:SetWidth(uBar.leftText:GetFullWidth())
 	uBar.leftText:SetHeight(uBar.leftText:GetFullHeight())
 	-- Font: From Config
-	if(MinUIConfig.globalTextFont) then
+	if not (MinUIConfig.globalTextFont == "default") then
 		uBar.leftText:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	
@@ -105,7 +105,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	uBar.leftTextShadow:SetWidth(uBar.leftText:GetFullWidth())
 	uBar.leftTextShadow:SetHeight(uBar.leftText:GetFullHeight())
 	-- Font: From Config
-	if(MinUIConfig.globalTextFont) then
+	if not (MinUIConfig.globalTextFont == "default") then
 		uBar.leftTextShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	
@@ -119,7 +119,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	uBar.rightText:SetWidth(uBar.rightText:GetFullWidth())
 	uBar.rightText:SetHeight(uBar.rightText:GetFullHeight())
 	-- Font: From Config
-	if(MinUIConfig.globalTextFont) then
+	if not (MinUIConfig.globalTextFont == "default") then
 		uBar.rightText:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	
@@ -133,7 +133,7 @@ function UnitBar.new( name, width, height, fontSize, anchorThis, anchorParent, p
 	uBar.rightTextShadow:SetWidth(uBar.rightText:GetFullWidth())
 	uBar.rightTextShadow:SetHeight(uBar.rightText:GetFullHeight())
 	-- Font: From Config
-	if(MinUIConfig.globalTextFont) then
+	if not (MinUIConfig.globalTextFont == "default") then
 		uBar.rightTextShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
 	end
 	

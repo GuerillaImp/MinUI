@@ -119,7 +119,7 @@ local function muiCommandInterface(commandline)
 					or token == "mageChargeFontSize" or token == "itemOffset" or token == "bars" or token == "texts" 
 					or token == "buffsEnabled" or token == "debuffsEnabled" or token == "buffLocation" or token == "debuffLocation"
 					or token == "buffVisibilityOptions" or token == "debuffVisibilityOptions" or token == "buffThreshold" 
-					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" ) then
+					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" or token == "buffView"  or token == "debuffView" or token == "castbar" ) then
 				command = token 
 				--debugPrint("command given ", command)
 			-- unknown command
@@ -198,7 +198,7 @@ local function muiCommandInterface(commandline)
 						or command == "mageChargeFontSize" or command == "itemOffset" or command == "bars"  or command == "texts" 
 						or command == "buffsEnabled" or command == "debuffsEnabled" or command == "buffLocation" or command == "debuffLocation"
 						or command == "buffVisibilityOptions" or command == "debuffVisibilityOptions" or command == "buffThreshold" 
-						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" ) then
+						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" or command == "buffView"  or command == "debuffView" or command == "castbar" ) then
 					frameToConfig = token
 					----debugPrint("configuring frame", frameToConfig)
 				end
@@ -370,6 +370,24 @@ local function muiCommandInterface(commandline)
 				end
 				print ("Setting debuff auras to ", debuffAuras, " on ", frameToConfig)
 				MinUIConfig.frames[frameToConfig].debuffAuras = debuffAuras
+				refreshRequired = true
+			-- buff view type
+			elseif (command == "buffView") then
+				local buffView = token
+				print ("Setting buff view to ", buffView, " on ", frameToConfig)
+				MinUIConfig.frames[frameToConfig].buffView = buffView
+				refreshRequired = true		
+			-- debuff view type
+			elseif (command == "debuffView") then
+				local buffView = token
+				print ("Setting debuff view to ", debuffView, " on ", frameToConfig)
+				MinUIConfig.frames[frameToConfig].debuffView = debuffView
+				refreshRequired = true	
+			-- debuff view type
+			elseif (command == "castbar") then
+				local castbar = token
+				print ("Setting castbar to ", castbar, " on ", frameToConfig)
+				MinUIConfig.frames[frameToConfig].castbar = castbar
 				refreshRequired = true					
 			-- bars requires a comma separated list of items afterwards (health,resource,charge,text,comboPointsBar)
 			elseif (command == "bars") then
@@ -463,7 +481,7 @@ local function createUnitFrames()
 	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
 		-- if the frame is enabled
 		if(unitSavedValues.frameEnabled) then
-			print("Creating ", unitName)
+			debugPrint("Creating ", unitName)
 			-- create new unitframe
 			local newFrame = nil
 			if (unitSavedValues.scale) then
@@ -482,7 +500,7 @@ local function createUnitFrames()
 			
 			-- add enabled bars
 			for position,barType in ipairs(enabledBars) do
-				print("creating bar ", barType, " at position ", position)
+				debugPrint("creating bar ", barType, " at position ", position)
 				-- Check player is a calling that has combo points
 				if ( barType == "warriorComboPoints" ) then
 					if ( MinUI.playerCalling  == "warrior" ) then
@@ -508,30 +526,37 @@ local function createUnitFrames()
 				newFrame:showText (text)
 			end
 			
+			-- create cast bar if enabled
+			local castBar =  unitSavedValues.castbar 
+			if ( castBar ) then
+				newFrame:addCastBar(castBar)
+			end
 			
 			-- check if both buff/debuff are on the same side and we need to make a "merged" buff bar
-			local mergedBuffBar = false
+			local mergedBuffs = false
 			if ( unitSavedValues.buffsEnabled == true and unitSavedValues.debuffsEnabled == true ) then
 				if ( unitSavedValues.buffLocation == unitSavedValues.debuffLocation ) then
-					mergedBuffBar = true
+					mergedBuffs = true
 				end
 			end
 			
+			local buffView = unitSavedValues.buffView
+			local debuffView = unitSavedValues.debuffView
+			
 			-- if we do have a merged buff bar then create it
-			if ( mergedBuffBar ) then
-				----debugPrint ( "Note: Buffs/debufs are on the same side of the unit frame ", unitSavedValues.buffLocation, " so will merge" )
+			if ( mergedBuffs ) then
 				-- NOTE: in merged bars the threshold and visibility options provided here are ignored (and read out of MinUI Config)
-				newFrame:addBuffBars( "merged", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation)
+				newFrame:addBuffs( buffView, "merged", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation)
 			-- else create bars as normal
 			else
 				-- create buff bars
 				if ( unitSavedValues.buffsEnabled == true ) then
-					newFrame:addBuffBars( "buffs", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation)
+					newFrame:addBuffs( buffView, "buffs", unitSavedValues.buffVisibilityOptions, unitSavedValues.buffThreshold, unitSavedValues.buffLocation)
 				end
 				
 				-- create debuff bars
 				if ( unitSavedValues.debuffsEnabled == true ) then
-					newFrame:addBuffBars( "debuffs", unitSavedValues.debuffVisibilityOptions, unitSavedValues.debuffThreshold, unitSavedValues.debuffLocation)
+					newFrame:addBuffs( debuffView, "debuffs", unitSavedValues.debuffVisibilityOptions, unitSavedValues.debuffThreshold, unitSavedValues.debuffLocation)
 				end
 			end
 			
@@ -597,11 +622,23 @@ end
 local function enterSecureMode()
 	debugPrint("+++ entering combat (config disabled)")
 	MinUI.secureMode = true
+	
+	-- if we have a player frame, tell it to be "in combat"
+	local player = MinUI.unitFrames["player"]
+	if(player)then
+		player:setInCombat(true)
+	end
 end
 
 local function leaveSecureMode()
 	debugPrint("--- leaving combat (config enabled)")
 	MinUI.secureMode = false
+	
+	-- if we have a player frame, tell it to be "in combat"
+	local player = MinUI.unitFrames["player"]
+	if(player)then
+		player:setInCombat(false)
+	end
 end
 
 --
@@ -732,6 +769,21 @@ local function variablesLoaded( addon )
 			print("Restored ",key, " debuffsMax value from defaults")
 			MinUIConfig.frames[key].debuffsMax = MinUIConfigDefaults.frames[key].debuffsMax
 		end	
+		
+		if not MinUIConfig.frames[key].castbar then
+			print("Restored ",key, " castbar value from defaults")
+			MinUIConfig.frames[key].castbar = MinUIConfigDefaults.frames[key].castbar
+		end	
+		
+		if not MinUIConfig.frames[key].buffView then
+			print("Restored ",key, " buffView value from defaults")
+			MinUIConfig.frames[key].buffView = MinUIConfigDefaults.frames[key].buffView
+		end	
+		
+		if not MinUIConfig.frames[key].debuffView then
+			print("Restored ",key, " debuffView value from defaults")
+			MinUIConfig.frames[key].debuffView = MinUIConfigDefaults.frames[key].debuffView
+		end
 	end
 		
 	--	

@@ -21,11 +21,11 @@ MinUIConfigDefaults = {
 	-- Frames Locked
 	unitFramesLocked = true,
 	-- Global Text Font
-	globalTextFont = "arial_round",
+	globalTextFont = "default", -- default, arial, arial_round (ship with MinUI)
 	-- Global Texture
-	barTexture = "otravi",
+	barTexture = "smooth",
 	-- Background Color
-	backgroundColor = {r=0,g=0,b=0,a=0.3},
+	backgroundColor = {r=0,g=0,b=0,a=0.5},
 	-- Frame Settings
 	frames = {
 		["player"] =
@@ -34,6 +34,8 @@ MinUIConfigDefaults = {
 			y = 500, -- y location
 			scale = 1.0, -- frame scale
 			frameEnabled = true, -- determines if the frame is created on loading
+			-- castbar options
+			castbar = "below", -- above, below or none
 			-- default sizes
 			barWidth = barWidthDefault, -- the width of the bars 
 			barHeight = barHeightDefault, -- the height of the bars
@@ -50,6 +52,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = true, -- true/false
 			debuffsEnabled = true, -- true/false
+			buffView = "icon", -- icon or bar
+			debuffView = "icon", -- icon or bar
 			buffsMax = 10, -- max number of buffs/debuffs
 			debuffsMax = 10,
 			buffLocation = "above", -- can only be below or above at the moment
@@ -66,6 +70,8 @@ MinUIConfigDefaults = {
 			y = 500,
 			scale = 1.0,
 			frameEnabled = true,
+			-- castbar options
+			castbar = "below", -- above below or none
 			-- default sizes
 			barWidth = barWidthDefault,
 			barHeight = barHeightDefault,
@@ -82,6 +88,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = true,
 			debuffsEnabled = true,
+			buffView = "icon", -- icon or bar
+			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "above",
@@ -98,6 +106,8 @@ MinUIConfigDefaults = {
 			y = 500,
 			scale = 1.0, 
 			frameEnabled = true,
+			-- castbar options
+			castbar = "above", -- above below or none
 			-- default sizes
 			barWidth = barWidthDefault,
 			barHeight = barHeightDefault,
@@ -114,6 +124,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffView = "icon", -- icon or bar
+			debuffView = "bar", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",
@@ -130,6 +142,8 @@ MinUIConfigDefaults = {
 			y = 600,
 			scale = 1.0, 
 			frameEnabled = true,
+			-- castbar options
+			castbar = "above", -- above below or none
 			-- default sizes
 			barWidth = barWidthDefault,
 			barHeight = barHeightDefault,
@@ -146,6 +160,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffView = "icon", -- icon or bar
+			debuffView = "bar", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",
@@ -162,6 +178,8 @@ MinUIConfigDefaults = {
 			y = 500,
 			scale = 1.0,
 			frameEnabled = true,
+			-- castbar options
+			castbar = "above", -- above below or none
 			-- default sizes
 			barWidth = barWidthDefault,
 			barHeight = barHeightDefault,
@@ -178,6 +196,8 @@ MinUIConfigDefaults = {
 			-- buff/debuff settings
 			buffsEnabled = false,
 			debuffsEnabled = false,
+			buffView = "icon", -- icon or bar
+			debuffView = "bar", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",
