@@ -545,37 +545,23 @@ function UnitFrame:updateHealth( )
 					local healthRatio = health/healthMax
 					healthPercent = math.ceil(healthRatio * 100) -- lets be more optimistic :P
 					
-					local healthMillions = math.floor(health / 1000000)
-					local healthTenThousands = math.floor(health / 10000)
-					local healthMaxMillions = math.floor(healthMax / 1000000)
-					local healthMaxTenThousands = math.floor(healthMax / 10000)
 					
-					--[[local healthText = ""
-					if(healthMillions > 0)then
-						healthText = healthText .. string.format("%s", healthMillions)
-						if(healthTenThousands > 0)then
-							healthText = healthText .. string.format(".%sm", healthTenThousands)
-						end
-					elseif(healthTenThousands > 0)then
-						healthText = healthText .. string.format("%s (ten k) gotta fix this :P", healthTenThousands)
+					local healthText = ""
+					if(health >= 1000000)then
+						healthText = healthText ..  string.format("%.2fm", health / 1000000)
+					elseif(health >= 10000)then
+						healthText = healthText ..  string.format("%.2fk", health / 1000)
 					else
-						healthText = healthText .. string.format("%s", health)
+						healthText = healthText ..  string.format("%s", health)
+					end
+					if(healthMax >= 1000000)then
+						healthText = healthText ..  string.format(" / %.2fm", healthMax / 1000000)
+					elseif(healthMax >= 10000)then
+						healthText = healthText ..  string.format(" / %.2fk", healthMax / 1000)
+					else
+						healthText = healthText ..  string.format(" / %s", healthMax)
 					end
 					
-					healthText = healthText .. " / "
-						
-					if(healthMaxMillions > 0)then
-						healthText = healthText .. string.format("%s", healthMaxMillions)
-						if(healthMaxTenThousands > 0)then
-							healthText = healthText .. string.format(".%sm", healthMaxTenThousands)
-						end
-					elseif(healthMaxTenThousands > 0)then
-						healthText = healthText .. string.format("%sk", healthMaxTenThousands)
-					else
-						healthText = healthText .. string.format("%s", healthMax)
-					end]]
-					
-					healthText =  string.format("%s / %s", health,healthMax)
 					local healthPercentText = string.format("(%s%%)", healthPercent)
 					
 					bar:setUBarLeftText(healthText)
@@ -669,33 +655,26 @@ function UnitFrame:updateResources( )
 				local mana = unitDetails.mana
 				-- guard against wierdness when zoning
 				if (mana) then
-					local largeMana = false
-					local largeManaMax = false
 					local manaMax = unitDetails.manaMax
 					if (manaMax) then
 						local manaRatio = mana/manaMax
 						local manaPercent = math.floor(manaRatio * 100)
 						
 						-- Convert large numbers to small versions
-						if (mana >= 10000) then
-							mana = mana/1000
-							largeMana = true
-						end
-						if (manaMax >= 10000) then
-							manaMax = manaMax/1000
-							largeManaMax = true
-						end
-						
 						local manaText = ""
-						if ( largeMana )then
-							manaText = string.format("%sk / ", mana)
+						if(mana >= 1000000)then
+							manaText = manaText ..  string.format("%.2fm", mana / 1000000)
+						elseif(mana >= 10000)then
+							manaText = manaText ..  string.format("%.2fk", mana / 1000)
 						else
-							manaText = string.format("%s / ", mana)
+							manaText = manaText ..  string.format("%s", mana)
 						end
-						if( largeManaMax ) then
-							manaText = manaText .. string.format("%sk", manaMax)
+						if(manaMax >= 1000000)then
+							manaText = manaText ..  string.format(" / %.2fm", manaMax / 1000000)
+						elseif(manaMax >= 10000)then
+							manaText = manaText ..  string.format(" / %.2fk", manaMax / 1000)
 						else
-							manaText = manaText .. string.format("%s", manaMax)
+							manaText = manaText ..  string.format(" / %s", manaMax)
 						end
 						
 						local manaPercentText = string.format("(%s%%)", manaPercent)
