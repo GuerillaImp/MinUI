@@ -23,7 +23,7 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	uCastBar.channeled = false
 	uCastBar.maxLength = 25 -- truncate after 20 characters?
 	
-	debugPrint("creating castbar for",uCastBar.unitName)
+	--debugPrint("creating castbar for",uCastBar.unitName)
 	
 	--
 	-- CAST BAR STUFFS
@@ -50,7 +50,7 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	-- Create textured component that resizes
 	uCastBar.castbar.texture = UI.CreateFrame("Texture", uCastBar.unitName.."_texture", uCastBar.castbar.bar)
 	if ( MinUIConfig.barTexture ) then
-		--debugPrint( MinUIConfig.barTexture )
+		----debugPrint( MinUIConfig.barTexture )
 		uCastBar.castbar.texture:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
 	else
 		uCastBar.castbar.texture:SetTexture("MinUI", "Media/aluminium.tga")
@@ -157,7 +157,7 @@ function UnitCastBar:animate( )
 					self.castbar.rightTextShadow:SetText(rightText)
 					self.castbar.rightTextShadow:SetWidth(self.castbar.rightText:GetFullWidth())
 					
-					debugPrint ( rightText )
+					--debugPrint ( rightText )
 				
 					-- FILL 
 					if not self.channeled then

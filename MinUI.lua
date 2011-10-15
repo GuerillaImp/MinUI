@@ -141,7 +141,6 @@ local function muiCommandInterface(commandline)
 					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" or token == "buffView"  or token == "debuffView" or token == "castbar" 
 					or token == "buffUpdateThreshold" or token == "animationUpdateThreshold" or token == "buffsMax" or token == "debuffsMax") then
 				command = token 
-				--debugPrint("command given ", command)
 			-- unknown command
 			else
 				print ("Unknown command, type \'/mui\' for help")
@@ -235,7 +234,6 @@ local function muiCommandInterface(commandline)
 						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" or command == "buffView"  or command == "debuffView" or command == "castbar"  
 						or command == "buffsMax"  or command == "debuffsMax" ) then
 					frameToConfig = token
-					----debugPrint("configuring frame", frameToConfig)
 				end
 			else
 				print("Error in command, type \'/mui\' for help")	
@@ -507,7 +505,7 @@ end
 -- Inspect player for calling, sometimes this returns nil (when loading or porting)
 --
 local function getPlayerDetails()
-	--debugPrint("Get Player Details")
+	----debugPrint("Get Player Details")
 	
 	-- based on player class some things are different
 	local playerDetails = Inspect.Unit.Detail("player")
@@ -532,16 +530,16 @@ local function createUnitFrames()
 	for unitName, unitSavedValues in pairs(MinUIConfig.frames) do
 		-- if the frame is enabled
 		if(unitSavedValues.frameEnabled) then
-			debugPrint("Creating ", unitName)
+			--debugPrint("Creating ", unitName)
 			-- create new unitframe
 			local newFrame = nil
 			if (unitSavedValues.scale) then
-				debugPrint("Scale: ",unitSavedValues.scale)
+				--debugPrint("Scale: ",unitSavedValues.scale)
 				local scaledWidth = (unitSavedValues.barWidth + (unitSavedValues.itemOffset*2)) * unitSavedValues.scale
 				local scaledHeight = unitSavedValues.barHeight * unitSavedValues.scale
 				newFrame = UnitFrame.new( unitName, scaledWidth, scaledHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
 			else	
-				debugPrint("Scale: Not Set")
+				--debugPrint("Scale: Not Set")
 				newFrame = UnitFrame.new( unitName, (unitSavedValues.barWidth + (unitSavedValues.itemOffset*2)), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
 			end
 			
@@ -551,7 +549,7 @@ local function createUnitFrames()
 			
 			-- add enabled bars
 			for position,barType in ipairs(enabledBars) do
-				debugPrint("creating bar ", barType, " at position ", position)
+				--debugPrint("creating bar ", barType, " at position ", position)
 				-- Check player is a calling that has combo points
 				if ( barType == "warriorComboPoints" ) then
 					if ( MinUI.playerCalling  == "warrior" ) then
@@ -628,14 +626,14 @@ local function update()
 	-- Poll for player calling until we get one
 	--
 	if (MinUI.playerCallingKnown == false) then
-		debugPrint("waiting for rift to start giving details...")
+		--debugPrint("waiting for rift to start giving details...")
 		getPlayerDetails()
 	else
 		--
 		-- Once we get the player's calling initialise the unitFrames
 		--
 		if (MinUI.initialised == false) then
-			debugPrint("we have details (at least for the player) so lets create the frames now")
+			--debugPrint("we have details (at least for the player) so lets create the frames now")
 			
 			-- Create the Unit Frames
 			createUnitFrames()
@@ -694,7 +692,7 @@ local function update()
 end
 
 local function enterSecureMode()
-	debugPrint("+++ entering combat (config disabled)")
+	--debugPrint("+++ entering combat (config disabled)")
 	MinUI.secureMode = true
 	
 	-- if we have a player frame, tell it to be "in combat"
@@ -705,7 +703,7 @@ local function enterSecureMode()
 end
 
 local function leaveSecureMode()
-	debugPrint("--- leaving combat (config enabled)")
+	--debugPrint("--- leaving combat (config enabled)")
 	MinUI.secureMode = false
 	
 	-- if we have a player frame, tell it to be "in combat"
@@ -763,7 +761,7 @@ local function variablesLoaded( addon )
 	-- For all Frames in MinUIConfig.frames, check that we aren't missing any values (because of new options or w.e.)
 	--
 	for key,_ in pairs(MinUIConfig.frames) do
-		debugPrint("Checking: ",key, " saved variables")
+		--debugPrint("Checking: ",key, " saved variables")
 		
 		if not MinUIConfig.frames[key].x then
 			print("Restored ",key, " x value from defaults")

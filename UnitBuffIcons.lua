@@ -14,7 +14,7 @@ function UnitBuffIcons.new( unitName, buffType, visibilityOptions, lengthThresho
 	local uBIcons = {}             			-- our new object
 	setmetatable(uBIcons, UnitBuffIcons)      	-- make UnitBar handle lookup
 	
-	--debugPrint("creating buff bars for ",unitName, buffType, visibilityOptions, lengthThreshold, direction)
+	----debugPrint("creating buff bars for ",unitName, buffType, visibilityOptions, lengthThreshold, direction)
 	
 	-- store values for the bar
 	uBIcons.width = width
@@ -66,7 +66,7 @@ function UnitBuffIcons.new( unitName, buffType, visibilityOptions, lengthThresho
 	table.insert(Event.Buff.Remove, {function( unitID ) uBIcons:resyncBuffs ( Inspect.Time.Frame(), unitID )  end, "MinUI",  "MinUI_unitBuffIcons_buffRemove_"..uBIcons.unitName})
 	
 	
-	--debugPrint(uBIcons)
+	----debugPrint(uBIcons)
 	return uBIcons
 end
 
@@ -338,7 +338,7 @@ end
 -- Reset buff bars
 --
 function UnitBuffIcons:resetBuffs()
-	----debugPrint("resetting buff bars on ", self.unitName)
+	------debugPrint("resetting buff bars on ", self.unitName)
 	
 	for _, buffIcon in pairs(self.activeBuffIcons) do
 		table.insert(self.zombieBuffIcons, buffIcon)
@@ -398,7 +398,7 @@ function UnitBuffIcons:resyncBuffs( time, unitID )
 							if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
 								-- Showing all debuffs
 								if(self.visibilityOptions == "all") then
-									--debugPrint(buff.duration)
+									----debugPrint(buff.duration)
 									-- Check the debuff is lessthan/equal to threshold length
 									if(buff.duration) then
 										if(buff.duration <= self.lengthThreshold)then
@@ -433,7 +433,7 @@ function UnitBuffIcons:resyncBuffs( time, unitID )
 							if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
 								-- Showing all debuffs
 								if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
-									--debugPrint(buff.duration)
+									----debugPrint(buff.duration)
 									-- Check the debuff is lessthan/equal to threshold length
 									if(buff.duration) then
 										if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
@@ -472,7 +472,7 @@ function UnitBuffIcons:resyncBuffs( time, unitID )
 							if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
 								-- Showing all buffs
 								if(self.visibilityOptions == "all") then
-									--debugPrint(buff.duration)
+									----debugPrint(buff.duration)
 									-- Check the buff is lessthan/equal to threshold length
 									if(buff.duration)then
 										if(buff.duration <= self.lengthThreshold)then
@@ -510,7 +510,7 @@ function UnitBuffIcons:resyncBuffs( time, unitID )
 							if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
 								-- Showing all debuffs
 								if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
-									--debugPrint(buff.duration)
+									----debugPrint(buff.duration)
 									-- Check the debuff is lessthan/equal to threshold length
 									if(buff.duration) then
 										if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then

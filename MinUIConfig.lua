@@ -223,7 +223,7 @@ MinUIConfig = MinUIConfigDefaults
 -- lock frames
 --
 function lockFrames()
-	debugPrint("Frames locked")
+	--debugPrint("Frames locked")
 	MinUIConfig.unitFramesLocked = true
 end
 
@@ -231,7 +231,7 @@ end
 -- unlock frames
 --
 function unlockFrames()
-	debugPrint("Frames unlocked")
+	--debugPrint("Frames unlocked")
 	MinUIConfig.unitFramesLocked = false
 end
 
@@ -239,7 +239,7 @@ end
 -- reset everything to default
 --
 function reset()
-	debugPrint("Restoring factory default settings ;)")
+	--debugPrint("Restoring factory default settings ;)")
 	MinUIConfig = {}
 	MinUIConfig = MinUIConfigDefaults
 end
@@ -249,32 +249,32 @@ end
 --
 function showCurrentSettings(unitFrame)
 	if(MinUIConfig.frames[unitFrame]) then
-		debugPrint("*** Settings for ", unitFrame)
-		debugPrint("x: ", MinUIConfig.frames[unitFrame].x)
-		debugPrint("y: ", MinUIConfig.frames[unitFrame].y)
-		debugPrint("scale: ", MinUIConfig.frames[unitFrame].scale)
-		debugPrint("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
-		debugPrint("enabled?: ", MinUIConfig.frames[unitFrame].frameEnabled)
-		debugPrint("barWidth: ", MinUIConfig.frames[unitFrame].barWidth)
-		debugPrint("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
-		debugPrint("comboPointsBarHeight: ", MinUIConfig.frames[unitFrame].comboPointsBarHeight)
-		debugPrint("mageChargeBarHeight: ", MinUIConfig.frames[unitFrame].mageChargeBarHeight)
+		--debugPrint("*** Settings for ", unitFrame)
+		--debugPrint("x: ", MinUIConfig.frames[unitFrame].x)
+		--debugPrint("y: ", MinUIConfig.frames[unitFrame].y)
+		--debugPrint("scale: ", MinUIConfig.frames[unitFrame].scale)
+		--debugPrint("itemOffset: ", MinUIConfig.frames[unitFrame].itemOffset)
+		--debugPrint("enabled?: ", MinUIConfig.frames[unitFrame].frameEnabled)
+		--debugPrint("barWidth: ", MinUIConfig.frames[unitFrame].barWidth)
+		--debugPrint("barHeight: ", MinUIConfig.frames[unitFrame].barHeight)
+		--debugPrint("comboPointsBarHeight: ", MinUIConfig.frames[unitFrame].comboPointsBarHeight)
+		--debugPrint("mageChargeBarHeight: ", MinUIConfig.frames[unitFrame].mageChargeBarHeight)
 
 		for position, bar in pairs(MinUIConfig.frames[unitFrame].bars) do
-			debugPrint ("Bar ", bar, " enabled in position ", position)
+			--debugPrint ("Bar ", bar, " enabled in position ", position)
 		end		
 		
 		for _, text in pairs(MinUIConfig.frames[unitFrame].texts) do
-			debugPrint("Unit Text ", text, " enabled")
+			--debugPrint("Unit Text ", text, " enabled")
 		end
-		debugPrint("unitTextPosition: ", MinUIConfig.frames[unitFrame].unitTextPosition)
+		--debugPrint("unitTextPosition: ", MinUIConfig.frames[unitFrame].unitTextPosition)
 		
-		debugPrint("buffLocation: ", MinUIConfig.frames[unitFrame].buffLocation)
-		debugPrint("buffVisibilityOptions: ", MinUIConfig.frames[unitFrame].buffVisibilityOptions)
-		debugPrint("debuffVisibilityOptions: ", MinUIConfig.frames[unitFrame].debuffVisibilityOptions)
-		debugPrint("buffThreshold: ", MinUIConfig.frames[unitFrame].buffThreshold)
-		debugPrint("debuffThreshold: ", MinUIConfig.frames[unitFrame].debuffThreshold)
+		--debugPrint("buffLocation: ", MinUIConfig.frames[unitFrame].buffLocation)
+		--debugPrint("buffVisibilityOptions: ", MinUIConfig.frames[unitFrame].buffVisibilityOptions)
+		--debugPrint("debuffVisibilityOptions: ", MinUIConfig.frames[unitFrame].debuffVisibilityOptions)
+		--debugPrint("buffThreshold: ", MinUIConfig.frames[unitFrame].buffThreshold)
+		--debugPrint("debuffThreshold: ", MinUIConfig.frames[unitFrame].debuffThreshold)
 	else
-		debugPrint "??? unknown frame name"
+		--debugPrint "??? unknown frame name"
 	end
 end

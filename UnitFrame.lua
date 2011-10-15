@@ -115,11 +115,12 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	table.insert(Event.Unit.Detail.Power, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
 	table.insert(Event.Unit.Detail.Energy, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
 	table.insert(Event.Unit.Detail.EnergyMax, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources"  ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "charge" ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
+	
 	
 	-- slightly less spammy events - don't check ownership of unitIDs here, because of the wierdness of comboPoints :)
 	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:updateComboPointsBar( ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
 	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:updateComboPointsBar( ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:updateChargeBar( ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
 	
 	-- text items that may have updated
 	table.insert(Event.Unit.Detail.Planar, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
@@ -248,7 +249,7 @@ function UnitFrame:unitChanged( )
 	-- Get our UnitID
 	local unitID = Inspect.Unit.Lookup(self.unitName)
 	
-	--print ("Unit Changed - name/id ", self.unitName, unitID )	
+	debugPrint ("Unit Changed - name/id ", self.unitName, unitID )	
 	
 	--
 	-- Ensure the values on the bars update to the new target's details
@@ -338,7 +339,7 @@ end
 --
 --
 function UnitFrame:setUFrameVisible (toggle)
-	debugPrint("setting ", self.unitName, " to visible ", toggle)
+	--debugPrint("setting ", self.unitName, " to visible ", toggle)
 	-- store visiblity
 	self.visible = toggle
 	self.frame:SetVisible(self.visible)
@@ -546,10 +547,10 @@ function UnitFrame:updateComboPointsBar( )
 			if ( MinUI.playerCalling == "rogue" ) then
 				if( unitDetails.comboUnit ) then
 					local unit = Inspect.Unit.Lookup(unitDetails.comboUnit)
-					------debugPrint("combo points are on ", unit, unitDetails.comboUnit)
+					--------debugPrint("combo points are on ", unit, unitDetails.comboUnit)
 					if ( unit == "player.target" ) then
 						local points = unitDetails.combo
-						------debugPrint ( points ) 
+						--------debugPrint ( points ) 
 						bar:updateComboPoints(points)
 					else
 						bar:updateComboPoints(0)
@@ -639,7 +640,7 @@ function UnitFrame:updateChargeBar( )
 				local chargePercent = math.floor(chargeRatio * 100)
 				
 				local chargeText = string.format("%s/%s", charge,chargeMax)
-				------debugPrint(chargeText)
+				--------debugPrint(chargeText)
 				bar:setUBarLeftText(chargeText)
 				bar:setUBarWidthRatio(chargeRatio)
 				bar:setUBarRightText("")
@@ -784,7 +785,7 @@ end
 --
 function UnitFrame:setUFrameCalling ( calling )
 	self.calling = calling
-	----debugPrint("Set ", self.unitName, " to calling ", self.calling)
+	------debugPrint("Set ", self.unitName, " to calling ", self.calling)
 end
 
 --
@@ -799,7 +800,7 @@ end
 --
 function UnitFrame:createEnabledBars()
 	for _,barType in pairs(self.barsEnabled) do
-		debugPrint("creating enabled bars, ", barType)
+		--debugPrint("creating enabled bars, ", barType)
 		if ( barType == "health" ) then
 			self:addHealthBar()
 		end
@@ -931,7 +932,7 @@ end
 -- A charge bar for a Mage calling class
 --
 function UnitFrame:addChargeBar()
-	debugPrint("Add charge Bar", self.unitName)
+	--debugPrint("Add charge Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
@@ -970,7 +971,7 @@ end
 -- Resource will be based on the Unit's Calling
 --
 function UnitFrame:addResourcesBar()
-	----debugPrint("Add resources Bar", self.unitName)
+	------debugPrint("Add resources Bar", self.unitName)
 	
 	-- values from config
 	local barWidth = MinUIConfig.frames[self.unitName].barWidth
