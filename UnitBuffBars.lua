@@ -156,9 +156,9 @@ function UnitBuffBars:addBuffBar(buff, time)
 
 		-- Set the solid bar to fill the entire buff bar.
 		bar.solid:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
+		--bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
 		bar.tex:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
+		--bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
 		bar:SetWidth( self.width + MinUIConfig.frames[unitName].itemOffset )
 		
 		--

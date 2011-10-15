@@ -159,7 +159,7 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		
 		-- icon fills the buffIcon
 		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
-		buffIcon.icon:SetPoint("BOTTOMRIGHT", buffIcon, "BOTTOMRIGHT")
+		--buffIcon.icon:SetPoint("BOTTOMRIGHT", buffIcon, "BOTTOMRIGHT")
 		
 		
 		if(self.direction == "up")then
