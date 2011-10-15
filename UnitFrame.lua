@@ -241,15 +241,17 @@ end
 -- Unit Changed
 --
 function UnitFrame:unitChanged( )
-	debugPrint ("Unit Changed ", self.unitName )
+	
 	
 	-- Get our UnitID
 	local unitID = Inspect.Unit.Lookup(self.unitName)
-		
+	
+	print ("Unit Changed - name/id ", self.unitName, unitID )	
+	
 	--
 	-- Ensure the values on the bars update to the new target's details
 	--
-	self:refreshUnitFrame()
+	self:refreshUnitFrame( unitID )
 	
 	--
 	-- Ensure the buffs are reset then update to match the new target
@@ -352,27 +354,36 @@ end
 -- no longer details for it)
 -- 
 --
-function UnitFrame:refreshUnitFrame ( )
-	local unitDetails = Inspect.Unit.Detail(self.unitName)
-	
-	--
-	-- Unit Details
-	-- 
-	if(unitDetails) then
-		-- add the unitID of this frame to the a table of unitIDs to update
-		-- because the updateXXXXX( unitIDs ) commands require
-		-- a table of IDs that have updated to check against and will only
-		-- update if the ID of the updated unit matches this frame's unitID
-		local unitIDs = {}
-		local unitID = Inspect.Unit.Lookup(self.unitName)
-		unitIDs[unitID] = true
-
+function UnitFrame:refreshUnitFrame ( unitID )
+	if(unitID)then
+		local unitDetails = Inspect.Unit.Detail( unitID )
+		print (unitDetails)
 		
-		self.calling = unitDetails.calling
+		-- set the frame to visible, because we have an ID - but we might not yet have the details
+		-- due to Rift's system of not providing things immediately, when you ask for them so kindly
+		-- yes im looking at you pet's that dont give detials when summoned >:-|
 		self:setUFrameVisible(true)
-		self:updateReactionColoring(unitDetails.relation)
-		self:refreshBarValues( unitIDs, "all" )
-		self:updateIcons( unitIDs )
+	
+		--
+		-- Unit Details - if we have them, then update them
+		-- Otherwise the Events will update the frame through their callbacks
+		-- 
+		if(unitDetails) then
+			-- add the unitID of this frame to the a table of unitIDs to update
+			-- because the updateXXXXX( unitIDs ) commands require
+			-- a table of IDs that have updated to check against and will only
+			-- update if the ID of the updated unit matches this frame's unitID
+			local unitIDs = {}
+			local unitID = Inspect.Unit.Lookup(self.unitName)
+			unitIDs[unitID] = true
+
+			
+			self.calling = unitDetails.calling
+			self:setUFrameVisible(true)
+			self:updateReactionColoring(unitDetails.relation)
+			self:refreshBarValues( unitIDs, "all" )
+			self:updateIcons( unitIDs )
+		end
 	else
 		self:setUFrameVisible(false)
 	end
