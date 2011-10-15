@@ -33,7 +33,7 @@ MinUI.animate = false
 MinUI.secureMode = false
 
 -- Version
-MinUI.version = "1.3a"
+MinUI.version = "1.3b"
 
 
 -----------------------------------------------------------------------------------------------------------------------------

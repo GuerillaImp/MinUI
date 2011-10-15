@@ -115,9 +115,11 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	table.insert(Event.Unit.Detail.Power, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
 	table.insert(Event.Unit.Detail.Energy, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
 	table.insert(Event.Unit.Detail.EnergyMax, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources"  ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "combo" ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
-	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "combo" ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
 	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "charge" ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
+	
+	-- slightly less spammy events - don't check ownership of unitIDs here, because of the wierdness of comboPoints :)
+	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:updateComboPointsBar( ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:updateComboPointsBar( ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
 	
 	-- text items that may have updated
 	table.insert(Event.Unit.Detail.Planar, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
@@ -412,15 +414,15 @@ function UnitFrame:refreshBarValues( unitIDs, barToUpdate )
 				-- only update what is actually enabled on this unit frame
 				if(barType == "health" and (barToUpdate == "health" or barToUpdate == "all")) then
 					--print( "refreshing ", barType, " on ", self.unitName )
-					self:updateHealth( unitIDs )
+					self:updateHealth(  )
 				end
 				if(barType == "resources" and (barToUpdate == "resources" or barToUpdate == "all")) then
 					--print( "refreshing ", barType, " on ", self.unitName )
-					self:updateResources( unitIDs )
+					self:updateResources(  )
 				end
 				if(barType == "comboPointsBar" and (barToUpdate == "combo" or barToUpdate == "all")) then
-					--print( "refreshing ", barType, " on ", self.unitName )
-					self:updateComboPointsBar( unitIDs )
+					print( "refreshing ", barType, " on ", self.unitName )
+					self:updateComboPointsBar(  )
 				end
 				if(barType == "text" and (barToUpdate == "text" or barToUpdate == "all")) then
 					--print( "refreshing ", barType, " on ", self.unitName )
@@ -428,7 +430,7 @@ function UnitFrame:refreshBarValues( unitIDs, barToUpdate )
 				end
 				if(barType == "charge"and (barToUpdate == "charge" or barToUpdate == "all")) then
 					--print( "refreshing ", barType, " on ", self.unitName )
-					self:updateChargeBar( unitIDs )
+					self:updateChargeBar(  )
 				end
 			end
 		end
