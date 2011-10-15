@@ -23,9 +23,13 @@ MinUIConfigDefaults = {
 	-- Global Text Font
 	globalTextFont = "default", -- default, arial, arial_round (ship with MinUI)
 	-- Global Texture
-	barTexture = "smooth",
+	barTexture = "aluminium",
 	-- Background Color
 	backgroundColor = {r=0,g=0,b=0,a=0.5},
+	-- Thresholds for Buff Ticks
+	buffUpdateThreshold = 1.0, -- every second by default (will look silly on bars so you'll need to change it to something like 0.1)
+	-- Animation threshold
+	animationUpdateThreshold = 0.01, -- every 10 ms by default (for castbars, flashing, etc)
 	-- Frame Settings
 	frames = {
 		["player"] =
@@ -54,8 +58,8 @@ MinUIConfigDefaults = {
 			debuffsEnabled = true, -- true/false
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
-			buffsMax = 10, -- max number of buffs/debuffs
-			debuffsMax = 10,
+			buffsMax = 5, -- max number of buffs/debuffs
+			debuffsMax = 5,
 			buffLocation = "above", -- can only be below or above at the moment
 			debuffLocation = "above", -- can only be below or above at the moment
 			buffVisibilityOptions = "all", -- "player" cast or "all"
@@ -90,8 +94,8 @@ MinUIConfigDefaults = {
 			debuffsEnabled = true,
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
-			buffsMax = 10,
-			debuffsMax = 10,
+			buffsMax = 5,
+			debuffsMax = 5,
 			buffLocation = "above",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
@@ -125,7 +129,7 @@ MinUIConfigDefaults = {
 			buffsEnabled = false,
 			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
-			debuffView = "bar", -- icon or bar
+			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",
@@ -161,7 +165,7 @@ MinUIConfigDefaults = {
 			buffsEnabled = false,
 			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
-			debuffView = "bar", -- icon or bar
+			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",
@@ -197,7 +201,7 @@ MinUIConfigDefaults = {
 			buffsEnabled = false,
 			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
-			debuffView = "bar", -- icon or bar
+			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
 			debuffsMax = 10,
 			buffLocation = "below",

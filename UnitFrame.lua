@@ -108,16 +108,16 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	-- 
 	-- But when they do, this will make the frames more efficient
 	--
-	table.insert(Event.Unit.Detail.Health, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
-	table.insert(Event.Unit.Detail.HealthMax, {function ( unitIDs ) uFrame:updateHealth( unitIDs ) end, "MinUI", uFrame.unitName.."_updateHealth"})
-	table.insert(Event.Unit.Detail.Mana, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.ManaMax, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.Power, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.Energy, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.EnergyMax, {function ( unitIDs ) uFrame:updateResources( unitIDs ) end, "MinUI", uFrame.unitName.."_updateResources"})
-	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
-	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:updateComboPointsBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
-	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:updateChargeBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
+	table.insert(Event.Unit.Detail.Health, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "health" ) end, "MinUI", uFrame.unitName.."_updateHealth"})
+	table.insert(Event.Unit.Detail.HealthMax, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "health" ) end, "MinUI", uFrame.unitName.."_updateHealth"})
+	table.insert(Event.Unit.Detail.Mana, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.ManaMax, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Power, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Energy, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources" ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.EnergyMax, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "resources"  ) end, "MinUI", uFrame.unitName.."_updateResources"})
+	table.insert(Event.Unit.Detail.Combo, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "combo" ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.ComboUnit, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "combo" ) end, "MinUI", uFrame.unitName.."_updateComboPointsBar"})
+	table.insert(Event.Unit.Detail.Charge, {function ( unitIDs ) uFrame:refreshBarValues( unitIDs, "charge" ) end, "MinUI", uFrame.unitName.."_updateChargeBar"})
 	
 	-- text items that may have updated
 	table.insert(Event.Unit.Detail.Planar, {function ( unitIDs ) uFrame:updateUnitTextBar( unitIDs ) end, "MinUI", uFrame.unitName.."_updateTextBar"})
@@ -215,71 +215,104 @@ function UnitFrame:setInCombat(toggle)
 	end
 end
 
---
--- Animation Loop
---
-function UnitFrame:animate( )
-	local curTime = Inspect.Time.Frame()
-	--
-	-- Anything that needs updating, should get done here :-)
-	--
+-- Animate things that need "fast" updates (castbar, frame delta, flashing, etc)
+function UnitFrame:animate ( )
 	if ( self.visible ) then
-		-- Animate Visible Buff Bars
-		if(self.buffs) then
-			self.buffs:animate(curTime)
-		end
-		if(self.debuffs)  then
-			self.debuffs:animate(curTime)
-		end
-		
-		-- animate cast bar
 		if(self.castBar)then
 			self.castBar:animate()
 		end
 	end
 end
 
+-- Animate buff timers
+function UnitFrame:animateBuffTimers ( time )
+	if ( self.visible ) then
+		if(self.buffs) then
+			self.buffs:animate( time )
+		end
+		if(self.debuffs)  then
+			self.debuffs:animate( time )
+		end
+	end
+end
+
+
 --
 -- Unit Changed
 --
 function UnitFrame:unitChanged( )
 	debugPrint ("Unit Changed ", self.unitName )
+	
+	-- Get our UnitID
+	local unitID = Inspect.Unit.Lookup(self.unitName)
+		
 	--
 	-- Ensure the values on the bars update to the new target's details
 	--
-	self:refresh()
+	self:refreshUnitFrame()
+	
 	--
-	-- Ensure the buffsbars are reset then update
+	-- Ensure the buffs are reset then update to match the new target
 	--
-	self:resetBuffs()
-	self:updateBuffBars( )	
+	if(self.buffs)then
+		self.buffs:resyncBuffs( Inspect.Time.Frame(), unitID )
+	end
+	if(self.debuffs)then
+		self.debuffs:resyncBuffs( Inspect.Time.Frame(), unitID )
+	end
+	
+	--
+	-- Make the CastBar update
+	--
+	if(self.castBar)then
+		if(unitID)then
+			local unitIDsForCastBar = {}
+			local unitCastBar = Inspect.Unit.Castbar( unitID )
+			
+			if(unitCastBar)then
+				unitIDsForCastBar[unitID] = true
+			else
+				unitIDsForCastBar[unitID] = false
+			end
+			
+			--print("updating castbar for ", unitID, unitCastBar )
+			self.castBar:updateCastbar( unitIDsForCastBar )
+		end
+	end
 end
 
 --
 -- Update the UnitFrame's icons
 --
-function UnitFrame:updateIcons()
-
-	local unitDetails = Inspect.Unit.Detail(self.unitName)
-	if(unitDetails)then
-		local role = unitDetails.role
-		if(role)then
-			self.bottomRightIcon:SetVisible(true)
-			if(role=="dps")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/dps.png")
-			elseif(role=="support")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Support.png")
-			elseif(role=="heal")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Heals.png")
-			elseif(role=="tank")then
-				self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Tank.png")
-			else
-				self.bottomRightIcon:SetVisible(false)
+function UnitFrame:updateIcons( unitIDs )
+	-- get the ID of the unit represented by this frame currently
+	local frameUnitID = Inspect.Unit.Lookup(self.unitName)
+	-- check to see if this frame actually updated
+	for unitID, value in pairs (unitIDs) do
+		if ( unitID == frameUnitID ) then
+			local unitDetails = Inspect.Unit.Detail(self.unitName)
+			if(unitDetails)then
+				local role = unitDetails.role
+				if(role)then
+					self.bottomRightIcon:SetVisible(true)
+					if(role=="dps")then
+						self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/dps.png")
+					elseif(role=="support")then
+						self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Support.png")
+					elseif(role=="heal")then
+						self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Heals.png")
+					elseif(role=="tank")then
+						self.bottomRightIcon:SetTexture("MinUI", "Media/Roles/Tank.png")
+					else
+						self.bottomRightIcon:SetVisible(false)
+					end
+				else
+					--print("no role")
+					self.bottomRightIcon:SetVisible(false)
+				end	
 			end
-		else
-			--print("no role")
-			self.bottomRightIcon:SetVisible(false)
-		end	
+	
+		end
 	end
 end
 
@@ -305,49 +338,6 @@ function UnitFrame:setUFrameVisible (toggle)
 	-- store visiblity
 	self.visible = toggle
 	self.frame:SetVisible(self.visible)
-	
-	--
-	-- Secure Mode Workaround?
-	--
-	
-	-- if in secure mode we can't set things to invisible
-	--if(MinUI.secureMode)then -- for now, fuck it.
-		-- make things visible
-		--[[if(self.visible)then
-			self.frame:SetBackgroundColor(0,0,0,0.3)
-			for _,barType in pairs(self.barsEnabled) do
-				if(self.bars[barType])then
-					self.bars[barType]:setUBarEnabled(true)
-				end
-			end
-		-- hide everything
-		else
-			self.frame:SetBackgroundColor(0,0,0,0.3)
-			for _,barType in pairs(self.barsEnabled) do
-				if(self.bars[barType])then
-					--self.bars[barType]:setUBarEnabled(false)
-					--self.bars[barType]:setUBarColorAlpha(0,0,0,0) -- eventually we will disable them
-				end
-			end
-		end]]
-	-- if not, we can :-)
-	--[[else]]
-	-- dont forget to re-enable everything else :)
-	--[[if(self.visible)then
-		for _,barType in pairs(self.barsEnabled) do
-			if(self.bars[barType])then
-				self.bars[barType]:setUBarEnabled(true)
-			end
-		end
-	else
-		for _,barType in pairs(self.barsEnabled) do
-			if(self.bars[barType])then
-				self.bars[barType]:setUBarEnabled(false)
-			end
-		end
-	end]]
-	
-	--end
 end
 
 --
@@ -362,22 +352,27 @@ end
 -- no longer details for it)
 -- 
 --
-function UnitFrame:refresh ( )
+function UnitFrame:refreshUnitFrame ( )
 	local unitDetails = Inspect.Unit.Detail(self.unitName)
 	
-	if(unitDetails)then
-		debugPrint("we have details for ", self.unitName)
-	end
-
 	--
 	-- Unit Details
 	-- 
 	if(unitDetails) then
+		-- add the unitID of this frame to the a table of unitIDs to update
+		-- because the updateXXXXX( unitIDs ) commands require
+		-- a table of IDs that have updated to check against and will only
+		-- update if the ID of the updated unit matches this frame's unitID
+		local unitIDs = {}
+		local unitID = Inspect.Unit.Lookup(self.unitName)
+		unitIDs[unitID] = true
+
+		
 		self.calling = unitDetails.calling
 		self:setUFrameVisible(true)
 		self:updateReactionColoring(unitDetails.relation)
-		self:refreshBarValues()
-		self:updateIcons()
+		self:refreshBarValues( unitIDs, "all" )
+		self:updateIcons( unitIDs )
 	else
 		self:setUFrameVisible(false)
 	end
@@ -386,26 +381,45 @@ end
 --
 -- Refresh the bar values
 --
-function UnitFrame:refreshBarValues()
-	--
-	-- refresh all of our bars
-	--
-	for _,barType in pairs(self.barsEnabled) do
-		-- only update what is actually enabled on this unit frame
-		if(barType == "health") then
-			self:updateHealth()
+function UnitFrame:refreshBarValues( unitIDs, barToUpdate )
+	if( unitIDs and barToUpdate ) then
+		local updateFrame = false
+		-- get the ID of the unit represented by this frame currently
+		local frameUnitID = Inspect.Unit.Lookup(self.unitName)
+		-- check to see if this frame actually updated
+		for unitID, value in pairs (unitIDs) do
+			if ( unitID == frameUnitID ) then
+				updateFrame = true
+			end
 		end
-		if(barType == "resources") then
-			self:updateResources()
-		end
-		if(barType == "comboPointsBar") then
-			self:updateComboPointsBar()
-		end
-		if(barType == "text") then
-			self:updateUnitTextBar()
-		end
-		if(barType == "charge") then
-			self:updateChargeBar()
+
+		--
+		-- refresh bars as required
+		--
+		if(updateFrame)then
+			for _,barType in pairs(self.barsEnabled) do
+				-- only update what is actually enabled on this unit frame
+				if(barType == "health" and (barToUpdate == "health" or barToUpdate == "all")) then
+					--print( "refreshing ", barType, " on ", self.unitName )
+					self:updateHealth( unitIDs )
+				end
+				if(barType == "resources" and (barToUpdate == "resources" or barToUpdate == "all")) then
+					--print( "refreshing ", barType, " on ", self.unitName )
+					self:updateResources( unitIDs )
+				end
+				if(barType == "comboPointsBar" and (barToUpdate == "combo" or barToUpdate == "all")) then
+					--print( "refreshing ", barType, " on ", self.unitName )
+					self:updateComboPointsBar( unitIDs )
+				end
+				if(barType == "text" and (barToUpdate == "text" or barToUpdate == "all")) then
+					--print( "refreshing ", barType, " on ", self.unitName )
+					self:updateUnitTextBar( unitIDs )
+				end
+				if(barType == "charge"and (barToUpdate == "charge" or barToUpdate == "all")) then
+					--print( "refreshing ", barType, " on ", self.unitName )
+					self:updateChargeBar( unitIDs )
+				end
+			end
 		end
 	end
 end
@@ -447,7 +461,7 @@ function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThresh
 	local attachPoint = self.frame
 	local buffView = viewType
 	
-	print ( "creating buff type, ", buffView)
+	--print ( "creating buff type, ", buffView)
 	
 	-- if this unit has a scale value
 	if(MinUIConfig.frames[self.unitName].scale)then
@@ -488,52 +502,28 @@ function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThresh
 		self.buffs = buffs -- just store here
 	end
 end
-
---
--- Resets the buff bar to contain no buffs
---
-function UnitFrame:resetBuffs()
-	if(self.buffs) then
-		debugPrint("resetBuffs buffs on ", self.unitName)
-		self.buffs:resetBuffBars(Inspect.Time.Frame())
-	end
-	if(self.debuffs)  then
-		debugPrint("resetBuffs buffs on ", self.unitName)
-		self.debuffs:resetBuffBars(Inspect.Time.Frame())
-	end
-end
-
---
--- Refresh the buffs to update for new buffs/debuffs
---
-function UnitFrame:updateBuffBars( )
-	if (self.visible) then
-		if(self.buffs) then
-			debugPrint("updateBuffBars buffs on ", self.unitName)
-			self.buffs:update(Inspect.Time.Frame())
-		end
-		if(self.debuffs)  then
-			debugPrint("updateBuffBars debuffs on ", self.unitName)
-			self.debuffs:update(Inspect.Time.Frame())
-		end
-	end
-end
-
 --
 -- Update the Unit's Text Values
 --
-function UnitFrame:updateUnitTextBar()
-	local bar = self.bars["text"]
-	-- if this frame has a health bar
-	if (bar) then
-		bar:updateTextItems()
+function UnitFrame:updateUnitTextBar( unitIDs )
+	-- get the ID of the unit represented by this frame currently
+	local frameUnitID = Inspect.Unit.Lookup(self.unitName)
+	-- check to see if this frame actually updated
+	for unitID, value in pairs (unitIDs) do
+		if ( unitID == frameUnitID ) then
+			local bar = self.bars["text"]
+			-- if this frame has a health bar
+			if (bar) then
+				bar:updateTextItems()
+			end
+		end
 	end
 end
 
 --
 -- Update the Combo Points Bar
 --
-function UnitFrame:updateComboPointsBar()
+function UnitFrame:updateComboPointsBar( )
 	local bar = self.bars["comboPointsBar"]
 	if (bar) then
 		-- combo points only available for player
@@ -1022,17 +1012,13 @@ end
 -- Add a bar to this UnitFrame
 --                             
 function UnitFrame:addUnitBar( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY )
-	----debugPrint ("Adding Unit Bar", barType, " to ", self.unitName)
-
-	--debugPrint ("pre scale", width,height,fontSize)
 	-- if this unit has a scale value
 	if(MinUIConfig.frames[self.unitName].scale)then
 		width = width * MinUIConfig.frames[self.unitName].scale
 		height = height * MinUIConfig.frames[self.unitName].scale
 		fontSize = fontSize * MinUIConfig.frames[self.unitName].scale
 	end
-	--debugPrint ("post scale", width,height,fontSize)
-
+	
 	newBar = UnitBar.new( barType, width, height, fontSize, anchorThis, anchorParent, parentItem, offsetX, offsetY  )
 	
 	-- store bar in unit frame

@@ -196,7 +196,7 @@ function UnitCastBar:updateCastbar( unitIDs )
 				local unitCastBar = Inspect.Unit.Castbar( unitID )
 				local abilityName = unitCastBar.abilityName
 				local uninterruptible = unitCastBar.uninterruptible
-				debugPrint(self.unitName, " is casting ", abilityName )
+				--print(self.unitName, " is casting ", abilityName )
 				self.castbar.bar:SetVisible(true)
 				self.visible = true
 
@@ -216,12 +216,11 @@ function UnitCastBar:updateCastbar( unitIDs )
 					local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
 					if(abilityDetails)then
 						self.channeled = abilityDetails.channeled
-					
-						--print(abilityDetails)
 						if(abilityDetails.icon)then
+							--print(abilityDetails.icon)
 							self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
 						else
-							self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
+							self.castbar.icon:SetTexture("Rift", "apple.dds")
 						end
 					else
 						self.castbar.icon:SetTexture("Rift", "apple.dds") -- use a placeholder 

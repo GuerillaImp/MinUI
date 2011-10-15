@@ -15,18 +15,25 @@ MinUI.context = UI.CreateContext("MinUIContext")
 -- Unit Frames
 MinUI.unitFrames = {}
 
--- Buff Control
-MinUI.resyncBuffs = false
-
 -- Player Calling / Initialisation
 MinUI.playerCalling = "unknown"
 MinUI.playerCallingKnown = false
 MinUI.initialised = false
 
+-- Update/Animation throttling
+MinUI.lastBuffUpdate = 0
+MinUI.lastAnimationUpdate = 0
+MinUI.buffUpdateDiff = 0
+MinUI.animationUpdateDiff = 0
+MinUI.curTime = 0
+MinUI.animateBuffs = false
+MinUI.animate = false
+			
 -- Are we current in secure mode?
 MinUI.secureMode = false
 
-MinUI.version = "1.3"
+-- Version
+MinUI.version = "1.3a"
 
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -44,12 +51,16 @@ local function printHelpText()
 	print("\'/mui lock\' lock the frames in position.")
 	print("\'/mui unlock\' unlock the frames.")
 	print("\'/mui reset\' reset the frames to the defaults in MinUIConfig.lua.")
+	print("\'/mui barTexture [textureName (do not add .png/.tga)]\' change the bar texture for this frame\nCan be \"smooth\",\"ace\",\"minimalist\",\"aluminium\",\"banto\",\"glaze\",\"lite\",\"otravi\", or the filename (excluding extension) of any .tga or .png you place in /Media of the addon folder.")
+	print("\'/mui buffUpdateThreshold [number]\' set the buffs to \"tick\" at this number, by default it is 1.0 (1 second) but this will look odd for bars, which need around 0.1 to look decent\nThe lower this goes, the more CPU time the addon will consume.")
+	print("\'/mui animationUpdateThreshold [number]\' set the animation threshold value, by default it is 0.01 (10 ms). This effects castbars, and other animating items.")
 	print("---")
 	print("Mui Frame Commands (all require \'/reloadui\'")
 	print("Allowed Frames: player, focus, player.pet, player.target, player.target.target")
 	print("Number: must be positive")
 	print("\'/mui enabe [frame]\' enables a frame.")
 	print("\'/mui disable [frame]\' disables a frame.")
+	print("\'/mui scale [frame] [number]\' scales a frame.")
 	print("\'/mui barWidth [frame] [number]\' sets the frame bar width.")
 	print("\'/mui barHeight [frame] [number]\' sets the frame bar width.")
 	print("\'/mui barFontSize [frame] [number]\' sets the frame font size.")
@@ -67,6 +78,13 @@ local function printHelpText()
 	print("\'/mui debuffVisibilityOptions [frame] [all/player]\' set the visibility option of the debuffs on the frame.")
 	print("\'/mui buffThreshold [frame] [number]\' set the time threshold of the buffs on the frame.")
 	print("\'/mui debuffThreshold [frame] [number]\' set the time threshold of the debuffs on the frame.")
+	print("\'/mui buffAuras [frame] [true/false]\' show buff auras on the frame.")
+	print("\'/mui debuffAuras [frame] [true/false]\' show debuff auras on the frame.")
+	print("\'/mui buffView [frame] [bar/icon] change the view of the frame's buffs to an icon or bar style.")
+	print("\'/mui debuffView [frame] [bar/icon] change the view of the frame's debuffs to an icon or bar style.")
+	print("\'/mui buffsMax [frame] [number] the max number of buffs that will be displayed.")
+	print("\'/mui debuffsMax [frame] [number] the max number of debuffs that will be displayed.")
+	print("\'/mui castbar [frame] [above/below/none] change the casthar on the frame to be above, below or none.")
 	print("---")
 	print("Allowed Bars: health,resources,warriorComboPoints,rogueComboPoints,charge,text")
 	print("Allowed Texts: name,level,guild,vitality,planar")
@@ -74,6 +92,7 @@ local function printHelpText()
 	print("\'/mui texts [frame] [comma,separated,text,list]\' set the texts shown on the frame \'s unit text bar to those in the list.")
 	print("---")
 	print("\'/mui globalTextFont [fontName (do not add .ttf)]\' set the font used globally to the one provided, exlude the .ttf.\nWARNING: if the font isn't in the addon folder this makes things go crazy.")
+	print("\'/mui backgroundColor [r,g,b,a]\' set the unit frames background color.")
 end
 
 --
@@ -119,7 +138,8 @@ local function muiCommandInterface(commandline)
 					or token == "mageChargeFontSize" or token == "itemOffset" or token == "bars" or token == "texts" 
 					or token == "buffsEnabled" or token == "debuffsEnabled" or token == "buffLocation" or token == "debuffLocation"
 					or token == "buffVisibilityOptions" or token == "debuffVisibilityOptions" or token == "buffThreshold" 
-					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" or token == "buffView"  or token == "debuffView" or token == "castbar" ) then
+					or token == "debuffThreshold" or token == "globalTextFont" or token == "buffAuras"  or token == "debuffAuras" or token == "buffView"  or token == "debuffView" or token == "castbar" 
+					or token == "buffUpdateThreshold" or token == "animationUpdateThreshold" or token == "buffsMax" or token == "debuffsMax") then
 				command = token 
 				--debugPrint("command given ", command)
 			-- unknown command
@@ -145,6 +165,20 @@ local function muiCommandInterface(commandline)
 					print("Setting bar texture to ", token)
 					MinUIConfig.barTexture = token
 					refreshRequired = true
+				end
+			-- Set Global Buff Update Threshold 
+			elseif (command == "buffUpdateThreshold") then
+				local threshold = tonumber(token)
+				if(threshold)then
+					print("Setting buffUpdateThreshold to ", threshold)
+					MinUIConfig.buffUpdateThreshold = threshold
+				end
+			-- Set Global Animation Update Threshold 
+			elseif (command == "animationUpdateThreshold") then
+				local threshold = tonumber(token)
+				if(threshold)then
+					print("Setting animationUpdateThreshold to ", threshold)
+					MinUIConfig.animationUpdateThreshold = threshold
 				end
 			-- Set Background Color
 			elseif(command == "backgroundColor")then
@@ -198,7 +232,8 @@ local function muiCommandInterface(commandline)
 						or command == "mageChargeFontSize" or command == "itemOffset" or command == "bars"  or command == "texts" 
 						or command == "buffsEnabled" or command == "debuffsEnabled" or command == "buffLocation" or command == "debuffLocation"
 						or command == "buffVisibilityOptions" or command == "debuffVisibilityOptions" or command == "buffThreshold" 
-						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" or command == "buffView"  or command == "debuffView" or command == "castbar" ) then
+						or command == "debuffThreshold" or command == "buffAuras"  or command == "debuffAuras" or command == "buffView"  or command == "debuffView" or command == "castbar"  
+						or command == "buffsMax"  or command == "debuffsMax" ) then
 					frameToConfig = token
 					----debugPrint("configuring frame", frameToConfig)
 				end
@@ -379,10 +414,26 @@ local function muiCommandInterface(commandline)
 				refreshRequired = true		
 			-- debuff view type
 			elseif (command == "debuffView") then
-				local buffView = token
+				local debuffView = token
 				print ("Setting debuff view to ", debuffView, " on ", frameToConfig)
 				MinUIConfig.frames[frameToConfig].debuffView = debuffView
-				refreshRequired = true	
+				refreshRequired = true
+			-- max buffs to show
+			elseif (command == "buffsMax") then
+				local buffsMax = tonumber(token)
+				print ("Setting buffsMax to ", buffsMax, " on ", frameToConfig)
+				if(buffsMax > 0)then
+					MinUIConfig.frames[frameToConfig].buffsMax = buffsMax
+					refreshRequired = true
+				end	
+			-- max debuffs to show				
+			elseif (command == "debuffsMax") then
+				local debuffsMax = tonumber(token)
+				print ("Setting debuffsMax to ", debuffsMax, " on ", frameToConfig)
+				if(debuffsMax > 0)then
+					MinUIConfig.frames[frameToConfig].debuffsMax = debuffsMax
+					refreshRequired = true
+				end					
 			-- debuff view type
 			elseif (command == "castbar") then
 				local castbar = token
@@ -594,22 +645,45 @@ local function update()
 				unitFrame:unitChanged()
 			end
 			
-			MinUI.resyncBuffs = true
 			MinUI.initialised = true
 			
-			debugPrint("all done, initialisation complete")
+			print("Loaded ["..MinUI.version.."]. Type /mui for help.")
+			
+			-- set the last update time
+			MinUI.lastBuffUpdate = Inspect.Time.Frame()
 		--
-		-- Handle buffs and other items that need to constantly poll for animation/updates
+		-- Once we are all setup, just call animate on the frame
 		--
 		else
-			if(MinUI.resyncBuffs)then
-				for unitName, unitFrame in pairs(MinUI.unitFrames) do
-					unitFrame:updateBuffBars()
-					unitFrame:animate()
+			--
+			-- calculate frame time difference
+			--
+			MinUI.curTime = Inspect.Time.Frame()
+			MinUI.buffUpdateDiff = MinUI.curTime  - MinUI.lastBuffUpdate
+			MinUI.animationUpdateDiff = MinUI.curTime  - MinUI.lastAnimationUpdate
+			MinUI.animateBuffs = false
+			MinUI.animate = false
+			
+			if(MinUI.buffUpdateDiff >= MinUIConfig.buffUpdateThreshold)then
+				MinUI.animateBuffs = true
+				MinUI.lastBuffUpdate = MinUI.curTime 
+				MinUI.buffUpdateDiff = 0
+			end
+
+			if(MinUI.animationUpdateDiff >= MinUIConfig.animationUpdateThreshold)then
+				MinUI.animate = true
+				MinUI.lastAnimationUpdate = MinUI.curTime 
+				MinUI.animationUpdateDiff = 0
+			end
+
+			--
+			-- update / animate buffs/castbars etc
+			--
+			for unitName, unitFrame in pairs(MinUI.unitFrames) do
+				if ( MinUI.animateBuffs ) then
+					unitFrame:animateBuffTimers( MinUI.curTime  )
 				end
-				MinUI.resyncBuffs = false
-			else
-				for unitName, unitFrame in pairs(MinUI.unitFrames) do
+				if ( MinUI.animate ) then
 					unitFrame:animate()
 				end
 			end
@@ -669,6 +743,16 @@ local function variablesLoaded( addon )
 		MinUIConfig.backgroundColor = MinUIConfigDefaults.backgroundColor
 	end
 
+	if not MinUIConfig.buffUpdateThreshold then
+		print("New config setting buffUpdateThreshold added")
+		MinUIConfig.buffUpdateThreshold = MinUIConfigDefaults.buffUpdateThreshold
+	end
+	
+	if not MinUIConfig.animationUpdateThreshold then
+		print("New config setting animationUpdateThreshold added")
+		MinUIConfig.animationUpdateThreshold = MinUIConfigDefaults.animationUpdateThreshold
+	end
+	
 	
 	if not MinUIConfig.frames then -- if this happens the version is probably epically old anyawys
 		print("Restored frames from Default - did not exist in MinUIConfig")
@@ -805,12 +889,7 @@ local function startup()
 	--
 	--MinUI.context:SetSecureMode("restricted")
 	
-	--
-	-- Event Hooks
-	--
-	table.insert (Event.Addon.Load.Begin, {function () print("Loaded ["..MinUI.version.."]. Type /mui for help.") end, "MinUI", "loaded"})
-	
-	-- saved vars laoded
+	-- saved vars loaded
 	table.insert(Event.Addon.SavedVariables.Load.End, { variablesLoaded, "MinUI", "variables loaded" })
 	
 	-- Handle User Customisation
@@ -819,13 +898,6 @@ local function startup()
 	-- Inform frames we are entering "secure" mode (basically, combat)
 	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "entering combat/secure mode"})
 	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "leaving combat/secure mode"})
-	
-	--
-	-- A Buff Hath Changed - sucks that I have to use this :/
-	--
-	table.insert(Event.Buff.Add, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffAdd"})
-	table.insert(Event.Buff.Change, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffChange"})
-	table.insert(Event.Buff.Remove, {function() MinUI.resyncBuffs = true end, "MinUI",  "MinUI_buffRemove"})
 end
 
 -- Start the UnitFrame
