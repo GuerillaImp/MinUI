@@ -246,7 +246,7 @@ function UnitFrame:unitChanged( )
 	-- Get our UnitID
 	local unitID = Inspect.Unit.Lookup(self.unitName)
 	
-	print ("Unit Changed - name/id ", self.unitName, unitID )	
+	--print ("Unit Changed - name/id ", self.unitName, unitID )	
 	
 	--
 	-- Ensure the values on the bars update to the new target's details
@@ -357,7 +357,7 @@ end
 function UnitFrame:refreshUnitFrame ( unitID )
 	if(unitID)then
 		local unitDetails = Inspect.Unit.Detail( unitID )
-		print (unitDetails)
+		--print (unitDetails)
 		
 		-- set the frame to visible, because we have an ID - but we might not yet have the details
 		-- due to Rift's system of not providing things immediately, when you ask for them so kindly
