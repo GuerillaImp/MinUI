@@ -56,8 +56,8 @@ MinUIConfigDefaults = {
 			debuffsEnabled = true, -- true/false
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
-			buffsMax = 5, -- max number of buffs/debuffs
-			debuffsMax = 5,
+			buffsMax = 16, -- max number of buffs/debuffs
+			debuffsMax = 16,
 			buffLocation = "above", -- can only be below or above at the moment
 			debuffLocation = "above", -- can only be below or above at the moment
 			buffVisibilityOptions = "all", -- "player" cast or "all"
@@ -92,8 +92,8 @@ MinUIConfigDefaults = {
 			debuffsEnabled = true,
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
-			buffsMax = 5,
-			debuffsMax = 5,
+			buffsMax = 16,
+			debuffsMax = 16,
 			buffLocation = "above",
 			debuffLocation = "above",
 			buffVisibilityOptions = "all",
@@ -210,7 +210,44 @@ MinUIConfigDefaults = {
 			debuffThreshold = 9000,
 			debuffAuras = true, -- debuff auras? (i.e. no duration buffs)
 			buffAuras = true -- buff auras?
-		}
+		}--[[,
+		["group01"] =
+		{
+			x = 10,
+			y = 500,
+			scale = 1.0,
+			frameEnabled = true,
+			-- castbar options
+			castbar = "none", -- above below or none
+			-- default sizes
+			barWidth = barWidthDefault,
+			barHeight = barHeightDefault,
+			barFontSize = barFontSizeDefault,
+			buffFontSize = buffFontSizeDefault,
+			unitTextFontSize = unitTextFontSizeDefault,
+			comboPointsBarHeight = comboPointsBarHeightDefault,
+			mageChargeBarHeight = mageChargeBarHeightDefault,
+			mageChargeFontSize = mageChargeFontSizeDefault,
+			itemOffset = itemOffsetDefault,
+			-- enabled bars/items
+			bars = { "health" }, 
+			texts = { },
+			-- buff/debuff settings
+			buffsEnabled = false,
+			debuffsEnabled = false,
+			buffView = "icon", -- icon or bar
+			debuffView = "icon", -- icon or bar
+			buffsMax = 10,
+			debuffsMax = 10,
+			buffLocation = "below",
+			debuffLocation = "above",
+			buffVisibilityOptions = "all",
+			debuffVisibilityOptions = "all",
+			buffThreshold = 9000,
+			debuffThreshold = 9000,
+			debuffAuras = false, -- debuff auras? (i.e. no duration buffs)
+			buffAuras = false -- buff auras?		
+		}]]
 	}
 }
 

@@ -24,8 +24,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.parentItem = parentItem
 	uFrame.calling = nil
 	uFrame.visible = false
-	uFrame.itemOffset = MinUIConfig.frames[uFrame.unitName].itemOffset
 	
+	uFrame.itemOffset = MinUIConfig.frames[uFrame.unitName].itemOffset
+
 	-- frame locked
 	uFrame.locked = true
 	
@@ -207,8 +208,10 @@ end
 function UnitFrame:showMovementHandle ( toggle )
 	if toggle then
 		self.drag:SetVisible(true)
+		self.frame:SetVisible(true)
 	else
 		self.drag:SetVisible(false)
+		self:unitChanged() -- this will make anything that shuoldnt be visible, become, invisible!
 	end
 end
 
@@ -352,7 +355,11 @@ function UnitFrame:refreshUnitFrame ( )
 			self:updateIcons( )
 		end
 	else
-		self:setUFrameVisible(false)
+		-- if the frames are locked, then let this go invisible as normal,
+		-- otherwise we want it to stay visible, even without details for dragging around
+		if (MinUI.framesLocked) then
+			self:setUFrameVisible(false)
+		end
 	end
 end
 

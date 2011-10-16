@@ -54,7 +54,7 @@ function UnitBuffIcons.new( unitName, buffType, visibilityOptions, lengthThresho
 	
 	
 	-- calculate max icons per "row"
-	uBIcons.maxIconsPerRow = math.floor(uBIcons.width / 32)
+	uBIcons.maxIconsPerRow = math.floor(uBIcons.width / 30)
 	uBIcons.curIconsInRow = 0
 	uBIcons.numRows = 0
 	
@@ -79,8 +79,8 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		-- We don't have any bars remaining, so we create a new one.
 		-- Our Bars are considered single objects that can be dealt with atomically. Each one has the functionality needed to update itself.
 		buffIcon = UI.CreateFrame("Frame", "Bar", MinUI.context)
-		buffIcon:SetWidth(32)
-		buffIcon:SetHeight(32)
+		buffIcon:SetWidth(30)
+		buffIcon:SetHeight(30)
 		buffIcon:SetBackgroundColor(0,0,0,0.5)
 
 		-- Set location
@@ -117,15 +117,15 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 		buffIcon.icon = UI.CreateFrame("Texture", "Icon", buffIcon)
 		buffIcon.icon:SetLayer(1)
 		buffIcon.icon:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
-		buffIcon.icon:SetWidth(32)
-		buffIcon.icon:SetHeight(32)
+		buffIcon.icon:SetWidth(30)
+		buffIcon.icon:SetHeight(30)
 
 		buffIcon.tex = UI.CreateFrame("Texture", "tex", buffIcon)
 		buffIcon.tex:SetTexture("MinUI", "Media/Icons/buff.png")
 		buffIcon.tex:SetLayer(2)
 		buffIcon.tex:SetPoint("TOPLEFT", buffIcon, "TOPLEFT")
-		buffIcon.tex:SetWidth(32)
-		buffIcon.tex:SetHeight(32)
+		buffIcon.tex:SetWidth(30)
+		buffIcon.tex:SetHeight(30)
 
 		-- Set Fonts
 		if not (MinUIConfig.globalTextFont == "default") then
@@ -304,12 +304,12 @@ function UnitBuffIcons:addBuffIcon(buff, time)
 	end
 	
 	-- calcualte the Y offset based on number of rows
-	local rowYOffset = ((32+buffIcon.timer:GetFullHeight())*self.numRows)
+	local rowYOffset = ((30+buffIcon.timer:GetFullHeight())*self.numRows)
 	
 	if (self.direction == "up") then
-		buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", (32+itemOffset)*self.curIconsInRow, -rowYOffset)
+		buffIcon:SetPoint("BOTTOMLEFT", self.frame, "TOPLEFT", (30+itemOffset)*self.curIconsInRow, -rowYOffset)
 	elseif (self.direction == "down") then
-		buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT", (32+itemOffset)*self.curIconsInRow, rowYOffset)
+		buffIcon:SetPoint("TOPLEFT", self.frame, "BOTTOMLEFT", (30+itemOffset)*self.curIconsInRow, rowYOffset)
 	end
 	
 	-- increment icons in row

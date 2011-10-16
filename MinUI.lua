@@ -564,7 +564,7 @@ local function createUnitFrames()
 				local scaledHeight = unitSavedValues.barHeight * unitSavedValues.scale
 				newFrame = UnitFrame.new( unitName, scaledWidth, scaledHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
 			else	
-				--debugPrint("Scale: Not Set")
+				
 				newFrame = UnitFrame.new( unitName, (unitSavedValues.barWidth + (unitSavedValues.itemOffset*2)), unitSavedValues.barHeight, MinUI.context, unitSavedValues.x, unitSavedValues.y )
 			end
 			
@@ -648,70 +648,37 @@ end
 --
 local function animate()
 	--
-	-- Poll for player calling until we get one
+	-- calculate frame time difference
 	--
-	--if (MinUI.playerCallingKnown == false) then
-		--debugPrint("waiting for rift to start giving details...")
-	--	getPlayerDetails()
-	--else
-		--
-		-- Once we get the player's calling initialise the unitFrames
-		--
-		--if (MinUI.initialised == false) then
-			--debugPrint("we have details (at least for the player) so lets create the frames now")
-			
-			-- Create the Unit Frames
-			--createUnitFrames()
-			
-			-- Initialise the Unit Frames
-			--for unitName, unitFrame in pairs(MinUI.unitFrames) do
-			--	unitFrame:unitChanged()
-			--end
-			
-			--MinUI.initialised = true
-			
-			-- set the last update time
-			--MinUI.lastBuffUpdate = Inspect.Time.Frame()
-		--
-		-- Once we are all setup, just call animate on the frame
-		--
-		--else
-			--
-			-- calculate frame time difference
-			--
-			MinUI.curTime = Inspect.Time.Frame()
-			MinUI.buffUpdateDiff = MinUI.curTime  - MinUI.lastBuffUpdate
-			MinUI.animationUpdateDiff = MinUI.curTime  - MinUI.lastAnimationUpdate
-			MinUI.animateBuffs = false
-			MinUI.animate = false
-			
-			if(MinUI.buffUpdateDiff >= MinUIConfig.buffUpdateThreshold)then
-				MinUI.animateBuffs = true
-				MinUI.lastBuffUpdate = MinUI.curTime 
-				MinUI.buffUpdateDiff = 0
-			end
+	MinUI.curTime = Inspect.Time.Frame()
+	MinUI.buffUpdateDiff = MinUI.curTime  - MinUI.lastBuffUpdate
+	MinUI.animationUpdateDiff = MinUI.curTime  - MinUI.lastAnimationUpdate
+	MinUI.animateBuffs = false
+	MinUI.animate = false
+	
+	if(MinUI.buffUpdateDiff >= MinUIConfig.buffUpdateThreshold)then
+		MinUI.animateBuffs = true
+		MinUI.lastBuffUpdate = MinUI.curTime 
+		MinUI.buffUpdateDiff = 0
+	end
 
-			if(MinUI.animationUpdateDiff >= MinUIConfig.animationUpdateThreshold)then
-				MinUI.animate = true
-				MinUI.lastAnimationUpdate = MinUI.curTime 
-				MinUI.animationUpdateDiff = 0
-			end
+	if(MinUI.animationUpdateDiff >= MinUIConfig.animationUpdateThreshold)then
+		MinUI.animate = true
+		MinUI.lastAnimationUpdate = MinUI.curTime 
+		MinUI.animationUpdateDiff = 0
+	end
 
-			--
-			-- update / animate buffs/castbars etc
-			--
-			for unitName, unitFrame in pairs(MinUI.unitFrames) do
-				if ( MinUI.animateBuffs ) then
-					unitFrame:animateBuffTimers( MinUI.curTime  )
-				end
-				if ( MinUI.animate ) then
-					unitFrame:animate()
-				end
-			end
-			
-			
-		--end
-	--end
+	--
+	-- update / animate buffs/castbars etc
+	--
+	for unitName, unitFrame in pairs(MinUI.unitFrames) do
+		if ( MinUI.animateBuffs ) then
+			unitFrame:animateBuffTimers( MinUI.curTime  )
+		end
+		if ( MinUI.animate ) then
+			unitFrame:animate()
+		end
+	end
 end
 
 local function enterSecureMode()
@@ -1296,6 +1263,12 @@ local function startup()
 	-- Casting
 	--
 	table.insert(Event.Unit.Castbar, { updateCastbars, "MinUI", "MinUI updateCastbars"})
+	
+			
+	--local group01 = UnitFrame.new( "group01", 50,50, MinUI.context, 10, 500 )
+	--group01:enableBar(1, "health")
+	--group01:createEnabledBars()
+	--group01:unitChanged()
 	
 end
 
