@@ -2,7 +2,6 @@
 -- MinUI UnitFrames by Grantus
 --
 
-
 -----------------------------------------------------------------------------------------------------------------------------
 --
 -- MinUI Global Settings/Values
@@ -14,6 +13,9 @@ MinUI.context = UI.CreateContext("MinUIContext")
 
 -- Unit Frames
 MinUI.unitFrames = {}
+
+-- Locked
+MinUI.framesLocked = true
 
 -- Player Calling / Initialisation
 MinUI.playerCalling = "unknown"
@@ -33,7 +35,7 @@ MinUI.animate = false
 MinUI.secureMode = false
 
 -- Version
-MinUI.version = "1.3b"
+MinUI.version = "1.3.1"
 
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -94,6 +96,31 @@ local function printHelpText()
 	print("\'/mui globalTextFont [fontName (do not add .ttf)]\' set the font used globally to the one provided, exlude the .ttf.\nWARNING: if the font isn't in the addon folder this makes things go crazy.")
 	print("\'/mui backgroundColor [r,g,b,a]\' set the unit frames background color.")
 end
+
+--
+-- lock frames
+--
+local function lockFrames()
+	print "Frames Locked"
+	MinUI.framesLocked = true
+	
+	for _,frame in pairs (MinUI.unitFrames) do
+		frame:showMovementHandle(false)
+	end
+end
+
+--
+-- unlock frames
+--
+local function unlockFrames()
+	print "Frames Unlocked"
+	MinUI.framesLocked = false
+	
+	for _,frame in pairs (MinUI.unitFrames) do
+		frame:showMovementHandle(true)
+	end
+end
+
 
 --
 -- Configuration Interface
@@ -505,8 +532,6 @@ end
 -- Inspect player for calling, sometimes this returns nil (when loading or porting)
 --
 local function getPlayerDetails()
-	----debugPrint("Get Player Details")
-	
 	-- based on player class some things are different
 	local playerDetails = Inspect.Unit.Detail("player")
 	if (playerDetails) then
@@ -621,38 +646,36 @@ end
 --
 -- Rename animate loop (for things that animate :P)
 --
-local function update()
+local function animate()
 	--
 	-- Poll for player calling until we get one
 	--
-	if (MinUI.playerCallingKnown == false) then
+	--if (MinUI.playerCallingKnown == false) then
 		--debugPrint("waiting for rift to start giving details...")
-		getPlayerDetails()
-	else
+	--	getPlayerDetails()
+	--else
 		--
 		-- Once we get the player's calling initialise the unitFrames
 		--
-		if (MinUI.initialised == false) then
+		--if (MinUI.initialised == false) then
 			--debugPrint("we have details (at least for the player) so lets create the frames now")
 			
 			-- Create the Unit Frames
-			createUnitFrames()
+			--createUnitFrames()
 			
 			-- Initialise the Unit Frames
-			for unitName, unitFrame in pairs(MinUI.unitFrames) do
-				unitFrame:unitChanged()
-			end
+			--for unitName, unitFrame in pairs(MinUI.unitFrames) do
+			--	unitFrame:unitChanged()
+			--end
 			
-			MinUI.initialised = true
-			
-			print("Loaded ["..MinUI.version.."]. Type /mui for help.")
+			--MinUI.initialised = true
 			
 			-- set the last update time
-			MinUI.lastBuffUpdate = Inspect.Time.Frame()
+			--MinUI.lastBuffUpdate = Inspect.Time.Frame()
 		--
 		-- Once we are all setup, just call animate on the frame
 		--
-		else
+		--else
 			--
 			-- calculate frame time difference
 			--
@@ -687,8 +710,8 @@ local function update()
 			end
 			
 			
-		end
-	end
+		--end
+	--end
 end
 
 local function enterSecureMode()
@@ -724,10 +747,6 @@ local function variablesLoaded( addon )
 	--
 	-- Ensure the Saved Variables do not contain nil values (because of new additions or w.e.)
 	--
-	if not MinUIConfig.unitFramesLocked then
-		print("New config setting unitFramesLocked added")
-		MinUIConfig.unitFramesLocked = MinUIConfigDefaults.unitFramesLocked
-	end
 	if not MinUIConfig.globalTextFont then
 		print("New config setting globalTextFont added")
 		MinUIConfig.globalTextFont = MinUIConfigDefaults.globalTextFont
@@ -867,11 +886,338 @@ local function variablesLoaded( addon )
 			MinUIConfig.frames[key].debuffView = MinUIConfigDefaults.frames[key].debuffView
 		end
 	end
-		
-	--	
-	-- Then Start the Main update Loop
+	
+	debugPrint("saved variables loaded")
+end
+
+
+--
+-- Unit's Available - Use this to check when the player frame / pet frame is available for inspection
+-- This should help overcome issues with buggy pets
+--
+local function unitAvailable ( unitIDs )
+	local frameUnitID = -1
+	
+	if (MinUI.initialised == false) then
+		-- initially we only care about the player's details being available,
+		-- once this unit signals that it is available we can create the unit frames
+		frameUnitID = Inspect.Unit.Lookup("player") 
+		for unitID, value in pairs(unitIDs) do
+			if ( unitID == frameUnitID ) then
+				debugPrint("Player available for inspection.")
+				
+				getPlayerDetails()
+				createUnitFrames()
+				
+				MinUI.initialised = true
+				
+				-- initialise all of the frames
+				for unitName, unitFrame in pairs(MinUI.unitFrames) do
+					unitFrame:unitChanged()
+				end
+			end
+		end
+	else
+		-- use this for when a frame's detail's become available that may have been 
+		-- unavailable on unit change, zone change, death, out of range, etc
+		-- just call unitChanged on the frame again and it shuold update nicely
+		for unitName, unitFrame in pairs (MinUI.unitFrames) do
+			frameUnitID = Inspect.Unit.Lookup(unitName) 
+			for unitID, value in pairs(unitIDs) do
+				if ( unitID == frameUnitID ) then
+					debugPrint(unitName, " available for inspection.")
+					
+					-- refresh the unit frame
+					for unitName, unitFrame in pairs(MinUI.unitFrames) do
+						unitFrame:refreshUnitFrame()
+					end
+				end
+			end
+		end
+	end
+end
+
+
+--
+-- Update the health values of the unitIDs who we have frames for
+--
+local function updateHealthValues ( unitIDs )
+	local frameUnitID = -1
+	
 	--
-	table.insert(Event.System.Update.Begin, {update, "MinUI", "update loop"})
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose health value just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's health value just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating health values on ", unitName)
+					unitFrame:updateHealth()
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update the power values of the unitIDs who we have frames for
+--
+local function updatePowerValues ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose power value just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's power value just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating power values on ", unitName)
+					unitFrame:updatePower()
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update the mana values of the unitIDs who we have frames for
+--
+local function updateManaValues ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose mana value just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's mana value just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating mana values on ", unitName)
+					unitFrame:updateMana()
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update the mana values of the unitIDs who we have frames for
+--
+local function updateEnergyValues ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose energy value just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's energy value just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating energy values on ", unitName)
+					unitFrame:updateEnergy()
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update the charge values on any of the frames (taken from "player" unit always)
+--
+local function updateChargeValues ()
+	debugPrint("updating charge values")
+	
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		unitFrame:updateCharge()
+	end
+end
+
+--
+-- Update the combo points values on any of the frames (taken from "player" unit always)
+--
+local function updateComboPointsValues()
+	debugPrint("updating combo points values")
+			
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		unitFrame:updateComboPoints()
+	end
+end
+
+--
+-- Update Unit Level
+--
+local function updateUnitLevel( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose level just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's level just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating level on ", unitName)
+					unitFrame:updateTexts() -- TODO more granular approach to updating textual items (each their own thing)
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update Unit Guild
+--
+local function updateUnitGuild ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose guild just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's guild just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating guild on ", unitName)
+					unitFrame:updateTexts() -- TODO more granular approach to updating textual items (each their own thing)
+				end
+			end
+		end
+	end
+end
+
+
+--
+-- Update Unit Role
+--
+local function updateUnitRole ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose role just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's role just update?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating role on ", unitName)
+					unitFrame:updateIcons() -- TODO more granular approach to updating textual items (each their own thing)
+				end
+			end
+		end
+	end
+end
+
+--
+-- Update Player Planar Charges
+--
+local function updatePlanarValue ( )
+	if(MinUI.unitFrames["player"])then
+		MinUI.unitFrames["player"]:updateTexts() -- TODO: again this should eventually be more granular for each text item
+	end
+end
+
+--
+-- Update Player Vitality
+--
+local function updateVitalityValue ( )
+	if(MinUI.unitFrames["player"])then
+		MinUI.unitFrames["player"]:updateTexts() -- TODO: again this should eventually be more granular for each text item
+	end
+end
+
+--
+-- Update Buffs/Debuffs
+--
+local function updateBuffs ( unitID )
+	local frameUnitID = -1
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Did this frame's role just update?
+			if ( unitID == frameUnitID ) then
+				debugPrint("updating buffs on ", unitName)
+				unitFrame:updateBuffs( )
+			end
+		end
+	end	
+end
+
+
+--
+-- Update castbars
+--
+local function updateCastbars ( unitIDs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Cycle through the unitIDs of unit's whose castbar value just updated
+			for unitID, value in pairs (unitIDs) do
+				-- Did this frame's castbar value just change?
+				if ( unitID == frameUnitID ) then
+					debugPrint("updating casting on ", unitName, value)
+					unitFrame:updateCastbar( value )
+				end
+			end
+		end
+	end
+end
+
+--
+-- Addon finished loading
+--
+local function addonLoaded( addon )
+	if(addon == "MinUI")then
+		print("Loaded ["..MinUI.version.."]. Type /mui for help.")
+		table.insert(Event.System.Update.Begin, {animate, "MinUI", "MinUI Animation Loop"})
+	end
 end
 
 -----------------------------------------------------------------------------------------------------------------------------
@@ -887,15 +1233,70 @@ local function startup()
 	--
 	--MinUI.context:SetSecureMode("restricted")
 	
-	-- saved vars loaded
+	-- Saved Variables Loaded
 	table.insert(Event.Addon.SavedVariables.Load.End, { variablesLoaded, "MinUI", "variables loaded" })
+	
+	-- Saved Variables Loaded
+	table.insert(Event.Addon.Load.End, { addonLoaded, "MinUI", "Addon Loaded" })
 	
 	-- Handle User Customisation
 	table.insert(Command.Slash.Register("mui"), {muiCommandInterface, "MinUI", "Slash command"})
 
-	-- Inform frames we are entering "secure" mode (basically, combat)
-	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "entering combat/secure mode"})
-	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "leaving combat/secure mode"})
+	-- Secure Mode Enter/Leave
+	table.insert(Event.System.Secure.Enter, {enterSecureMode, "MinUI", "Entering combat/secure mode"})
+	table.insert(Event.System.Secure.Leave, {leaveSecureMode, "MinUI", "Leaving combat/secure mode"})
+
+	--
+	-- Unit Frame Events
+	--
+	
+	--
+	-- Unit Available - check for the player unit frame being avaialbe for inspection
+	--
+	table.insert(Event.Unit.Available, {unitAvailable, "MinUI", "MinUI unitAvailable"})
+	
+	--
+	-- Unit Changes
+	--
+	table.insert(Event.Unit.Detail.Health, { updateHealthValues, "MinUI", "MinUI updateHealthValues"})
+	table.insert(Event.Unit.Detail.HealthMax, { updateHealthValues, "MinUI", "MinUI updateHealthValues"})
+	table.insert(Event.Unit.Detail.Mana, { updateManaValues, "MinUI", "MinUI updateManaValues"})
+	table.insert(Event.Unit.Detail.ManaMax, { updateManaValues, "MinUI", "MinUI updateManaMaxValues"})
+	table.insert(Event.Unit.Detail.Power, { updatePowerValues, "MinUI", "MinUI updatePowerValues"})
+	table.insert(Event.Unit.Detail.Energy, { updateEnergyValues, "MinUI", "MinUI updateEnergyValues"})
+	table.insert(Event.Unit.Detail.EnergyMax, { updateEnergyValues, "MinUI", "MinUI updateEnergyMaxValues"})
+	
+	--
+	-- Player Only Events
+	--
+	table.insert(Event.Unit.Detail.Combo, { updateComboPointsValues, "MinUI", "MinUI updateComboPointsValues"})
+	table.insert(Event.Unit.Detail.ComboUnit, { updateComboPointsValues, "MinUI", "MinUI updateComboPointsValues"})
+	table.insert(Event.Unit.Detail.Charge, { updateChargeValues, "MinUI", "MinUI updateChargeValues"})
+	table.insert(Event.Unit.Detail.Planar, { updatePlanarValue, "MinUI", "MinUI updatePlanarValue"}) 
+	table.insert(Event.Unit.Detail.Vitality, { updateVitalityValue, "MinUI", "MinUI updateVitalityValue"})  
+	
+	--
+	-- Other Events
+	--
+	table.insert(Event.Unit.Detail.Level, { updateUnitLevel, "MinUI", "MinUI updateUnitLevel"})
+	table.insert(Event.Unit.Detail.Guild, { updateUnitGuild, "MinUI", "MinUI updateUnitGuild"})
+	table.insert(Event.Unit.Detail.Role, { updateUnitRole, "MinUI", "MinUI updateUnitRole" })
+	-- TODO: pvp
+	-- TODO: warfront
+	-- others.
+	
+	--
+	-- Buffs/Debuffs
+	--
+	table.insert(Event.Buff.Add, { updateBuffs, "MinUI", "MinUI updateBuffs"})
+	table.insert(Event.Buff.Change, { updateBuffs, "MinUI", "MinUI updateBuffs"})
+	table.insert(Event.Buff.Remove, { updateBuffs, "MinUI", "MinUI updateBuffs"})
+	
+	--
+	-- Casting
+	--
+	table.insert(Event.Unit.Castbar, { updateCastbars, "MinUI", "MinUI updateCastbars"})
+	
 end
 
 -- Start the UnitFrame

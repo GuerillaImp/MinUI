@@ -23,8 +23,6 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	uCastBar.channeled = false
 	uCastBar.maxLength = 25 -- truncate after 20 characters?
 	
-	--debugPrint("creating castbar for",uCastBar.unitName)
-	
 	--
 	-- CAST BAR STUFFS
 	--
@@ -121,11 +119,6 @@ function UnitCastBar.new( unitName, width, height, thisAnchor, parentAnchor, par
 	uCastBar.castbar.icon:SetPoint("CENTERLEFT", uCastBar.castbar.bar, "CENTERLEFT" )
 	uCastBar.castbar.icon:SetHeight(uCastBar.height)
 	uCastBar.castbar.icon:SetWidth(uCastBar.height)
-		
-	--
-	-- Handle castbar changed events
-	--
-	table.insert(Event.Unit.Castbar, {function ( unitIDs ) uCastBar:updateCastbar( unitIDs ) end, "MinUI", uCastBar.unitName.."_updateCastBar"})
 	
 	-- return the new "object"
 	return uCastBar
@@ -185,66 +178,61 @@ end
 --
 -- Unit Castbar Status Changed
 --
-function UnitCastBar:updateCastbar( unitIDs )
-	-- get the ID of the unit represented by this frame currently
-	local frameUnitID = Inspect.Unit.Lookup(self.unitName)
+function UnitCastBar:syncCastbar( casting )
+	-- store casting value for animation updats
+	self.casting = casting
+	
+	-- if we have begun casting then update the cast bar with the values
+	if(self.casting)then
+		local unitCastBar = Inspect.Unit.Castbar( self.unitName )
+		local abilityName = unitCastBar.abilityName
+		local uninterruptible = unitCastBar.uninterruptible
+		
+		debugPrint(self.unitName, " is casting ", abilityName )
+		
+		self.castbar.bar:SetVisible(true)
+		self.visible = true
 
-	for unitID, value in pairs (unitIDs) do
-		if ( unitID == frameUnitID ) then
-			self.casting = value
-			if(self.casting)then
-				local unitCastBar = Inspect.Unit.Castbar( unitID )
-				local abilityName = unitCastBar.abilityName
-				local uninterruptible = unitCastBar.uninterruptible
-				--print(self.unitName, " is casting ", abilityName )
-				self.castbar.bar:SetVisible(true)
-				self.visible = true
-
-				
-				if(string.len(abilityName) >= self.maxLength)then
-					abilityName = string.sub(abilityName, 1, self.maxLength-3)
-					abilityName = abilityName .. "..."
-				end
-				
-				self.castbar.leftText:SetText(abilityName)
-				self.castbar.leftText:SetWidth(self.castbar.leftText:GetFullWidth())
-				self.castbar.leftTextShadow:SetText(abilityName)
-				self.castbar.leftTextShadow:SetWidth(self.castbar.leftText:GetFullWidth())
-				
-				if(unitCastBar.ability)then
-					--print(unitCastBar.ability)
-					local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
-					if(abilityDetails)then
-						self.channeled = abilityDetails.channeled
-						if(abilityDetails.icon)then
-							--print(abilityDetails.icon)
-							self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
-						else
-							self.castbar.icon:SetTexture("Rift", "apple.dds")
-						end
-					else
-						self.castbar.icon:SetTexture("Rift", "apple.dds") -- use a placeholder 
-					end
+		
+		if(string.len(abilityName) >= self.maxLength)then
+			abilityName = string.sub(abilityName, 1, self.maxLength-3)
+			abilityName = abilityName .. "..."
+		end
+		
+		self.castbar.leftText:SetText(abilityName)
+		self.castbar.leftText:SetWidth(self.castbar.leftText:GetFullWidth())
+		self.castbar.leftTextShadow:SetText(abilityName)
+		self.castbar.leftTextShadow:SetWidth(self.castbar.leftText:GetFullWidth())
+		
+		if(unitCastBar.ability)then
+			local abilityDetails = Inspect.Ability.Detail(unitCastBar.ability)
+			if(abilityDetails)then
+				self.channeled = abilityDetails.channeled
+				if(abilityDetails.icon)then
+					self.castbar.icon:SetTexture("Rift", abilityDetails.icon)
 				else
-					self.castbar.icon:SetTexture("Rift", "apple.dds") -- use a placeholder 
-				end
-				
-				if ( uninterruptible ) then
-					self.castbar.bar:SetBackgroundColor(0.2,0.2,0.2,0.3)
-					self.castbar.solid:SetBackgroundColor(0.2,0.2,0.2,0.6)
-				else
-					self.castbar.bar:SetBackgroundColor(0.2,0.4,1.0,0.3)
-					self.castbar.solid:SetBackgroundColor(0.2,0.4,1.0,0.6)
+					self.castbar.icon:SetTexture("Rift", "apple.dds")
 				end
 			else
-				self.castbar.bar:SetVisible(false)
-				self.visible = false
-				self.castbar.leftText:SetText("")
-				self.castbar.rightText:SetText("")
-				self.castbar.leftTextShadow:SetText("")
-				self.castbar.rightTextShadow:SetText("")
+				self.castbar.icon:SetTexture("Rift", "apple.dds") -- use a placeholder 
 			end
-			
+		else
+			self.castbar.icon:SetTexture("Rift", "apple.dds") -- use a placeholder 
 		end
+		
+		if ( uninterruptible ) then
+			self.castbar.bar:SetBackgroundColor(0.2,0.2,0.2,0.3)
+			self.castbar.solid:SetBackgroundColor(0.2,0.2,0.2,0.6)
+		else
+			self.castbar.bar:SetBackgroundColor(0.2,0.4,1.0,0.3)
+			self.castbar.solid:SetBackgroundColor(0.2,0.4,1.0,0.6)
+		end
+	else
+		self.castbar.bar:SetVisible(false)
+		self.visible = false
+		self.castbar.leftText:SetText("")
+		self.castbar.rightText:SetText("")
+		self.castbar.leftTextShadow:SetText("")
+		self.castbar.rightTextShadow:SetText("")
 	end
 end

@@ -18,8 +18,6 @@ local mageChargeFontSizeDefault = 12
 
 -- Defaults for Frame Configuration
 MinUIConfigDefaults = {
-	-- Frames Locked
-	unitFramesLocked = true,
 	-- Global Text Font
 	globalTextFont = "default", -- default, arial, arial_round (ship with MinUI)
 	-- Global Texture
@@ -218,22 +216,6 @@ MinUIConfigDefaults = {
 
 -- Saved Frame Settings (Configured per-character through in game commands) (Set to Defaults on First Run)
 MinUIConfig = MinUIConfigDefaults
-
---
--- lock frames
---
-function lockFrames()
-	--debugPrint("Frames locked")
-	MinUIConfig.unitFramesLocked = true
-end
-
---
--- unlock frames
---
-function unlockFrames()
-	--debugPrint("Frames unlocked")
-	MinUIConfig.unitFramesLocked = false
-end
 
 --
 -- reset everything to default
