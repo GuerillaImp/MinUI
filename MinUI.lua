@@ -1129,10 +1129,11 @@ local function updateVitalityValue ( )
 end
 
 --
--- Update Buffs/Debuffs
+-- Add the Buffs/Debuffs on the given unitID
 --
-local function updateBuffs ( unitID )
+local function addBuffs ( unitID, buffs )
 	local frameUnitID = -1
+	
 	--
 	-- For all of our unitFrames
 	--
@@ -1141,10 +1142,59 @@ local function updateBuffs ( unitID )
 		frameUnitID = Inspect.Unit.Lookup(unitName)
 		-- If the frame is currently representing a unit
 		if(frameUnitID)then
-			-- Did this frame's role just update?
+			-- Did this unit have a buff that just changed?
 			if ( unitID == frameUnitID ) then
-				debugPrint("updating buffs on ", unitName)
-				unitFrame:updateBuffs( )
+				for buff,value in pairs(buffs) do
+					unitFrame:addBuff( buff, Inspect.Time.Frame() )
+				end
+			end
+		end
+	end	
+end
+
+--
+-- Remove the Buffs/Debuffs on the given unitID
+--
+local function removeBuffs ( unitID, buffs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Did this unit have a buff that just changed?
+			if ( unitID == frameUnitID ) then
+				for buff,value in pairs(buffs) do
+					unitFrame:removeBuff( buff, Inspect.Time.Frame() )
+				end
+			end
+		end
+	end	
+end
+
+--
+-- Change the Buffs/Debuffs on the given unitID
+--
+local function changeBuffs ( unitID, buffs )
+	local frameUnitID = -1
+	
+	--
+	-- For all of our unitFrames
+	--
+	for unitName,unitFrame in pairs (MinUI.unitFrames) do
+		-- Get the ID of the unit represented by the unitFrame
+		frameUnitID = Inspect.Unit.Lookup(unitName)
+		-- If the frame is currently representing a unit
+		if(frameUnitID)then
+			-- Did this unit have a buff that just changed?
+			if ( unitID == frameUnitID ) then
+				for buff,value in pairs(buffs) do
+					unitFrame:changeBuff( buff, Inspect.Time.Frame() )
+				end
 			end
 		end
 	end	
@@ -1255,9 +1305,9 @@ local function startup()
 	--
 	-- Buffs/Debuffs
 	--
-	table.insert(Event.Buff.Add, { updateBuffs, "MinUI", "MinUI updateBuffs"})
-	table.insert(Event.Buff.Change, { updateBuffs, "MinUI", "MinUI updateBuffs"})
-	table.insert(Event.Buff.Remove, { updateBuffs, "MinUI", "MinUI updateBuffs"})
+	table.insert(Event.Buff.Add, { addBuffs, "MinUI", "MinUI addBuffs"})
+	table.insert(Event.Buff.Change, { changeBuffs, "MinUI", "MinUI changeBuffs"})
+	table.insert(Event.Buff.Remove, { removeBuffs, "MinUI", "MinUI removeBuffs"})
 	
 	--
 	-- Casting

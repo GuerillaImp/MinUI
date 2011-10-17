@@ -90,14 +90,6 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	uFrame.topRightIcon:SetLayer(4)
 	uFrame.topRightIcon:SetVisible(false)
 	uFrame.topRightIcon:SetTexture("MinUI", "Media/Icons/InCombat.png")
-
-	--
-	-- Make the frame restricted such that we can ues mouesover macros on them
-	--
-	-- Eventually
-	--
-	--uFrame.frame:SetSecureMode("restricted")
-	--uFrame.frame:SetMouseoverUnit(uFrame.unitName)
 		
 	--
 	-- Unit Changed - The frame updates itself when it changes
@@ -173,6 +165,9 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	return uFrame
 end
 
+--
+-- Put the frame into combat mode
+--
 function UnitFrame:setInCombat(toggle)
 	if(toggle)then
 		self.topRightIcon:SetVisible(true)
@@ -181,7 +176,9 @@ function UnitFrame:setInCombat(toggle)
 	end
 end
 
+--
 -- Animate things that need "fast" updates (castbar, frame delta, flashing, etc)
+--
 function UnitFrame:animate ( )
 	if ( self.visible ) then
 		if(self.castBar)then
@@ -190,7 +187,9 @@ function UnitFrame:animate ( )
 	end
 end
 
+--
 -- Animate buff timers
+--
 function UnitFrame:animateBuffTimers ( time )
 	if ( self.visible ) then
 		if(self.buffs) then
@@ -233,7 +232,7 @@ function UnitFrame:unitChanged( )
 	--
 	-- Ensure the buffs on the unit frame match the new target's details
 	--
-	self:updateBuffs( )
+	self:syncBuffs( )
 	
 	--
 	-- Ensure the castbar on the unit frame matches the new target's casting details
@@ -260,17 +259,52 @@ function UnitFrame:updateCastbar( casting )
 end
 
 --
--- Update buffs/debuffs on this UnitFrame
+-- Resync the buffs/debuffs on this UnitFrame
 --
-function UnitFrame:updateBuffs( )
-	--
-	-- Ensure the buffs are reset then update to match the new target
-	--
+function UnitFrame:syncBuffs( )
 	if(self.buffs)then
 		self.buffs:syncBuffs( Inspect.Time.Frame() )
 	end
 	if(self.debuffs)then
 		self.debuffs:syncBuffs( Inspect.Time.Frame() )
+	end
+end
+
+--
+-- Add buff to unit frame
+--
+function UnitFrame:addBuff( buffID, curTime )
+	if(self.buffs)then
+		self.buffs:addBuff( buffID, curTime )
+	end
+	if(self.debuffs)then
+		self.debuffs:addBuff( buffID, curTime )
+	end
+end
+
+--
+-- Change buff on unit frame
+--
+function UnitFrame:changeBuff( buffID, curTime )
+	if(self.buffs)then
+		self.buffs:removeBuff( buffID, curTime )
+		self.buffs:addBuff( buffID, curTime )
+	end
+	if(self.debuffs)then
+		self.debuffs:removeBuff( buffID, curTime )
+		self.debuffs:addBuff( buffID, curTime )
+	end
+end
+
+--
+-- Remove buff from unit frame
+--
+function UnitFrame:removeBuff( buffID, curTime )
+	if(self.buffs)then
+		self.buffs:removeBuff( buffID, curTime )
+	end
+	if(self.debuffs)then
+		self.debuffs:removeBuff( buffID, curTime )
 	end
 end
 
@@ -443,12 +477,14 @@ function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThresh
 	if( location == "above") then
 		if(buffView == "icon")then
 			buffs = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth-(widthOffset), "BOTTOMCENTER", "TOPCENTER", attachPoint, xOffset, 0 )
+			buffs:createIconFrames()
 		elseif(buffView == "bar")then
 			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth-(widthOffset), "BOTTOMCENTER", "TOPCENTER", attachPoint, xOffset, 0 )
 		end
 	elseif ( location == "below") then	
 		if(buffView == "icon")then
 			buffs = UnitBuffIcons.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth-(widthOffset), "TOPCENTER", "BOTTOMCENTER", attachPoint, xOffset, 0 )
+			buffs:createIconFrames()
 		elseif(buffView == "bar")then
 			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth-(widthOffset), "TOPCENTER", "BOTTOMCENTER", attachPoint, xOffset, 0 )
 		end

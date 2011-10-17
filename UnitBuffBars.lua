@@ -4,6 +4,11 @@
 --
 -- Acts as the anchor for buffs/debuffs
 --
+--
+-- TODO: Conver this over to the Buff Icon style of Add/Remove debuffs without using zombie frames etc
+-- just have a set of X frames that are enabled/disabled
+--
+--
 -----------------------------------------------------------------------------------------------------------------------------
 
 UnitBuffBars = {}
