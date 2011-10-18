@@ -5,9 +5,6 @@
 -- Acts as the anchor for buffs/debuffs
 --
 --
--- TODO: Conver this over to the Buff Icon style of Add/Remove debuffs without using zombie frames etc
--- just have a set of X frames that are enabled/disabled
---
 --
 -----------------------------------------------------------------------------------------------------------------------------
 
@@ -26,30 +23,48 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 	uBBars.parentItem = parentItem
 	uBBars.offsetX = offsetX
 	uBBars.offsetY = offsetY
-	uBBars.fontSize = MinUIConfig.frames[unitName].buffFontSize
-
+	
 	-- buff values
 	uBBars.direction = direction
 	uBBars.unitName = unitName
 	uBBars.buffType = buffType
 	uBBars.visibilityOptions = visibilityOptions
 	uBBars.lengthThreshold = lengthThreshold
+	
+	uBBars.fontSize = MinUIConfig.frames[uBBars.unitName].buffFontSize
+	uBBars.itemOffset = MinUIConfig.frames[uBBars.unitName].itemOffset
+	uBBars.height = MinUIConfig.frames[uBBars.unitName].barHeight
+	
 		
 	-- scale font size if we have a scale
 	if ( MinUIConfig.frames[uBBars.unitName].scale ) then
 		uBBars.fontSize = uBBars.fontSize * MinUIConfig.frames[uBBars.unitName].scale
 	end
 	
-	-- store buffs
-	uBBars.activeBuffBars = {}
-	uBBars.zombieBuffBars = {}
-	uBBars.numActiveBars = 0
+	--
+	-- Buff Icon Frame Set
+	--
+	uBBars.buffBarFrames = {}
+	-- Set of buffs sorted by time remaining
+	uBBars.buffDetailsList = {}
+	
+	--
+	-- Max buffs/debuffs
+	--
+	uBBars.buffsMax = 10
+	if (uBBars.buffType == "buff") then
+		uBBars.buffsMax = MinUIConfig.frames[uBBars.unitName].buffsMax
+	elseif (uBBars.buffType == "debuff") then
+		uBBars.buffsMax = MinUIConfig.frames[uBBars.unitName].debuffsMax
+	elseif (uBBars.buffType == "merged") then
+		uBBars.buffsMax = MinUIConfig.frames[uBBars.unitName].buffsMax
+	end
 
 	-- create the frame
 	uBBars.frame = UI.CreateFrame("Frame", "buffBars_"..buffType, parentItem)
 	uBBars.frame:SetPoint(anchorThis, parentItem, anchorParent, offsetX, offsetY )
 	uBBars.frame:SetWidth(uBBars.width) -- give "breathing room" at either end
-	uBBars.frame:SetHeight(MinUIConfig.frames[uBBars.unitName].itemOffset)
+	uBBars.frame:SetHeight(uBBars.itemOffset)
 	uBBars.frame:SetLayer(-1)
 	uBBars.frame:SetVisible(true)
 	uBBars.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.0)
@@ -58,487 +73,571 @@ function UnitBuffBars.new( unitName, buffType, visibilityOptions, lengthThreshol
 end
 
 --
--- Create or Add Existing Buff Bar to the UnitBuffBars Anchor
+-- Create Frames for the maximum number of buffs currently enabled
 --
-function UnitBuffBars:addBuffBar(buff, time)
-
-	-- attempt to reuse an old bar
-	local bar = table.remove(self.zombieBuffBars)
+function UnitBuffBars:createBarFrames()
+	self.buffBarFrames = {}
 	
-	local unitName = self.unitName
-	local width = self.width
+	for i = 1, self.buffsMax do
+		self.buffBarFrames[i] = self:createBuffBarFrame(i)
+	end
+
+	-- after creating the bar frames, lay them out
+	self:layoutBarFrames()
+end
+
+--
+-- Layout the frames
+--
+function UnitBuffBars:layoutBarFrames()
+	--local lastAttach = nil
+	local yOffset = 0
+	
+	-- for each frame
+	for index, buffBarFrame in ipairs(self.buffBarFrames) do
+		if (self.direction == "up") then
+			buffBarFrame:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER", 0, -yOffset)
+		elseif (self.direction == "down") then
+			buffBarFrame:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER", 0, yOffset)
+		end
+			
+		yOffset = yOffset + self.height + self.itemOffset
+	end
+end
+
+--
+-- Create a buffBar
+--
+function UnitBuffBars:createBuffBarFrame( frameIndex )
+	-- get item values for the frame
+	local itemOffset = self.itemOffset
 	local fontSize = self.fontSize
+	local width = self.width
+	local height = self.height
 	
-	-- if no bar exist in our pool of bars then create one
-	if not bar then
-		-- We don't have any bars remaining, so we create a new one.
-		-- Our Bars are considered single objects that can be dealt with atomically. Each one has the functionality needed to update itself.
-		bar = UI.CreateFrame("Frame", "Bar", MinUI.context)
+	-- We don't have any bars remaining, so we create a new one.
+	-- Our Bars are considered single objects that can be dealt with atomically. Each one has the functionality needed to update itself.
+	bar = UI.CreateFrame("Frame", "Bar", MinUI.context)
+	bar:SetWidth(width)
+	bar:SetHeight(height)
+	bar:SetVisible(false)
+	bar.buffID = ""
+	
+	-- Set Initial Location
+	if(self.direction == "up")then
+		bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER")
+	elseif(self.direction == "down")then
+		bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
+	end
 
-		-- Set location
-		if(self.direction == "up")then
-			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER")
-		elseif(self.direction == "down")then
-			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER")
-		end
+	
+	bar.text = UI.CreateFrame("Text", "Text", bar)
+	bar.textShadow = UI.CreateFrame("Text", "Text", bar)
+	bar.text:SetLayer(2)
+	bar.textShadow:SetLayer(1)
+	
+	
+	bar.timer = UI.CreateFrame("Text", "Timer", bar)
+	bar.timerShadow = UI.CreateFrame("Text", "Timer", bar)
+	bar.timer:SetLayer(2)
+	bar.timerShadow:SetLayer(1)
+	
+	bar.timer:SetHeight(bar.text:GetFullHeight())
+	bar.timerShadow:SetHeight(bar.text:GetFullHeight())
+	
+	
+	bar.icon = UI.CreateFrame("Texture", "Icon", bar)
 
-		bar.text = UI.CreateFrame("Text", "Text", bar)
-		bar.textShadow = UI.CreateFrame("Text", "Text", bar)
-		bar.text:SetLayer(2)
-		bar.textShadow:SetLayer(1)
-		
-		bar.timer = UI.CreateFrame("Text", "Timer", bar)
-		bar.timerShadow = UI.CreateFrame("Text", "Timer", bar)
-		bar.timer:SetLayer(2)
-		bar.timerShadow:SetLayer(1)
-		
-		bar.timer:SetHeight(bar.text:GetFullHeight())
-		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
-		
-		
-		bar.icon = UI.CreateFrame("Texture", "Icon", bar)
+	-- Solid background - this is the actual "bar" part of it.
+	bar.solid = UI.CreateFrame("Frame", "Solid", bar)
+	bar.solid:SetLayer(-1)  -- Put it behind every other element.
+	
+	bar.tex = UI.CreateFrame("Texture", "Texture", bar)
+	if ( MinUIConfig.barTexture ) then
+		bar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
+	else
+		bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+	end
 
-		-- Solid background - this is the actual "bar" part of it.
-		bar.solid = UI.CreateFrame("Frame", "Solid", bar)
-		bar.solid:SetLayer(-1)  -- Put it behind every other element.
-		
-		bar.tex = UI.CreateFrame("Texture", "Texture", bar)
-		if ( MinUIConfig.barTexture ) then
-			bar.tex:SetTexture("MinUI", "Media/"..MinUIConfig.barTexture..".tga")
+	bar.tex:SetLayer(-2)
+	
+	
+	bar.text:SetText("???")
+	bar.text:SetFontSize(fontSize)
+	bar.textShadow:SetFontSize(fontSize)
+	bar.textShadow:SetFontColor(0,0,0,1)
+
+	-- Set Fonts
+	if not (MinUIConfig.globalTextFont == "default") then
+		bar.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		bar.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		bar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+		bar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
+	end
+	
+	bar.text:SetHeight(bar.text:GetFullHeight())
+	bar.textShadow:SetHeight(bar.text:GetFullHeight())
+	
+	bar.timerShadow:SetFontSize(fontSize)
+	bar.timerShadow:SetFontColor(0,0,0,1)
+	bar.timerShadow:SetHeight(bar.text:GetFullHeight())
+	
+	bar:SetHeight(bar.text:GetFullHeight())
+	bar.solid:SetHeight(bar.text:GetFullHeight())
+	bar.tex:SetHeight(bar.text:GetFullHeight())
+
+	bar.icon:SetPoint("TOPLEFT", bar, "TOPLEFT") -- The icon is pinned to the top-left corner of the bar.
+	bar.icon:SetPoint("BOTTOM", bar, "BOTTOM") -- Vertically, it always fills the entire bar.
+
+	bar.text:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT") -- The text is pinned to the top-right corner of the icon.
+	bar.textShadow:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT", 1.5, 1.5) -- The textShadow is pinned to the top-right corner of the icon. yoffset by 2
+	--bar:SetPoint("BOTTOM", bar.text, "BOTTOM")  -- The bar is set to always be as high as the text is.
+
+	bar.timer:SetPoint("TOPRIGHT", bar, "TOPRIGHT") -- The timer is pinned to the top-right corner.
+	bar.timerShadow:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 1.5, 1.5) -- The timerShadow is pinned to the top-right corner. yoffset by 2
+
+	bar.text:SetPoint("RIGHT", bar.timer, "LEFT") -- Make sure the text doesn't overrun the timer. We'll be changing the text's height based on the contents, but we'll leave the width calculated this way.
+
+	-- Set the solid bar to fill the entire buff bar.
+	bar.solid:SetPoint("CENTERLEFT", bar, "CENTERLEFT")
+	--bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
+	bar.tex:SetPoint("CENTERLEFT", bar, "CENTERLEFT")
+	--bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
+	bar:SetWidth( self.width )
+	bar.solid:SetWidth ( self.width )
+	bar.tex:SetWidth ( self.width )
+	
+	--
+	-- Set Buff - requires a buff and a timestamp
+	--
+	function bar:SetBuff(buff, time)
+		-- Set Debuff Color
+		if buff.debuff then
+			self:SetBackgroundColor(1.0, 0.0, 0.0, 0.2)
+			self.solid:SetBackgroundColor(1.0, 0.0, 0.0, 0.6)
+		-- Set Buff Color
 		else
-			bar.tex:SetTexture("MinUI", "Media/Aluminium.tga")
+			self:SetBackgroundColor(0.2, 0.2, 1.0, 0.2)
+			self.solid:SetBackgroundColor(0.2, 0.2,1.0,0.6)
 		end
-	
-		bar.tex:SetLayer(-2)
-
-		
-		bar.text:SetText("???")
-		bar.text:SetFontSize(fontSize)
-		bar.textShadow:SetFontSize(fontSize)
-		bar.textShadow:SetFontColor(0,0,0,1)
-
-		-- Set Fonts
-		if not (MinUIConfig.globalTextFont == "default") then
-			bar.timer:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.timerShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.text:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-			bar.textShadow:SetFont("MinUI", MinUIConfig.globalTextFont..".ttf")
-		end
-		
-		bar.text:SetHeight(bar.text:GetFullHeight())
-		bar.textShadow:SetHeight(bar.text:GetFullHeight())
-		
-		bar.timerShadow:SetFontSize(fontSize)
-		bar.timerShadow:SetFontColor(0,0,0,1)
-		bar.timerShadow:SetHeight(bar.text:GetFullHeight())
-		
-		bar:SetHeight(bar.text:GetFullHeight())
-		bar.solid:SetHeight(bar.text:GetFullHeight())
-		bar.tex:SetHeight(bar.text:GetFullHeight())
-
-		bar.icon:SetPoint("TOPLEFT", bar, "TOPLEFT") -- The icon is pinned to the top-left corner of the bar.
-		bar.icon:SetPoint("BOTTOM", bar, "BOTTOM") -- Vertically, it always fills the entire bar.
-
-		bar.text:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT") -- The text is pinned to the top-right corner of the icon.
-		bar.textShadow:SetPoint("TOPLEFT", bar.icon, "TOPRIGHT", 1.5, 1.5) -- The textShadow is pinned to the top-right corner of the icon. yoffset by 2
-		--bar:SetPoint("BOTTOM", bar.text, "BOTTOM")  -- The bar is set to always be as high as the text is.
-
-		bar.timer:SetPoint("TOPRIGHT", bar, "TOPRIGHT") -- The timer is pinned to the top-right corner.
-		bar.timerShadow:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 1.5, 1.5) -- The timerShadow is pinned to the top-right corner. yoffset by 2
-
-		bar.text:SetPoint("RIGHT", bar.timer, "LEFT") -- Make sure the text doesn't overrun the timer. We'll be changing the text's height based on the contents, but we'll leave the width calculated this way.
-
-		-- Set the solid bar to fill the entire buff bar.
-		bar.solid:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		--bar.solid:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
-		bar.tex:SetPoint("TOPLEFT", bar, "TOPLEFT")
-		--bar.tex:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT")
-		bar:SetWidth( self.width + MinUIConfig.frames[unitName].itemOffset )
-		
-		--
-		-- Set Buff - requires a buff and a timestamp
-		--
-		function bar:SetBuff(buff, time)
-			-- Set Debuff Color
-			if buff.debuff then
-				self:SetBackgroundColor(1.0, 0.0, 0.0, 0.2)
-				self.solid:SetBackgroundColor(1.0, 0.0, 0.0, 0.6)
-			-- Set Buff Color
-			else
-				self:SetBackgroundColor(0.2, 0.2, 1.0, 0.2)
-				self.solid:SetBackgroundColor(0.2, 0.2,1.0,0.6)
-			end
-		  
-			-- if we are showing all buffs/debuffs distinguish player buffs
-			if(self.visibilityOptions == "all")then
-				if (buff.caster == Inspect.Unit.Lookup("player")) then
-					self.text:SetFontSize(fontSize)
-					self.timer:SetFontSize(fontSize)
-					self.textShadow:SetFontSize(fontSize)
-					self.timerShadow:SetFontSize(fontSize)
-				else
-					self.text:SetFontSize(fontSize - 2)
-					self.timer:SetFontSize(fontSize - 2)
-					self.textShadow:SetFontSize(fontSize - 2)
-					self.timerShadow:SetFontSize(fontSize - 2)
-				end
-			else
+	  
+		-- if we are showing all buffs/debuffs distinguish player buffs
+		if(self.visibilityOptions == "all")then
+			if (buff.caster == Inspect.Unit.Lookup("player")) then
 				self.text:SetFontSize(fontSize)
 				self.timer:SetFontSize(fontSize)
 				self.textShadow:SetFontSize(fontSize)
 				self.timerShadow:SetFontSize(fontSize)
+			else
+				self.text:SetFontSize(fontSize - 2)
+				self.timer:SetFontSize(fontSize - 2)
+				self.textShadow:SetFontSize(fontSize - 2)
+				self.timerShadow:SetFontSize(fontSize - 2)
 			end
-			
-			-- Set Heights
-			self.text:SetHeight(self.text:GetFullHeight())
-			self.timer:SetHeight(self.text:GetFullHeight())
-			self.textShadow:SetHeight(self.text:GetFullHeight())
-			self.timerShadow:SetHeight(self.text:GetFullHeight())
-			self:SetHeight(self.text:GetFullHeight())
-			self.solid:SetHeight(self.text:GetFullHeight())
-			self.tex:SetHeight(self.text:GetFullHeight())
-			
-		  
-		  -- Re-square and set the icon
-		  self.icon:SetWidth(self.icon:GetHeight())
-		  self.icon:SetTexture("Rift", buff.icon)
-
-		  -- Display our stacking multiple.
-		  if buff.stack then
-			self.text:SetText(buff.name .. " (" .. buff.stack .. ")")
-			self.textShadow:SetText(buff.name .. " (" .. buff.stack .. ")")
-		  else
-			self.text:SetText(buff.name)
-			self.textShadow:SetText(buff.name)
-		  end
-		  
-		  self.text:SetWidth(width)
-		  self.textShadow:SetWidth(width)
-		  
-		  if buff.duration then
-			self.completion = buff.begin + buff.duration
-			self.duration = buff.duration
-			
-			-- Display everything we might have hidden.
-			self.solid:SetVisible(true)
-			self.tex:SetVisible(true)
-			self.timer:SetVisible(true)
-			self.timerShadow:SetVisible(true)
-			
-			self:Tick(time)
-		  else
-			self.completion = nil
-			
-			-- This is a permanent buff without a timer, so don't show any of that.
-			self.solid:SetVisible(false)
-			self.tex:SetVisible(false)
-			self.timer:SetVisible(false)
-			self.timer:SetWidth(0)
-			self.timerShadow:SetVisible(false)
-			self.timerShadow:SetWidth(0)
-		  end
-		  
-		  self.debuff = buff.debuff
-		  self.buffid = buff.id
+		else
+			self.text:SetFontSize(fontSize)
+			self.timer:SetFontSize(fontSize)
+			self.textShadow:SetFontSize(fontSize)
+			self.timerShadow:SetFontSize(fontSize)
 		end
 		
-		--
-		-- This is our update function, called once every frame.
-		--
-		function bar:Tick(time)
-			if self.completion then
-				local remaining = self.completion - time
+		-- Set Heights
+		self.text:SetHeight(self.text:GetFullHeight())
+		self.timer:SetHeight(self.text:GetFullHeight())
+		self.textShadow:SetHeight(self.text:GetFullHeight())
+		self.timerShadow:SetHeight(self.text:GetFullHeight())
+		self:SetHeight(self.text:GetFullHeight())
+		self.solid:SetHeight(self.text:GetFullHeight())
+		self.tex:SetHeight(self.text:GetFullHeight())
+		
+	  
+	  -- Re-square and set the icon
+	  self.icon:SetWidth(self.icon:GetHeight())
+	  self.icon:SetTexture("Rift", buff.icon)
 
-				if remaining < 0 then
-					self.timer:SetVisible(false)
-					self.timerShadow:SetVisible(false)
-				else
-				  -- Update our timer.
-					self.tex:SetPoint("RIGHT", bar, remaining / self.duration, nil)
-					self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
+	  -- Display our stacking multiple.
+	  if buff.stack then
+		self.text:SetText(buff.name .. " (" .. buff.stack .. ")")
+		self.textShadow:SetText(buff.name .. " (" .. buff.stack .. ")")
+	  else
+		self.text:SetText(buff.name)
+		self.textShadow:SetText(buff.name)
+	  end
+	  
+	  self.text:SetWidth(width)
+	  self.textShadow:SetWidth(width)
+	  
+	  if buff.duration then
+		self.completion = buff.begin + buff.duration
+		self.duration = buff.duration
+		
+		-- Display everything we might have hidden.
+		self.solid:SetVisible(true)
+		self.tex:SetVisible(true)
+		self.timer:SetVisible(true)
+		self.timerShadow:SetVisible(true)
+		
+		self:Tick(time)
+	  else
+		self.completion = nil
+		
+		-- This is a permanent buff without a timer, so don't show any of that.
+		self.solid:SetVisible(false)
+		self.tex:SetVisible(false)
+		self.timer:SetVisible(false)
+		self.timer:SetWidth(0)
+		self.timerShadow:SetVisible(false)
+		self.timerShadow:SetWidth(0)
+	  end
+	  
+	  self.debuff = buff.debuff
+	end
 	
-				  -- Generate the timer text string.
-				  if remaining >= 3600 then
-					self.timerShadow:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-					self.timer:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-				  else
-					self.timerShadow:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
-					self.timer:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
-					
-				  end
-				  
-				  -- Update the width to avoid truncation.
-				  self.timerShadow:SetWidth(self.timer:GetFullWidth())
-				  self.timer:SetWidth(self.timer:GetFullWidth())
-				  
-				end
+	--
+	-- This is our update function, called once every frame.
+	--
+	function bar:Tick(time)
+		if self.completion then
+			local remaining = self.completion - time
+
+			if remaining < 0 then
+				self.timer:SetVisible(false)
+				self.timerShadow:SetVisible(false)
+			else
+				-- Update our timer.
+				--self.tex:SetPoint("RIGHT", bar, remaining / self.duration, nil)
+				--self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
+				
+				local widthMultiplier = ((remaining /  self.duration))
+				self.solid:SetWidth((width) * widthMultiplier)
+				self.tex:SetWidth((width) * widthMultiplier)
+
+			  -- Generate the timer text string.
+			  if remaining >= 3600 then
+				self.timerShadow:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
+				self.timer:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
+			  else
+				self.timerShadow:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
+				self.timer:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
+				
+			  end
+			  
+			  -- Update the width to avoid truncation.
+			  self.timerShadow:SetWidth(self.timer:GetFullWidth())
+			  self.timer:SetWidth(self.timer:GetFullWidth())
+			  
 			end
-		end
-		
-		--
-		-- Finally, if we're clicked, we want to cancel whatever buff is on us.
-		--
-		function bar.Event:RightDown()
-		  Command.Buff.Cancel(self.buffid)
 		end
 	end
 	
-	table.insert(self.activeBuffBars, bar)
-
-	-- Show the bar and set the data.
-	bar:SetVisible(true)
-	bar:SetBuff(buff, time)
-	
-	-- Attach it to the right spot.
-	if not self.lastAttach then
-		-- This is our first bar, so we're pinning it to the unit frame it belongs too
-		if (self.direction == "up") then
-			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER", 0, 0)
-		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER", 0, 0)
-		end
-	-- This isn't our first bar, so we pin it to the last bar.
-	else
-		if (self.direction == "up") then
-			bar:SetPoint("BOTTOMCENTER", self.lastAttach, "TOPCENTER", 0, -MinUIConfig.frames[unitName].itemOffset)
-		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.lastAttach, "BOTTOMCENTER", 0, MinUIConfig.frames[unitName].itemOffset)
-		end
+	--
+	-- Finally, if we're clicked, we want to cancel whatever buff is on us.
+	--
+	function bar.Event:RightDown()
+		Command.Buff.Cancel(self.buffID)
 	end
 	
-	-- store the last bar as the current attachment point
-	self.lastAttach = bar
+	return bar
+end
+
+--
+-- Clear existing buffs
+--
+function UnitBuffBars:resetBuffs()
+	for index, buffBarFrame in ipairs(self.buffBarFrames) do
+		buffBarFrame:SetVisible( false )
+		buffBarFrame.active = false
+	end
+end
+
+--
+-- Add buffs in buffDetails
+--
+function UnitBuffBars:addBuffs()
+	-- Re-add buffs from buffDetails till we hit our max frames
+	local index = 1
+	local buffBarFrame = nil
+	for _, buffDetails in ipairs(self.buffDetailsList) do
+		if (index < self.buffsMax) then
+			buffBarFrame = self.buffBarFrames[index]
+			-- Show the buffIcon and set the data.
+			buffBarFrame:SetVisible( true )
+			buffBarFrame.active = true
+			buffBarFrame.buffID = buffDetails.buffID
+			buffBarFrame:SetBuff( buffDetails, Inspect.Time.Frame() )
+			index = index + 1
+		else
+			return -- we can't add anymore
+		end
+	end
+end
+
+--
+-- Sort the Buffs by Time Remaining
+--
+function UnitBuffBars:sortBuffDetails ()
+	-- sort on time
+	table.sort(
+		self.buffDetailsList,
+		function (a, b)
+			--if(self.buffType == "merged") then
+			if (a.debuff ~= b.debuff) then
+				return b.debuff
+			end
+			--end
+		
+			if a.duration and b.duration then return a.remaining > b.remaining end
+			if not a.duration and not b.duration then return false end
+			return not a.duration
+		end
+	)
 end
 
 --
 -- Animate buff bars
 --
 function UnitBuffBars:animate(time)
-	for _, bar in ipairs(self.activeBuffBars) do
-		bar:Tick(time)
+	for index, buffBarFrame in ipairs(self.buffBarFrames) do
+		if(buffBarFrame.active)then
+			buffBarFrame:Tick(time)
+		end
 	end
 end
 
 --
--- Reset buff bars
+-- Add Buff
 --
-function UnitBuffBars:resetBuffs()
+function UnitBuffBars:addBuff ( buffID, curTime )
+	-- check against duplicates (because of initial sync on player frame or anything that is selected whilst loading)
+	for _,buffDetails in pairs(self.buffDetailsList) do
+		if buffDetails.buffID == buffID then
+			--debugPrint ("buff is a duplicate, not adding")
+			return
+		end
+	end
+		
+	-- Get the details table of the given buffID (for this unit)
+	local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
 
-	for _, bar in pairs(self.activeBuffBars) do
-		table.insert(self.zombieBuffBars, bar)
-		bar:SetVisible(false)
-		if (self.direction == "up") then
-			bar:SetPoint("BOTTOMCENTER", self.frame, "TOPCENTER", 0, 0)
-		elseif (self.direction == "down") then
-			bar:SetPoint("TOPCENTER", self.frame, "BOTTOMCENTER", 0, 0)
+	-- If we have buff details then...
+	if ( newBuffDetails ) then
+		-- We need to store this in the table for later
+		newBuffDetails.buffID = buffID
+		
+		-- if this buff meets the user's critera
+		if ( self:showBuff ( newBuffDetails ) ) then
+			-- Insert the new buff into the buffDetails array of buffs
+			table.insert(self.buffDetailsList, newBuffDetails)
 		end
 	end
 
-	self.activeBuffBars = {}
-	self.lastAttach = nil
+	-- sort the buffs
+	self:sortBuffDetails()
+	
+	-- Reset frame bars
+	self:resetBuffs()
+
+	-- layout the buffs
+	self:addBuffs()
 end
 
+
+--
+-- Remove Buff
 -- 
--- Resync the Buff Bars
---
-function UnitBuffBars:syncBuffs( time )
-	-- inspect buffs for unitName
-	local bufflist = Inspect.Buff.List(self.unitName)
-
-	-- If we don't get anything, then we don't currently have information about the player.
-	-- This may happen when the player is logging in or teleporting long distances.
-	if bufflist then  
-		local buffdetails = Inspect.Buff.Detail(self.unitName, bufflist)
-		self:resetBuffs()
-		
-		local buffCount = 0
-		local debuffCount = 0
-		
-		-- We want to order buffs by their time remaining
-		-- splitting apart buffs and debuffs.
-		local bbars = {}
-		for id, buff in pairs(buffdetails) do
-			buff.id = id  -- Make a copy of the ID, because we'll need it
-			
-			--
-			-- Only Show the buffs that this UnitBuffBar is watching
-			-- Based on VisibilityOptions, BuffType and Threshold Time
-			--
-			if (buff.debuff) then
-				-- If we are showing buffType debuffs
-				if (self.buffType == "debuffs") then
-					if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
-						-- Showing all debuffs
-						if(self.visibilityOptions == "all") then
-							----debugPrint(buff.duration)
-							-- Check the debuff is lessthan/equal to threshold length
-							if(buff.duration) then
-								if(buff.duration <= self.lengthThreshold)then
-									table.insert(bbars, buff)
-									debuffCount = debuffCount + 1 
-								end
-							-- or we have auras
-							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-								table.insert(bbars, buff)
-								debuffCount = debuffCount + 1 
-							end
-						-- Showing player debuffs
-						elseif (self.visibilityOptions == "player") then
-							-- Check debuff was cast by player
-							if (buff.caster == Inspect.Unit.Lookup("player")) then
-								-- Check the buff is lessthan/equal to threshold length
-								if(buff.duration) then
-									if(buff.duration <= self.lengthThreshold)then
-										table.insert(bbars, buff)
-									end
-								-- or we have auras
-								elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-									table.insert(bbars, buff)
-								end
-							end
-						end
-						
-						--print("debuff count " , debuffCount )
-					end
-				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
-				elseif (self.buffType == "merged") then
-					if (debuffCount < MinUIConfig.frames[self.unitName].debuffsMax) then
-						-- Showing all debuffs
-						if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
-							----debugPrint(buff.duration)
-							-- Check the debuff is lessthan/equal to threshold length
-							if(buff.duration) then
-								if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
-									table.insert(bbars, buff)
-									debuffCount = debuffCount + 1 
-								end
-							-- or we have auras
-							elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-								table.insert(bbars, buff)
-								debuffCount = debuffCount + 1 
-							end
-						-- Showing player debuffs
-						elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
-							-- Check debuff was cast by player
-							if (buff.caster == Inspect.Unit.Lookup("player")) then
-								-- Check the buff is lessthan/equal to threshold length
-								if(buff.duration) then
-									if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
-										table.insert(bbars, buff)
-										debuffCount = debuffCount + 1 
-									end
-								-- or we have auras
-								elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
-									table.insert(bbars, buff)
-									debuffCount = debuffCount + 1 
-								end
-							end
-						end
-						
-						--print("debuff count " , debuffCount )
-					end
-				end
-			else
-				-- if we are showing buffType buffs
-				if (self.buffType == "buffs") then
-					if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
-						-- Showing all buffs
-						if(self.visibilityOptions == "all") then
-							----debugPrint(buff.duration)
-							-- Check the buff is lessthan/equal to threshold length
-							if(buff.duration)then
-								if(buff.duration <= self.lengthThreshold)then
-									table.insert(bbars, buff)
-									buffCount = buffCount + 1 
-								end
-							-- or if we have auras
-							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-								table.insert(bbars, buff)
-								buffCount = buffCount + 1 
-							end	
-						-- Showing player buffs
-						elseif (self.visibilityOptions == "player") then
-							-- Check buff was cast by player
-							if (buff.caster == Inspect.Unit.Lookup("player")) then
-								-- Check the buff is lessthan/equal to threshold length
-								-- Check the debuff is lessthan/equal to threshold length
-								if(buff.duration)then
-									if(buff.duration <= self.lengthThreshold)then
-										table.insert(bbars, buff)
-										buffCount = buffCount + 1 
-									end
-								-- or if we have auras
-								elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-									table.insert(bbars, buff)
-									buffCount = buffCount + 1 
-								end							
-							end
-						end
-						
-						--print("buff count " , buffCount )
-					end
-				-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
-				elseif (self.buffType == "merged") then
-					if (buffCount < MinUIConfig.frames[self.unitName].buffsMax) then
-						-- Showing all debuffs
-						if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
-							----debugPrint(buff.duration)
-							-- Check the debuff is lessthan/equal to threshold length
-							if(buff.duration) then
-								if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
-									table.insert(bbars, buff)
-									buffCount = buffCount + 1 
-								end
-							-- or if we have auras
-							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-								table.insert(bbars, buff)
-								buffCount = buffCount + 1 
-							end						
-						-- Showing player debuffs
-						elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
-							-- Check debuff was cast by player
-							if (buff.caster == Inspect.Unit.Lookup("player")) then
-								-- Check the buff is lessthan/equal to threshold length
-								if(buff.duration) then
-									if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold)then
-										table.insert(bbars, buff)
-										buffCount = buffCount + 1 
-									end
-								end
-							-- or if we have auras
-							elseif(MinUIConfig.frames[self.unitName].buffAuras)then
-								table.insert(bbars, buff)
-								buffCount = buffCount + 1 
-							end						
-						end
-						
-						--print("buff count " , buffCount )
-					end
-				end
-			end
+function UnitBuffBars:removeBuff ( buffID, curTime )
+	local indexToRemove = -1
+	local index = 1
+	for _,buffDetails in pairs(self.buffDetailsList)do
+		if(buffDetails.buffID == buffID)then
+			indexToRemove = index
 		end
+		index = index + 1
+	end
+	
+	if not ( indexToRemove == -1 )then
+		table.remove(self.buffDetailsList, indexToRemove)
+	end
+	
+	-- sort the buffs
+	self:sortBuffDetails()
+	
+	-- Reset frame bars
+	self:resetBuffs()
 
-		-- sort on time
-		table.sort(
-			bbars, function (a, b)
-				if(self.buffType == "merged") then
-					 if (a.debuff ~= b.debuff) then
-						return b.debuff
+	-- layout the buffs
+	self:addBuffs()
+end
+
+--
+-- Resync all buffs
+--
+function UnitBuffBars:syncBuffs ( curTime )
+	debugPrint ("sync buffs", curTime, self.unitName)
+	
+	-- Reset frame bars
+	self:resetBuffs()
+			
+	-- Clear buff details list
+	self.buffDetailsList = {}
+		
+	-- inspect buffs for unitName
+	local buffList = Inspect.Buff.List(self.unitName)
+	
+	-- insert all buffs on the unit
+	if ( buffList ) then
+		for buffID,_ in pairs(buffList) do
+			-- Get the details table of the given buffID (for this unit)
+			local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
+
+			-- If we have buff details then...
+			if ( newBuffDetails ) then
+				-- We need to store this in the table for later
+				newBuffDetails.buffID = buffID
+				
+				-- if this buff meets the user's critera
+				if ( self:showBuff ( newBuffDetails ) ) then
+					-- Insert the new buff into the buffDetails array of buffs
+					table.insert(self.buffDetailsList, newBuffDetails)
+				end
+			end
+			
+		end
+		
+		-- sort the buffs
+		self:sortBuffDetails()
+		
+		-- layout the buffs
+		self:addBuffs()
+	end
+end
+
+--
+-- Return true or false depending on if this buff meets the visibility/treshold settings
+-- for this buff frame
+--
+function UnitBuffBars:showBuff ( buff ) 
+	-- Is it a debuff?
+	if (buff.debuff) then
+		-- Are showing debuffs?
+		if (self.buffType == "debuffs") then
+			-- All debuffs?
+			if(self.visibilityOptions == "all") then
+				-- Check the debuff is lessthan/equal to threshold length
+				if(buff.duration) then
+					if(buff.duration <= self.lengthThreshold)then
+						return true
+					end
+				-- or we have auras
+				elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+					return true
+				end
+			-- Or player debuffs?
+			elseif (self.visibilityOptions == "player") then
+				-- Check debuff was cast by player
+				if (buff.caster == Inspect.Unit.Lookup("player")) then
+					-- Check the buff is lessthan/equal to threshold length
+					if(buff.duration) then
+						if(buff.duration <= self.lengthThreshold)then
+							return true
+						end
+					-- or we have auras
+					elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+						return true
 					end
 				end
-			
-				if a.duration and b.duration then return a.remaining > b.remaining end
-				if not a.duration and not b.duration then return false end
-				return not a.duration
 			end
-		)
-		
-		
-		-- Now that we have the ordering, we just add the bars one at a time. Done!
-		for k, buff in ipairs(bbars) do
-			self:addBuffBar(buff, time)
+		-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
+		elseif (self.buffType == "merged") then
+			-- Showing all debuffs
+			if(MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "all") then
+				-- Check the debuff is lessthan/equal to threshold length
+				if(buff.duration) then
+					if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold) then
+						return true
+					end
+				-- or we have auras
+				elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+					return true
+				end
+			-- Showing player debuffs
+			elseif (MinUIConfig.frames[self.unitName].debuffVisibilityOptions == "player") then
+				-- Check debuff was cast by player
+				if (buff.caster == Inspect.Unit.Lookup("player")) then
+					-- Check the buff is lessthan/equal to threshold length
+					if(buff.duration) then
+						if(buff.duration <= MinUIConfig.frames[self.unitName].debuffThreshold)then
+							return true
+						end
+					-- or we have auras
+					elseif(MinUIConfig.frames[self.unitName].debuffAuras)then
+						return true
+					end
+				end
+			end
 		end
 	else
-		self:resetBuffs()
+		-- if we are showing buffType buffs
+		if (self.buffType == "buffs") then
+			-- Showing all buffs
+			if(self.visibilityOptions == "all") then
+				-- Check the buff is lessthan/equal to threshold length
+				if(buff.duration)then
+					if(buff.duration <= self.lengthThreshold)then
+						return true
+					end
+				-- or if we have auras
+				elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+					return true
+				end	
+			-- Showing player buffs
+			elseif (self.visibilityOptions == "player") then
+				-- Check buff was cast by player
+				if (buff.caster == Inspect.Unit.Lookup("player")) then
+					-- Check the buff is lessthan/equal to threshold length
+					-- Check the debuff is lessthan/equal to threshold length
+					if(buff.duration)then
+						if(buff.duration <= self.lengthThreshold)then
+							return true
+						end
+					-- or if we have auras
+					elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+						return true
+					end							
+				end
+			end
+		-- If we have merged buffs/debuffs (we dont use the self visibility/threshold stuff)
+		elseif (self.buffType == "merged") then
+			-- Showing all debuffs
+			if(MinUIConfig.frames[self.unitName].buffVisibilityOptions == "all") then
+				----debugPrint(buff.duration)
+				-- Check the debuff is lessthan/equal to threshold length
+				if(buff.duration) then
+					if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold) then
+						return true
+					end
+				-- or if we have auras
+				elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+					return true
+				end						
+			-- Showing player debuffs
+			elseif (MinUIConfig.frames[self.unitName].buffVisibilityOptions == "player") then
+				-- Check debuff was cast by player
+				if (buff.caster == Inspect.Unit.Lookup("player")) then
+					-- Check the buff is lessthan/equal to threshold length
+					if(buff.duration) then
+						if(buff.duration <= MinUIConfig.frames[self.unitName].buffThreshold)then
+							return true
+						end
+					end
+				-- or if we have auras
+				elseif(MinUIConfig.frames[self.unitName].buffAuras)then
+					return true
+				end						
+			end
+		end
 	end
+	
+	-- if we made it here, the buff just didnt cut it :P
+	return false
 end

@@ -53,13 +53,19 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 	
 	-- create the draggable frame
 	uFrame.drag = UI.CreateFrame("Frame", uFrame.unitName.."_draggable", 	uFrame.frame)
-	uFrame.drag:SetPoint("BOTTOMCENTER", uFrame.frame, "TOPCENTER",0, -5 )
+	uFrame.drag:SetPoint("CENTER", uFrame.frame, "CENTER",0, 0 )
 	uFrame.drag:SetWidth(uFrame.width)
 	uFrame.drag:SetHeight(uFrame.height)
-	uFrame.drag:SetLayer(5)
+	uFrame.drag:SetLayer(10)
 	uFrame.drag:SetVisible(false) -- show when not locked
 	uFrame.drag:SetBackgroundColor(1,0,0,0.5)
-	
+	uFrame.frameName = UI.CreateFrame("Text", uFrame.unitName.."_name", uFrame.drag)
+	uFrame.frameName:SetPoint("CENTER", uFrame.drag, "CENTER",0, 0 )
+	uFrame.frameName:SetFontSize(26)
+	uFrame.frameName:SetText(""..uFrame.unitName)
+	uFrame.frameName:SetHeight(uFrame.frameName:GetFullHeight())
+	uFrame.frameName:SetWidth(uFrame.frameName:GetFullWidth())
+		
 	-- create a castbar
 	uFrame.castBar = nil
 	
@@ -123,7 +129,6 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 			uFrame.frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", tempX, tempY)
 			uFrame.frame:SetWidth(tempW)
 			uFrame.frame:SetHeight(tempH)
-			self:SetBackgroundColor(0.3,0.0,0.0,0.6)
 		end
 	end
 	
@@ -149,7 +154,6 @@ function UnitFrame.new( unitName, width, height, parentItem, x, y )
 		if(MinUI.framesLocked == false) then
 			if self.MouseDown then
 				self.MouseDown = false
-				uFrame.frame:SetBackgroundColor(0.0, 0.0, 0.0, 0.3)
 							
 				-- store frame placement in saved var
 				uFrame.x = uFrame.frame:GetLeft()
@@ -480,6 +484,7 @@ function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThresh
 			buffs:createIconFrames()
 		elseif(buffView == "bar")then
 			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "up", barWidth-(widthOffset), "BOTTOMCENTER", "TOPCENTER", attachPoint, xOffset, 0 )
+			buffs:createBarFrames()
 		end
 	elseif ( location == "below") then	
 		if(buffView == "icon")then
@@ -487,6 +492,7 @@ function UnitFrame:addBuffs( viewType, buffType, visibilityOptions, lengthThresh
 			buffs:createIconFrames()
 		elseif(buffView == "bar")then
 			buffs = UnitBuffBars.new( self.unitName, buffType, visibilityOptions, lengthThreshold, "down", barWidth-(widthOffset), "TOPCENTER", "BOTTOMCENTER", attachPoint, xOffset, 0 )
+			buffs:createBarFrames()
 		end
 	end
 	
@@ -1110,6 +1116,7 @@ function UnitFrame:resize()
 	heightRequired = heightRequired + offset
 	self.height = heightRequired
 	self.frame:SetHeight(heightRequired)
+	self.drag:SetHeight(heightRequired)
 end
 
 

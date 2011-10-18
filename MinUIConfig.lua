@@ -23,9 +23,9 @@ MinUIConfigDefaults = {
 	-- Global Texture
 	barTexture = "aluminium",
 	-- Background Color
-	backgroundColor = {r=0,g=0,b=0,a=0.5},
+	backgroundColor = {r=0,g=0,b=0,a=0.6},
 	-- Thresholds for Buff Ticks
-	buffUpdateThreshold = 1.0, -- every second by default (will look silly on bars so you'll need to change it to something like 0.1)
+	buffUpdateThreshold = 0.1, -- every 100 ms by default
 	-- Animation threshold
 	animationUpdateThreshold = 0.01, -- every 10 ms by default (for castbars, flashing, etc)
 	-- Frame Settings
@@ -96,12 +96,12 @@ MinUIConfigDefaults = {
 			debuffsMax = 16,
 			buffLocation = "above",
 			debuffLocation = "above",
-			buffVisibilityOptions = "all",
-			debuffVisibilityOptions = "all",
-			buffThreshold = 9000,
-			debuffThreshold = 9000,
+			buffVisibilityOptions = "all", -- all buffs
+			debuffVisibilityOptions = "player", -- only the player's debuffs
+			buffThreshold = 60,
+			debuffThreshold = 60,
 			debuffAuras = true, -- debuff auras? (i.e. no duration buffs)
-			buffAuras = true -- buff auras?
+			buffAuras = false -- buff auras?
 		},
 		["player.target.target"] = {
 			x = 1400,

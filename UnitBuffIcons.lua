@@ -21,8 +21,8 @@ function UnitBuffIcons.new( unitName, buffType, visibilityOptions, lengthThresho
 	uBIcons.parentItem = parentItem
 	uBIcons.offsetX = offsetX
 	uBIcons.offsetY = offsetY
-	uBIcons.fontSize = 10
-	uBIcons.iconSize = 30
+	uBIcons.fontSize = 12
+	uBIcons.iconSize = 32
 	uBIcons.unitName = unitName
 	uBIcons.itemOffset = MinUIConfig.frames[uBIcons.unitName].itemOffset
 	
@@ -145,7 +145,7 @@ function UnitBuffIcons:createBuffIconFrame( frameIndex )
 	buffIcon:SetBackgroundColor(1,0,0,0.5)
 	buffIcon:SetVisible(false)
 	buffIcon.active = false -- used to check whether to tick the buff or not
-	buffIcon.buffID = "" -- store the buff ID
+	buffIcon.buffID = ""
 	
 	-- Set location
 	if(self.direction == "up")then
@@ -226,6 +226,8 @@ function UnitBuffIcons:createBuffIconFrame( frameIndex )
 	-- Set Buff - requires a buff and a timestamp
 	--
 	function buffIcon:SetBuff(buff, time)
+
+	
 		-- if we are showing all buffs/debuffs distinguish player buffs
 		if(self.visibilityOptions == "all")then
 			if (buff.caster == Inspect.Unit.Lookup("player")) then
@@ -353,10 +355,11 @@ function UnitBuffIcons:resetBuffs()
 		buffIconFrame.active = false
 	end
 end
+
 --
--- Layout buffs
+-- Add buffs in buffDetails
 --
-function UnitBuffIcons:layoutBuffs()
+function UnitBuffIcons:addBuffs()
 	-- Re-add buffs from buffDetails till we hit our max frames
 	local index = 1
 	local buffIconFrame = nil
@@ -366,7 +369,7 @@ function UnitBuffIcons:layoutBuffs()
 			-- Show the buffIcon and set the data.
 			buffIconFrame:SetVisible( true )
 			buffIconFrame.active = true
-			buffIconFrame.buffID = buffID
+			buffIconFrame.buffID = buffDetails.buffID
 			buffIconFrame:SetBuff( buffDetails, Inspect.Time.Frame() )
 			index = index + 1
 		else
@@ -414,7 +417,7 @@ function UnitBuffIcons:addBuff ( buffID, curTime )
 	-- check against duplicates (because of initial sync on player frame or anything that is selected whilst loading)
 	for _,buffDetails in pairs(self.buffDetailsList) do
 		if buffDetails.buffID == buffID then
-			--print ("buff is a duplicate, not adding")
+			--debugPrint ("buff is a duplicate, not adding")
 			return
 		end
 	end
@@ -441,7 +444,7 @@ function UnitBuffIcons:addBuff ( buffID, curTime )
 	self:resetBuffs()
 
 	-- layout the buffs
-	self:layoutBuffs()
+	self:addBuffs()
 end
 
 --
@@ -468,14 +471,14 @@ function UnitBuffIcons:removeBuff ( buffID, curTime )
 	self:resetBuffs()
 
 	-- layout the buffs
-	self:layoutBuffs()
+	self:addBuffs()
 end
 
 --
 -- Resync all buffs
 --
 function UnitBuffIcons:syncBuffs ( curTime )
-	print ("sync buffs", curTime, self.unitName)
+	debugPrint ("sync buffs", curTime, self.unitName)
 	
 	-- Reset frame icons
 	self:resetBuffs()
@@ -510,7 +513,7 @@ function UnitBuffIcons:syncBuffs ( curTime )
 		self:sortBuffDetails()
 		
 		-- layout the buffs
-		self:layoutBuffs()
+		self:addBuffs()
 	end
 end
 
