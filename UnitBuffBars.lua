@@ -76,6 +76,8 @@ end
 -- Create Frames for the maximum number of buffs currently enabled
 --
 function UnitBuffBars:createBarFrames()
+	--functionStart("UnitBuffBars:createBarFrames")
+	
 	self.buffBarFrames = {}
 	
 	for i = 1, self.buffsMax do
@@ -84,12 +86,16 @@ function UnitBuffBars:createBarFrames()
 
 	-- after creating the bar frames, lay them out
 	self:layoutBarFrames()
+	
+	--functionEnd("UnitBuffBars:createBarFrames")
 end
 
 --
 -- Layout the frames
 --
 function UnitBuffBars:layoutBarFrames()
+	--functionStart("UnitBuffBars:layoutBarFrames")
+	
 	--local lastAttach = nil
 	local yOffset = 0
 	
@@ -103,6 +109,8 @@ function UnitBuffBars:layoutBarFrames()
 			
 		yOffset = yOffset + self.height + self.itemOffset
 	end
+	
+	--functionEnd("UnitBuffBars:layoutBarFrames")
 end
 
 --
@@ -277,7 +285,7 @@ function UnitBuffBars:createBuffBarFrame( frameIndex )
 		self.timer:SetVisible(true)
 		self.timerShadow:SetVisible(true)
 		
-		self:Tick(time)
+		--self:Tick(time)
 	  else
 		self.completion = nil
 		
@@ -300,33 +308,32 @@ function UnitBuffBars:createBuffBarFrame( frameIndex )
 		if self.completion then
 			local remaining = self.completion - time
 
-			if remaining < 0 then
-				self.timer:SetVisible(false)
-				self.timerShadow:SetVisible(false)
-			else
+			--if remaining < 0 then
+			--	self.timer:SetVisible(false)
+			--	self.timerShadow:SetVisible(false)
+			--else
 				-- Update our timer.
 				--self.tex:SetPoint("RIGHT", bar, remaining / self.duration, nil)
 				--self.solid:SetPoint("RIGHT", bar, remaining / self.duration, nil)
 				
-				local widthMultiplier = ((remaining /  self.duration))
-				self.solid:SetWidth((width) * widthMultiplier)
-				self.tex:SetWidth((width) * widthMultiplier)
+			local widthMultiplier = ((remaining /  self.duration))
+			self.solid:SetWidth((width) * widthMultiplier)
+			self.tex:SetWidth((width) * widthMultiplier)
 
-			  -- Generate the timer text string.
-			  if remaining >= 3600 then
+			-- Generate the timer text string.
+			if remaining >= 3600 then
 				self.timerShadow:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
 				self.timer:SetText(string.format("%d:%02d:%02d", math.floor(remaining / 3600), math.floor(remaining / 60) % 60, math.floor(remaining) % 60))
-			  else
+			else
 				self.timerShadow:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
 				self.timer:SetText(string.format("%d:%02d", math.floor(remaining / 60), math.floor(remaining) % 60))
-				
-			  end
-			  
-			  -- Update the width to avoid truncation.
-			  self.timerShadow:SetWidth(self.timer:GetFullWidth())
-			  self.timer:SetWidth(self.timer:GetFullWidth())
-			  
 			end
+
+			-- Update the width to avoid truncation.
+			self.timerShadow:SetWidth(self.timer:GetFullWidth())
+			self.timer:SetWidth(self.timer:GetFullWidth())
+			  
+			--end
 		end
 	end
 	
@@ -375,7 +382,7 @@ end
 --
 -- Sort the Buffs by Time Remaining
 --
-function UnitBuffBars:sortBuffDetails ()
+function UnitBuffBars:sortBuffDetails()
 	-- sort on time
 	table.sort(
 		self.buffDetailsList,
@@ -397,6 +404,7 @@ end
 -- Animate buff bars
 --
 function UnitBuffBars:animate(time)
+	--functionStart("UnitBuffBars:animate")
 	for index, buffBarFrame in ipairs(self.buffBarFrames) do
 		if(buffBarFrame.active)then
 			buffBarFrame:Tick(time)
@@ -404,47 +412,10 @@ function UnitBuffBars:animate(time)
 	end
 end
 
---
--- Add Buff
---
-function UnitBuffBars:addBuff ( buffID, curTime )
-	-- check against duplicates (because of initial sync on player frame or anything that is selected whilst loading)
-	for _,buffDetails in pairs(self.buffDetailsList) do
-		if buffDetails.buffID == buffID then
-			--debugPrint ("buff is a duplicate, not adding")
-			return
-		end
-	end
-		
-	-- Get the details table of the given buffID (for this unit)
-	local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
-
-	-- If we have buff details then...
-	if ( newBuffDetails ) then
-		-- We need to store this in the table for later
-		newBuffDetails.buffID = buffID
-		
-		-- if this buff meets the user's critera
-		if ( self:showBuff ( newBuffDetails ) ) then
-			-- Insert the new buff into the buffDetails array of buffs
-			table.insert(self.buffDetailsList, newBuffDetails)
-		end
-	end
-
-	-- sort the buffs
-	self:sortBuffDetails()
-	
-	-- Reset frame bars
-	self:resetBuffs()
-
-	-- layout the buffs
-	self:addBuffs()
-end
-
 
 --
 -- Remove Buff
--- 
+--
 function UnitBuffBars:removeBuff ( buffID, curTime )
 	local indexToRemove = -1
 	local index = 1
@@ -458,55 +429,88 @@ function UnitBuffBars:removeBuff ( buffID, curTime )
 	if not ( indexToRemove == -1 )then
 		table.remove(self.buffDetailsList, indexToRemove)
 	end
-	
-	-- sort the buffs
-	self:sortBuffDetails()
-	
-	-- Reset frame bars
-	self:resetBuffs()
-
-	-- layout the buffs
-	self:addBuffs()
 end
 
 --
 -- Resync all buffs
 --
-function UnitBuffBars:syncBuffs ( curTime )
-	debugPrint ("sync buffs", curTime, self.unitName)
-	
-	-- Reset frame bars
-	self:resetBuffs()
-			
-	-- Clear buff details list
-	self.buffDetailsList = {}
-		
+function UnitBuffBars:syncBuffs( curTime )
 	-- inspect buffs for unitName
 	local buffList = Inspect.Buff.List(self.unitName)
+	-- has a change occured?
+	local changeHasOccured = false
 	
 	-- insert all buffs on the unit
 	if ( buffList ) then
+		-- iterate accross the new buffs to check for new ones to add
 		for buffID,_ in pairs(buffList) do
 			-- Get the details table of the given buffID (for this unit)
 			local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
+			
+			-- Does this buff meet the current filters/critera?
+			if ( self:showBuff ( newBuffDetails ) ) then
+				-- If we have buff details then...
+				if ( newBuffDetails ) then
+					-- We need to store this in the table for later
+					newBuffDetails.buffID = buffID
+					
+					-- do we already have it?
+					local buffExistsInOldDetails = false
+					-- iterate accross old buffs to see if the buff already exists
+					for _,buffDetails in pairs(self.buffDetailsList)do
+						if(buffDetails.buffID == newBuffDetails.buffID)then
+							buffExistsInOldDetails = true
+						end
+					end
 
-			-- If we have buff details then...
-			if ( newBuffDetails ) then
-				-- We need to store this in the table for later
-				newBuffDetails.buffID = buffID
-				
-				-- if this buff meets the user's critera
-				if ( self:showBuff ( newBuffDetails ) ) then
-					-- Insert the new buff into the buffDetails array of buffs
-					table.insert(self.buffDetailsList, newBuffDetails)
+					-- if we didn't have it, then add it
+					if not (buffExistsInOldDetails) then
+						-- Insert the new buff into the buffDetails array of buffs
+						table.insert(self.buffDetailsList, newBuffDetails)
+						changeHasOccured = true
+					end
+				end
+			end
+		end
+		
+		-- iterate across the old buffs, to check for ones to remove that are no longer present
+		local index = 1
+		local indexesToRemove = {}
+		for _,buffDetails in pairs(self.buffDetailsList)do
+			local buffExistsInNewDetails = false
+			for buffID,_ in pairs(buffList) do
+				if(buffID == buffDetails.buffID)then
+					buffExistsInNewDetails = true
 				end
 			end
 			
+			-- if the buff doesn't exist in the new list, then list it to remove
+			if not (buffExistsInNewDetails) then
+				table.insert(indexesToRemove, index)
+			end
+			
+			index = index+1
 		end
+		
+		-- remove all that we are supposed ta
+		for _,index in pairs(indexesToRemove)do
+			table.remove(self.buffDetailsList, index)
+			changeHasOccured = true
+		end
+	else
+		-- clear the details list (otherwise things wont readd if we switch back to the same target straight away)
+		self.buffDetailsList = {}
+		self:resetBuffs()
+	end
+	
+	-- only update if something has actually changed
+	if(changeHasOccured)then	
+		-- Reset frame icons
+		self:resetBuffs()
 		
 		-- sort the buffs
 		self:sortBuffDetails()
-		
+
 		-- layout the buffs
 		self:addBuffs()
 	end
@@ -516,7 +520,9 @@ end
 -- Return true or false depending on if this buff meets the visibility/treshold settings
 -- for this buff frame
 --
-function UnitBuffBars:showBuff ( buff ) 
+function UnitBuffBars:showBuff ( buff )
+	--functionStart("UnitBuffBars:showBuff")
+	
 	-- Is it a debuff?
 	if (buff.debuff) then
 		-- Are showing debuffs?
@@ -636,7 +642,10 @@ function UnitBuffBars:showBuff ( buff )
 				end						
 			end
 		end
+		
 	end
+	
+	--functionEnd("UnitBuffBars:showBuff")
 	
 	-- if we made it here, the buff just didnt cut it :P
 	return false

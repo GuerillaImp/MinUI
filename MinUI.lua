@@ -28,7 +28,7 @@ MinUI.lastAnimationUpdate = 0
 MinUI.buffUpdateDiff = 0
 MinUI.animationUpdateDiff = 0
 MinUI.curTime = 0
-MinUI.animateBuffs = false
+MinUI.updateBuffs = false
 MinUI.animate = false
 			
 -- Are we current in secure mode?
@@ -647,17 +647,19 @@ end
 -- Rename animate loop (for things that animate :P)
 --
 local function animate()
+	functionStart("MinUI:animate")
+
 	--
 	-- calculate frame time difference
 	--
 	MinUI.curTime = Inspect.Time.Frame()
 	MinUI.buffUpdateDiff = MinUI.curTime  - MinUI.lastBuffUpdate
 	MinUI.animationUpdateDiff = MinUI.curTime  - MinUI.lastAnimationUpdate
-	MinUI.animateBuffs = false
+	MinUI.updateBuffs = false
 	MinUI.animate = false
 	
 	if(MinUI.buffUpdateDiff >= MinUIConfig.buffUpdateThreshold)then
-		MinUI.animateBuffs = true
+		MinUI.updateBuffs = true
 		MinUI.lastBuffUpdate = MinUI.curTime 
 		MinUI.buffUpdateDiff = 0
 	end
@@ -672,13 +674,16 @@ local function animate()
 	-- update / animate buffs/castbars etc
 	--
 	for unitName, unitFrame in pairs(MinUI.unitFrames) do
-		if ( MinUI.animateBuffs ) then
-			unitFrame:animateBuffTimers( MinUI.curTime  )
+		if ( MinUI.updateBuffs ) then
+			unitFrame:syncBuffs()
 		end
 		if ( MinUI.animate ) then
 			unitFrame:animate()
+			unitFrame:animateBuffTimers( MinUI.curTime  )
 		end
 	end
+	
+	functionEnd("MinUI:animate")
 end
 
 local function enterSecureMode()
@@ -863,6 +868,8 @@ end
 -- This should help overcome issues with buggy pets
 --
 local function unitAvailable ( unitIDs )
+	functionStart("MinUI:unitAvailable")
+	
 	local frameUnitID = -1
 	
 	if (MinUI.initialised == false) then
@@ -902,6 +909,8 @@ local function unitAvailable ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:unitAvailable")
 end
 
 
@@ -909,6 +918,8 @@ end
 -- Update the health values of the unitIDs who we have frames for
 --
 local function updateHealthValues ( unitIDs )
+	functionStart("MinUI:updateHealthValues")
+
 	local frameUnitID = -1
 	
 	--
@@ -929,12 +940,16 @@ local function updateHealthValues ( unitIDs )
 			end
 		end
 	end
+
+	functionEnd("MinUI:updateHealthValues")
 end
 
 --
 -- Update the power values of the unitIDs who we have frames for
 --
 local function updatePowerValues ( unitIDs )
+	functionStart("MinUI:updatePowerValues")
+		
 	local frameUnitID = -1
 	
 	--
@@ -955,12 +970,16 @@ local function updatePowerValues ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updatePowerValues")
 end
 
 --
 -- Update the mana values of the unitIDs who we have frames for
 --
 local function updateManaValues ( unitIDs )
+	functionStart("MinUI:updateManaValues")
+		
 	local frameUnitID = -1
 	
 	--
@@ -981,12 +1000,16 @@ local function updateManaValues ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateManaValues")
 end
 
 --
 -- Update the mana values of the unitIDs who we have frames for
 --
 local function updateEnergyValues ( unitIDs )
+	functionStart("MinUI:updateEnergyValues")
+	
 	local frameUnitID = -1
 	
 	--
@@ -1007,34 +1030,46 @@ local function updateEnergyValues ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateEnergyValues")
 end
 
 --
 -- Update the charge values on any of the frames (taken from "player" unit always)
 --
 local function updateChargeValues ()
+	functionStart("MinUI:updateChargeValues")
+	
 	debugPrint("updating charge values")
 	
 	for unitName,unitFrame in pairs (MinUI.unitFrames) do
 		unitFrame:updateCharge()
 	end
+	
+	functionEnd("MinUI:updateChargeValues")
 end
 
 --
 -- Update the combo points values on any of the frames (taken from "player" unit always)
 --
 local function updateComboPointsValues()
+	functionStart("MinUI:updateComboPointsValues")
+	
 	debugPrint("updating combo points values")
 			
 	for unitName,unitFrame in pairs (MinUI.unitFrames) do
 		unitFrame:updateComboPoints()
 	end
+	
+	functionEnd("MinUI:updateComboPointsValues")
 end
 
 --
 -- Update Unit Level
 --
 local function updateUnitLevel( unitIDs )
+	functionStart("MinUI:updateUnitLevel")
+	
 	local frameUnitID = -1
 	
 	--
@@ -1055,12 +1090,16 @@ local function updateUnitLevel( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateUnitLevel")
 end
 
 --
 -- Update Unit Guild
 --
 local function updateUnitGuild ( unitIDs )
+	functionStart("MinUI:updateUnitGuild")
+	
 	local frameUnitID = -1
 	
 	--
@@ -1081,6 +1120,8 @@ local function updateUnitGuild ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateUnitGuild")
 end
 
 
@@ -1088,6 +1129,8 @@ end
 -- Update Unit Role
 --
 local function updateUnitRole ( unitIDs )
+	functionStart("MinUI:updateUnitRole")
+	
 	local frameUnitID = -1
 	
 	--
@@ -1108,30 +1151,42 @@ local function updateUnitRole ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateUnitRole")
 end
 
 --
 -- Update Player Planar Charges
 --
 local function updatePlanarValue ( )
+	functionStart("MinUI:updatePlanarValue")
+	
 	if(MinUI.unitFrames["player"])then
 		MinUI.unitFrames["player"]:updateTexts() -- TODO: again this should eventually be more granular for each text item
 	end
+	
+	functionEnd("MinUI:updatePlanarValue")
 end
 
 --
 -- Update Player Vitality
 --
 local function updateVitalityValue ( )
+	functionStart("MinUI:updateVitalityValue")
+	
 	if(MinUI.unitFrames["player"])then
 		MinUI.unitFrames["player"]:updateTexts() -- TODO: again this should eventually be more granular for each text item
 	end
+	
+	functionEnd("MinUI:updateVitalityValue")
 end
 
 --
 -- Add the Buffs/Debuffs on the given unitID
---
+--[[
 local function addBuffs ( unitID, buffs )
+	functionStart("MinUI:addBuffs")
+	
 	local frameUnitID = -1
 	
 	--
@@ -1150,12 +1205,17 @@ local function addBuffs ( unitID, buffs )
 			end
 		end
 	end	
+	
+	functionEnd("MinUI:addBuffs")
 end
 
 --
 -- Remove the Buffs/Debuffs on the given unitID
 --
 local function removeBuffs ( unitID, buffs )
+	functionStart("MinUI:removeBuffs")
+	
+	
 	local frameUnitID = -1
 	
 	--
@@ -1174,12 +1234,17 @@ local function removeBuffs ( unitID, buffs )
 			end
 		end
 	end	
+	
+	functionEnd("MinUI:removeBuffs")
 end
 
 --
 -- Change the Buffs/Debuffs on the given unitID
 --
 local function changeBuffs ( unitID, buffs )
+	functionStart("MinUI:changeBuffs")
+	
+
 	local frameUnitID = -1
 	
 	--
@@ -1198,13 +1263,18 @@ local function changeBuffs ( unitID, buffs )
 			end
 		end
 	end	
-end
+	
+	functionEnd("MinUI:changeBuffs")
+end]]
 
 
 --
 -- Update castbars
 --
 local function updateCastbars ( unitIDs )
+	functionStart("MinUI:updateCastbars")
+	
+	
 	local frameUnitID = -1
 	
 	--
@@ -1225,6 +1295,8 @@ local function updateCastbars ( unitIDs )
 			end
 		end
 	end
+	
+	functionEnd("MinUI:updateCastbars")
 end
 
 --
@@ -1305,9 +1377,11 @@ local function startup()
 	--
 	-- Buffs/Debuffs
 	--
-	table.insert(Event.Buff.Add, { addBuffs, "MinUI", "MinUI addBuffs"})
-	table.insert(Event.Buff.Change, { changeBuffs, "MinUI", "MinUI changeBuffs"})
-	table.insert(Event.Buff.Remove, { removeBuffs, "MinUI", "MinUI removeBuffs"})
+	-- XXX: Try just updating buffs every 300 ms or so
+	--
+	--table.insert(Event.Buff.Add, { addBuffs, "MinUI", "MinUI addBuffs"})
+	--table.insert(Event.Buff.Change, { changeBuffs, "MinUI", "MinUI changeBuffs"})
+	--table.insert(Event.Buff.Remove, { removeBuffs, "MinUI", "MinUI removeBuffs"})
 	
 	--
 	-- Casting

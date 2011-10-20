@@ -81,6 +81,8 @@ end
 -- Create Frames for the maximum number of buffs currently enabled
 --
 function UnitBuffIcons:createIconFrames()
+	--functionStart("UnitBuffIcons:createIconFrames")
+
 	self.buffIconFrames = {}
 	
 	for i = 1, self.buffsMax do
@@ -89,12 +91,16 @@ function UnitBuffIcons:createIconFrames()
 
 	-- after creating the icon frames, lay them out
 	self:layoutIconFrames()
+	
+	--functionEnd("UnitBuffIcons:createIconFrames")
 end
 
 --
 -- Layout the frames
 --
 function UnitBuffIcons:layoutIconFrames()
+	--functionStart("UnitBuffIcons:layoutIconFrames")
+	
 	local rowCount = 0
 	local curIcon = 0
 	
@@ -126,6 +132,8 @@ function UnitBuffIcons:layoutIconFrames()
 		-- increment icon number
 		curIcon = curIcon + 1
 	end
+	
+	--functionEnd("UnitBuffIcons:layoutIconFrames")
 end
 
 --
@@ -134,6 +142,8 @@ end
 -- params: requires a frame index, this will determine the location of the frame
 --
 function UnitBuffIcons:createBuffIconFrame( frameIndex )
+	--functionStart("UnitBuffIcons:createBuffIconFrame")
+	
 	-- get item offset
 	local itemOffset = self.itemOffset
 	local fontSize = self.fontSize
@@ -226,8 +236,6 @@ function UnitBuffIcons:createBuffIconFrame( frameIndex )
 	-- Set Buff - requires a buff and a timestamp
 	--
 	function buffIcon:SetBuff(buff, time)
-
-	
 		-- if we are showing all buffs/debuffs distinguish player buffs
 		if(self.visibilityOptions == "all")then
 			if (buff.caster == Inspect.Unit.Lookup("player")) then
@@ -285,7 +293,7 @@ function UnitBuffIcons:createBuffIconFrame( frameIndex )
 			self.timer:SetVisible(true)
 			self.timerShadow:SetVisible(true)
 
-			self:Tick(time)
+			--self:Tick(time)
 		else
 			self.completion = nil
 
@@ -298,40 +306,42 @@ function UnitBuffIcons:createBuffIconFrame( frameIndex )
 
 		self.debuff = buff.debuff
 	end
-
+	
 	--
-	-- This is our update function, called once every MinUIConfig.buffUpdateThreshold
+	-- Update timers, etc
 	--
 	function buffIcon:Tick(time)
-		if self.completion then
-			local remaining = self.completion - time
+		-- if the buff has a completion time
+			if (self.completion) then
+				local remaining = self.completion - time
 
-			if remaining < 0 then
-				self.timer:SetVisible(false)
-				self.timerShadow:SetVisible(false)
-			else
-				-- Update our timer.
-				local hours = math.floor(remaining / 3600)
-				local minutes = math.floor(remaining / 60)
-				local seconds = math.floor(remaining) % 60
+				-- remove any expired buffs - NLR, the sync code should pick this up every update threshold time
+				--if (remaining < 0) then
+					--self:removeBuff(buffIconFrame.buffID)
+				-- just tick along normal buffs
+				--else
+					-- Update our timer.
+					local hours = math.floor(remaining / 3600)
+					local minutes = math.floor(remaining / 60)
+					local seconds = math.floor(remaining) % 60
 
 
-				if(hours > 0)then
-					self.timerShadow:SetText(string.format("%dh", hours))
-					self.timer:SetText(string.format("%dh", hours))
-				elseif(minutes > 0)then
-					self.timerShadow:SetText(string.format("%dm", minutes))
-					self.timer:SetText(string.format("%dm", minutes))
-				elseif(seconds > 0)then
-					self.timerShadow:SetText(string.format("%ds", seconds))
-					self.timer:SetText(string.format("%ds", seconds))
-				end
-			  
-				-- Update the width to avoid truncation.
-				self.timerShadow:SetWidth(self.timer:GetFullWidth())
-				self.timer:SetWidth(self.timer:GetFullWidth())
-			end
-		end
+					if(hours > 0)then
+						self.timerShadow:SetText(string.format("%dh", hours))
+						self.timer:SetText(string.format("%dh", hours))
+					elseif(minutes > 0)then
+						self.timerShadow:SetText(string.format("%dm", minutes))
+						self.timer:SetText(string.format("%dm", minutes))
+					elseif(seconds > 0)then
+						self.timerShadow:SetText(string.format("%ds", seconds))
+						self.timer:SetText(string.format("%ds", seconds))
+					end
+				  
+					-- Update the width to avoid truncation.
+					self.timerShadow:SetWidth(self.timer:GetFullWidth())
+					self.timer:SetWidth(self.timer:GetFullWidth())
+				--end
+			end	
 	end
 
 	--
@@ -347,9 +357,9 @@ end
 
 
 --
--- Clear existing buffs
+-- Reset existing buffs
 --
-function UnitBuffIcons:resetBuffs()
+function UnitBuffIcons:resetBuffs()	
 	for index, buffIconFrame in ipairs(self.buffIconFrames) do
 		buffIconFrame:SetVisible( false )
 		buffIconFrame.active = false
@@ -381,7 +391,7 @@ end
 --
 -- Sort the Buffs by Time Remaining
 --
-function UnitBuffIcons:sortBuffDetails ()
+function UnitBuffIcons:sortBuffDetails ()	
 	-- sort on time
 	table.sort(
 		self.buffDetailsList,
@@ -411,46 +421,9 @@ function UnitBuffIcons:animate(time)
 end
 
 --
--- Add Buff
---
-function UnitBuffIcons:addBuff ( buffID, curTime )
-	-- check against duplicates (because of initial sync on player frame or anything that is selected whilst loading)
-	for _,buffDetails in pairs(self.buffDetailsList) do
-		if buffDetails.buffID == buffID then
-			--debugPrint ("buff is a duplicate, not adding")
-			return
-		end
-	end
-		
-	-- Get the details table of the given buffID (for this unit)
-	local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
-
-	-- If we have buff details then...
-	if ( newBuffDetails ) then
-		-- We need to store this in the table for later
-		newBuffDetails.buffID = buffID
-		
-		-- if this buff meets the user's critera
-		if ( self:showBuff ( newBuffDetails ) ) then
-			-- Insert the new buff into the buffDetails array of buffs
-			table.insert(self.buffDetailsList, newBuffDetails)
-		end
-	end
-
-	-- sort the buffs
-	self:sortBuffDetails()
-	
-	-- Reset frame icons
-	self:resetBuffs()
-
-	-- layout the buffs
-	self:addBuffs()
-end
-
---
 -- Remove Buff
--- 
-function UnitBuffIcons:removeBuff ( buffID, curTime )
+--
+function UnitBuffIcons:removeBuff ( buffID )
 	local indexToRemove = -1
 	local index = 1
 	for _,buffDetails in pairs(self.buffDetailsList)do
@@ -463,55 +436,90 @@ function UnitBuffIcons:removeBuff ( buffID, curTime )
 	if not ( indexToRemove == -1 )then
 		table.remove(self.buffDetailsList, indexToRemove)
 	end
-	
-	-- sort the buffs
-	self:sortBuffDetails()
-	
-	-- Reset frame icons
-	self:resetBuffs()
-
-	-- layout the buffs
-	self:addBuffs()
 end
 
 --
 -- Resync all buffs
 --
 function UnitBuffIcons:syncBuffs ( curTime )
-	debugPrint ("sync buffs", curTime, self.unitName)
-	
-	-- Reset frame icons
-	self:resetBuffs()
-			
-	-- Clear buff details list
-	self.buffDetailsList = {}
-		
 	-- inspect buffs for unitName
 	local buffList = Inspect.Buff.List(self.unitName)
+	-- has a change occured?
+	local changeHasOccured = false
 	
 	-- insert all buffs on the unit
 	if ( buffList ) then
+		-- iterate accross the new buffs to check for new ones to add
 		for buffID,_ in pairs(buffList) do
 			-- Get the details table of the given buffID (for this unit)
 			local newBuffDetails = Inspect.Buff.Detail(self.unitName, buffID)
+			
+			-- Does this buff meet the current filters/critera?
+			if ( self:showBuff ( newBuffDetails ) ) then
+				-- If we have buff details then...
+				if ( newBuffDetails ) then
+					-- We need to store this in the table for later
+					newBuffDetails.buffID = buffID
+					
+					-- do we already have it?
+					local buffExistsInOldDetails = false
+					-- iterate accross old buffs to see if the buff already exists
+					for _,buffDetails in pairs(self.buffDetailsList)do
+						if(buffDetails.buffID == newBuffDetails.buffID)then
+							buffExistsInOldDetails = true
+						end
+					end
 
-			-- If we have buff details then...
-			if ( newBuffDetails ) then
-				-- We need to store this in the table for later
-				newBuffDetails.buffID = buffID
-				
-				-- if this buff meets the user's critera
-				if ( self:showBuff ( newBuffDetails ) ) then
-					-- Insert the new buff into the buffDetails array of buffs
-					table.insert(self.buffDetailsList, newBuffDetails)
+					-- if we didn't have it, then add it
+					if not (buffExistsInOldDetails) then
+						-- Insert the new buff into the buffDetails array of buffs
+						table.insert(self.buffDetailsList, newBuffDetails)
+						changeHasOccured = true
+					end
+				end
+			end
+		end
+		
+		-- iterate across the old buffs, to check for ones to remove that are no longer present
+		local index = 1
+		local indexesToRemove = {}
+		for _,buffDetails in pairs(self.buffDetailsList)do
+			local buffExistsInNewDetails = false
+			for buffID,_ in pairs(buffList) do
+				if(buffID == buffDetails.buffID)then
+					buffExistsInNewDetails = true
 				end
 			end
 			
+			-- if the buff doesn't exist in the new list, then list it to remove
+			if not (buffExistsInNewDetails) then
+				table.insert(indexesToRemove, index)
+			end
+			
+			index = index+1
 		end
+		
+		-- remove all that we are supposed ta
+		for _,index in pairs(indexesToRemove)do
+			table.remove(self.buffDetailsList, index)
+			changeHasOccured = true
+		end
+	-- no buffs
+	else
+		-- clear the details list (otherwise things wont readd if we switch back to the same target straight away)
+		self.buffDetailsList = {}
+		-- Reset frame icons
+		self:resetBuffs()
+	end
+	
+	-- only update if something has actually changed
+	if(changeHasOccured)then	
+		-- Reset frame icons
+		self:resetBuffs()
 		
 		-- sort the buffs
 		self:sortBuffDetails()
-		
+
 		-- layout the buffs
 		self:addBuffs()
 	end
@@ -522,6 +530,8 @@ end
 -- for this buff frame
 --
 function UnitBuffIcons:showBuff ( buff ) 
+	--functionStart("UnitBuffIcons:showBuff")
+	
 	-- Is it a debuff?
 	if (buff.debuff) then
 		-- Are showing debuffs?
@@ -642,6 +652,8 @@ function UnitBuffIcons:showBuff ( buff )
 			end
 		end
 	end
+	
+	--functionEnd("UnitBuffIcons:showBuff")
 	
 	-- if we made it here, the buff just didnt cut it :P
 	return false
