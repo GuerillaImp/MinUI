@@ -22,7 +22,15 @@ Environment = "1.3"
 
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
-	"grUF_Core.lua"
+	"grUF_Events.lua",
+	"grUF_Core.lua",
+	-- widgets, core components of the addon
+	"widgets/container.lua",
+	"widgets/bar.lua",
+	-- modules, use widgets to represent values from the game
+	"modules/options.lua",
+	"modules/test.lua"
+
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
