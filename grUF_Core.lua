@@ -7,11 +7,9 @@
 --
 --
 
------------------------------------------------------------------------------------------------------------------------------
 --
--- grUF Globals
+-- Globals
 --
------------------------------------------------------------------------------------------------------------------------------ 
 grUF = {}
 
 -- Context for Creation of Widgets
@@ -32,9 +30,17 @@ grUF.curTime = 0
 grUF.update = false
 grUF.animate = false
 
-
 -- Register events hook for grUF
 registerEvents()
+
+--
+-- Functions
+--
+
+function initialiseUnits( )
+	print("initialiseUnits")
+	-- TODO: Create everything :)
+end
 
 --
 -- Main update Loop:
@@ -44,7 +50,7 @@ registerEvents()
 function update ( )
 	--
 	-- calculate frame time difference
-	--
+	--[[
 	grUF.curTime = Inspect.Time.Frame()
 	grUF.updateDiff = grUF.curTime  - grUF.lastUpdate
 	grUF.animateDiff = grUF.curTime  - grUF.lastAnimate
@@ -63,7 +69,7 @@ function update ( )
 		grUF.animateDiff = 0
 	end
 
-	-- TODO: Loop through units and update/animate as required
+	-- TODO: Loop through units and update/animate as required]]
 end
 
 --
@@ -75,6 +81,7 @@ end
 function variablesLoaded( addonIdentifier )
 	if ( addonIdentifier == "grUF" ) then
 		print ( "grUF saved variables loaded" )
+		initialiseUnits( )
 	end
 end
 
@@ -82,8 +89,8 @@ end
 -- Open the grUF Options Window
 --
 --
-function showOptions ( )
-	print("TODO: Show options GUI!")
+function showOptions ( ) 
+	print( "TODO: Show options GUI!" )
 end
 
 --
@@ -94,7 +101,7 @@ end
 --
 function addonLoaded ( addonIdentifer )
 	if ( addonIdentifier == "grUF" ) then
-		print("Loaded ["..grUF.version.."]. Type /gruf for options.")
+		print( "Loaded ["..grUF.version.."]. Type /gruf for options." )
 		table.insert(Event.System.Update.Begin, {animate, "grUF", "grUF Animation Loop"})
 	end
 end
@@ -196,9 +203,6 @@ function castbarChanged ( unitIDs )
 		print("unit ", Inspect.Unit.Lookup(unitID), " castbar changed")
 	end
 end
-
-
-
 
 --
 -- Register event hooks for grUF

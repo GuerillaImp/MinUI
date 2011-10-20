@@ -27,5 +27,5 @@ RunOnStartup = {
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
-	--MinUIConfig = "character"
+	grUF_Settings = "character"
 }
