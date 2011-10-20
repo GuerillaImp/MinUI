@@ -2,17 +2,17 @@
 
 -- Each addon needs a unique identifier. Please make sure it's descriptive! Identifiers must start with a letter and must consist solely of letters, numbers, and _.
 -- For regexp buffs, that's [a-zA-Z][a-zA-Z0-9_]*.
-Identifier = "MinUI"
+Identifier = "grUF_Core"
 
 -- Each addon needs a human-readable name. Languages are not currently supported but they will be soon.
-Name = "MinUI"
+Name = "grUF_Core"
 
 -- It's recommended that you include a description, author, and website. These aren't required but they will be shown to users when enabling your addon.
-Description = "Provides a clean display of health, resources and class mechanics, as well as castbars, debuffs and buffs."
+Description = "grUF Core UnitFrame Component"
 Author = "Grantus"
 
 -- You may want to include a version string for your addon as well.
-Version = "1.3.3"
+Version = "0.0.1"
 
 -- An email is required. Trion may use this email to contact you about your addon, so please make sure it's valid.
 Email = "grantus@gmail.com"
@@ -20,26 +20,12 @@ Email = "grantus@gmail.com"
 -- Addons must include which version of Rift they're designed to work with. Right now, the only valid number is "1.3".
 Environment = "1.3"
 
-Embed = {
-  ["Libs/LibUnitChange"] = true
-}
-
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
-	"MinUIDebug.lua",
-	"MinUIUtilities.lua",
-	"MinUIConfig.lua",
-	"UnitBar.lua",
-	"UnitText.lua",
-	"UnitComboBar.lua",
-	"UnitBuffBars.lua",
-	"UnitBuffIcons.lua",
-	"UnitCastBar.lua",
-	"UnitFrame.lua",
-	"MinUI.lua"
+	"grUF_Core.lua"
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
-	MinUIConfig = "character"
+	--MinUIConfig = "character"
 }
