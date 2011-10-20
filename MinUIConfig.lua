@@ -124,8 +124,8 @@ MinUIConfigDefaults = {
 			bars = { "health", "text" }, 
 			texts = { "level", "name" },
 			-- buff/debuff settings
-			buffsEnabled = true,
-			debuffsEnabled = true,
+			buffsEnabled = false,
+			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
@@ -160,8 +160,8 @@ MinUIConfigDefaults = {
 			bars = { "health", "text" }, 
 			texts = { "level", "name" },
 			-- buff/debuff settings
-			buffsEnabled = true,
-			debuffsEnabled = true,
+			buffsEnabled = false,
+			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
@@ -196,8 +196,8 @@ MinUIConfigDefaults = {
 			bars = { "health", "text" }, 
 			texts = { "level", "name" },
 			-- buff/debuff settings
-			buffsEnabled = true,
-			debuffsEnabled = true,
+			buffsEnabled = false,
+			debuffsEnabled = false,
 			buffView = "icon", -- icon or bar
 			debuffView = "icon", -- icon or bar
 			buffsMax = 10,
