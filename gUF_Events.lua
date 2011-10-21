@@ -5,6 +5,10 @@
 --
 --
 
+--
+-- Rift Updates
+--
+
 ENTER_COMBAT = 1
 LEAVE_COMBAT = 2
 
@@ -30,4 +34,14 @@ ROLE_UPDATE = 18
 
 CASTBAR_UPDATE = 19
 
+
+
 --todo warfront, pvp, etc
+
+
+--
+-- Non Rift Event Updates
+--
+
+ANIMATION_UPDATE = 50 -- Called by the main Update loop in gUF
+REFRESH_UPDATE = 51 -- Called by the main Update loop in gUF

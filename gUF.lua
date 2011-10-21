@@ -42,21 +42,19 @@ gUF.animate = false
 function InitialiseUnits( )
 	print("core: initialiseUnits")
 	
+	
+	-- Setup UnitChanged hooks here for updating modules when their unit has changed
+	
+	
 	-- in practice this wont be done, but rather we would go over the units
 	-- but while i develop the modules, ill just create one of each
 	for _,module in pairs(gUF_Modules) do
 		print( "init module", module[1] )
 		local newModule = module[2].new( "player" )
 		newModule:RegisterCallbacks()
-		local newModule2 = module[2].new( "player.target" )
-		newModule2:RegisterCallbacks()
+		--local newModule2 = module[2].new( "player.target" )
+		--newModule2:RegisterCallbacks()
 	end
-	
-	--
-	-- Register for Unit Change here (used when the target/unit changes)
-	--
-	--local unitChangedEventTable = Library.LibUnitChange.Register("player")
-	--table.insert(unitChangedEventTable, {function() unitChanged() end, "MinUI", uFrame.unitName.."_unitChanged"})
 	
 	-- TODO: Create everything :)
 end

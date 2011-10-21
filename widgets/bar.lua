@@ -44,6 +44,7 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	bar.frame:SetHeight(bar.height)
 	bar.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
 	bar.frame:SetLayer(bar.layer)
+	bar.frame:SetVisible(false)
 	
 	-- Create textured component that resizes
 	bar.texture = UI.CreateFrame("Texture", "BarTexture", bar.frame)
@@ -85,11 +86,25 @@ function Bar:GetLayer()
 end
 
 --
--- Set Point Wrapper
+-- SetPoint of Bar
 --
-function Bar:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset )
-	print( anchorSelf, anchor, anchorItem, xOffset, yOffset )
-	self.frame:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset ) 
+-- @params
+--		anchorSelf string: the point on the Box that shall anchor to the anchorItem expects rift style TOPCENTER, LEFT, etc
+--		newParent table: frame this Box anchors on, expects a rift frame
+--		anchorParent string: the point on the anchor shall the Box anchor on
+--		xOffset number: the x offset
+--		yOffset number: the y offset
+--
+function Bar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	print ( "bar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
+end
+
+--
+-- Toggle the Bar's Visibility
+--
+function Bar:SetVisible(toggle)
+	self.frame:SetVisible(toggle)
 end
 
 --

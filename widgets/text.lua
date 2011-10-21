@@ -42,6 +42,7 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 	text.frame:SetFontColor(fontColor.r,fontColor.g,fontColor.b,fontColor.a)
 	text.frame:SetFontSize(text.fontSize)
 	text.frame:SetLayer(text.layer+1)
+	text.frame:SetVisible(false)
 	
 	-- Create shadow or outline text frame
 	if ( text.style == "shadow" ) then
@@ -67,7 +68,7 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 		text.frame:SetText(tempString)
 		text.frame:SetWidth(text.frame:GetFullWidth())
 		text.frame:SetHeight(text.frame:GetFullHeight())
-		
+
 		if ( text.style == "shadow" ) then
 			text.shadow:SetWidth(text.frame:GetFullWidth())
 			text.shadow:SetHeight(text.frame:GetFullHeight())
@@ -89,19 +90,39 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 		end
 	end
 	
+	text.width = text.frame:GetFullWidth()
+	text.height = text.frame:GetFullHeight()
+		
 	return text
 end
 
+
 --
--- Set Point wrapper
+-- Toggle the Text's Visibility
 --
-function Text:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset )
-	self.frame:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset )
+function Text:SetVisible(toggle)
+	self.frame:SetVisible(toggle)
+end
+
+
+--
+-- SetPoint of Text
+--
+-- @params
+--		anchorSelf string: the point on the Box that shall anchor to the newParent expects rift style TOPCENTER, LEFT, etc
+--		newParent table: frame this Box anchors on, expects a rift frame
+--		anchorParent string: the point on the anchor shall the Box anchor on
+--		xOffset number: the x offset
+--		yOffset number: the y offset
+--
+function Text:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	print("text set point", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	
 	if(self.style=="shadow")then
-		self.shadow:SetPoint( anchorSelf, anchor, anchorItem, xOffset+1, yOffset+1 )
+		self.shadow:SetPoint( anchorSelf, newParent, anchorParent, xOffset+1, yOffset+1 )
 	elseif(self.style=="outline")then
-		self.outline:SetPoint( anchorSelf, anchor, anchorItem, xOffset+1, yOffset+1 )
+		self.outline:SetPoint( anchorSelf, newParent, anchorParent, xOffset+1, yOffset+1 )
 	end
 end
 
@@ -121,6 +142,16 @@ end
 function Text:GetFrame()
 	return self.frame
 end
+
+
+function Text:GetWidth()
+	return self.width
+end
+
+function Text:GetHeight()
+	return self.height
+end
+
 
 --
 -- Set Text on this frame
@@ -150,6 +181,9 @@ function Text:SetText( text )
 			self.outline:SetHeight(self.frame:GetFullHeight())
 		end
 	end
+	
+	self.width = self.frame:GetFullWidth()
+	self.height = self.frame:GetFullHeight()
 end
 
 

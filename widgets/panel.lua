@@ -11,31 +11,26 @@ Panel.__index = Panel
 -- Create a panel
 --
 -- @params
---		x number: the x offset
---		y number: y offset
---		anchorPointSelf string: the point on the panel that shall anchor to the anchorItem expects rift style TOPCENTER, LEFT, etc
---		anchorItem table: frame this panel anchors on, expects a rift frame
---		anchorPointParent string: the point on the anchorItem shall the panel anchor on
 --
-function Panel.new( anchorPointSelf, anchor, anchorPointParent, x, y, padding, width, height, bgColor, layer  )
+--
+function Panel.new( width, height, bgColor, context, layer  )
 	local panel = {}             		-- our new object
 	setmetatable(panel, Panel)      	-- make Panel handle lookup
 	
 
 	-- Store Values for the Panel
-	panel.anchorPointSelf = anchorPointSelf
-	panel.anchor = anchor
-	panel.anchorPointParent = anchorPointParent
 	panel.width = width
 	panel.height = height
-	panel.padding = padding
 	panel.layer = layer
 	
+	-- Items in this panel
+	panel.items = {}
+	panel.itemCount = 0 -- count
+	
 	-- Create the frame
-	panel.frame = UI.CreateFrame("Frame", "Panel", anchor )
-	panel.frame:SetPoint(anchorPointSelf, anchor, anchorPointParent, x, y )
-	panel.frame:SetWidth(panel.width)
-	panel.frame:SetHeight(panel.height)
+	panel.frame = UI.CreateFrame("Frame", "Panel", context )
+	panel.frame:SetWidth(panel.width )
+	panel.frame:SetHeight(panel.height )
 	panel.frame:SetLayer(panel.layer)
 	panel.frame:SetVisible(false)
 	panel.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
@@ -50,12 +45,19 @@ function Panel:GetLayer()
 	return self.layer
 end
 
-
 --
--- Set Point Wrapper
+-- SetPoint of Panel
 --
-function Panel:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset )
-	self.frame:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset ) 
+-- @params
+--		anchorSelf string: the point on the Box that shall anchor to the anchorItem expects rift style TOPCENTER, LEFT, etc
+--		newParent table: frame this Box anchors on, expects a rift frame
+--		anchorParent string: the point on the anchor shall the Box anchor on
+--		xOffset number: the x offset
+--		yOffset number: the y offset
+--
+function Panel:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	print ( "panel set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
 --
@@ -96,10 +98,14 @@ function Panel:GetHeight ( )
 end
 
 --
--- Toggle the panel's visiblity
+-- Toggle the Panel's visiblity
 --
 function Panel:SetVisible( toggle )
 	self.frame:SetVisible( toggle )
+	
+	for _,item in pairs(self.items)do
+		item:SetVisible( toggle )
+	end
 end
 
 --
@@ -159,7 +165,10 @@ end
 --		yOffset number: The yOffset that the item will be used to attach the new item
 --
 function Panel:AddItem( itemToAdd, anchorSelf, anchorPanel, xOffset, yOffset )
-	itemToAdd:SetPoint( anchorSelf, self.frame, anchorPanel, xOffset + self.padding, yOffset + self.padding )
+	itemToAdd:SetPoint( anchorSelf, self.frame, anchorPanel, xOffset, yOffset )
+	
+	self.itemCount = self.itemCount + 1
+	self.items[self.itemCount] = itemToAdd
 end
 
 
