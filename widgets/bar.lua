@@ -20,7 +20,7 @@ Bar.__index = Bar
 --		texturePath string: path of the texture to use
 --		context table: the rift ui context used to create the bar
 --
-function Bar.new( width, height, orientation, direction, bgColor, barColor, texturePath, context )
+function Bar.new( width, height, orientation, direction, bgColor, barColor, texturePath, context, layer )
 	local bar = {}             	-- our new object
 	setmetatable(bar, Bar)    	-- make Bar handle lookup
 	
@@ -32,6 +32,7 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	bar.texturePath = texturePath
 	bar.orientation = orientation
 	bar.direction = direction
+	bar.layer = layer
 	
 	
 	-- Create the frame itself - this part holds the other components
@@ -42,20 +43,20 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	bar.frame:SetWidth(bar.width)
 	bar.frame:SetHeight(bar.height)
 	bar.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
-	bar.frame:SetLayer(1)
+	bar.frame:SetLayer(bar.layer)
 	
 	-- Create textured component that resizes
 	bar.texture = UI.CreateFrame("Texture", "BarTexture", bar.frame)
-	bar.texture:SetTexture("grUF_Core", bar.texturePath )
+	bar.texture:SetTexture("gUF", bar.texturePath )
 	bar.texture:SetWidth(bar.width)
 	bar.texture:SetHeight(bar.height)
-	bar.texture:SetLayer(2)
+	bar.texture:SetLayer(bar.layer+1)
 
 	-- Create solid component that resizes
 	bar.solid = UI.CreateFrame("Frame", "BarSolid", bar.frame)
 	bar.solid:SetWidth(bar.width)
 	bar.solid:SetHeight(bar.height)
-	bar.solid:SetLayer(3)
+	bar.solid:SetLayer(bar.layer+2)
 	bar.solid:SetBackgroundColor(barColor.r,barColor.g,barColor.b,barColor.a)
 	
 	-- orientation based on direction and orientation
@@ -76,6 +77,20 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	return bar
 end
 
+--
+-- Get layer of this box
+--
+function Bar:GetLayer()
+	return (self.layer+2) -- accounting for texture and solid bar
+end
+
+--
+-- Set Point Wrapper
+--
+function Bar:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset )
+	print( anchorSelf, anchor, anchorItem, xOffset, yOffset )
+	self.frame:SetPoint( anchorSelf, anchor, anchorItem, xOffset, yOffset ) 
+end
 
 --
 -- Sets the current value of the bar, which will cause the solid and texture components to resize as a percentage of the 
@@ -87,12 +102,17 @@ end
 --
 --
 function Bar:SetCurrentValue( ratio )
-	if ( self.orientation == "horizontal " ) then
-		self.solid:SetWidth( self.width * ratio )
-		self.texture:SetWidth( self.width * ratio )
+	local width =  self.width * ratio
+	local height =  self.height * ratio
+	
+	if ( self.orientation == "horizontal" ) then
+		print("new width", width)
+		self.solid:SetWidth( width )
+		self.texture:SetWidth( width )
 	elseif ( self.orientation == "vertical" ) then
-		self.solid:SetHeight( self.height * ratio )
-		self.texture:SetHeight( self.height * ratio )
+		print("new width", width)
+		self.solid:SetHeight( height )
+		self.texture:SetHeight( height )
 	end
 end
 
@@ -165,5 +185,5 @@ end
 --
 function Bar:SetTexture ( texturePath )
 	self.texturePath = texturePath
-	self.texture:SetTexture("grUF_Core", texturePath)
+	self.texture:SetTexture("gUF", texturePath)
 end
