@@ -98,6 +98,18 @@ function Panel:GetHeight ( )
 end
 
 --
+-- Remove item at given index (if it exists)
+--
+function Panel:RemoveItem ( itemIndex ) 
+	if(self.items[itemIndex])then
+		local itemRemoved = table.remove (self.items, itemIndex)
+		itemRemoved:SetVisible(false)
+		itemRemoved:SetPoint("TOPLEFT", gUF.context, "TOPLEFT", 0,0)
+		self.itemCount = self.itemCount - 1
+	end
+end
+
+--
 -- Toggle the Panel's visiblity
 --
 function Panel:SetVisible( toggle )

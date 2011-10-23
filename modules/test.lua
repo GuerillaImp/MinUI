@@ -178,4 +178,4 @@ end
 --
 -- *** Register this Module with gUF ***
 --
-table.insert(gUF_Modules, { "Test", Test })
+-- table.insert(gUF_Modules, { "Test", Test })

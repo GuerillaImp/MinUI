@@ -15,14 +15,17 @@
 -- Grantus' UnitFrame's main table
 gUF = {}
 
--- Settings Saved Variable
-gUF_Settings = {}
+-- Module Registry (For Addons to use)
+gUF_Modules = {}
+
+-- Event Hooks (For modules to register callbacks)
+gUF_EventHooks = {}
+
+-- AddOn Config Registry (For Options and Configuration)
+gUF_AddOn_Config = {}
 
 -- Context for Creation of Widgets
-gUF.context = UI.CreateContext("grUF_Context")
-
--- Units Monitored
-gUF.units = {}
+gUF.context = UI.CreateContext("gUF_Context")
 
 -- Version
 gUF.version = "0.0.1"
@@ -36,29 +39,6 @@ gUF.curTime = 0
 gUF.update = false
 gUF.animate = false
 
---
--- Initalise Units
---
-function InitialiseUnits( )
-	print("core: initialiseUnits")
-	
-	
-	-- Setup UnitChanged hooks here for updating modules when their unit has changed
-	
-	
-	-- in practice this wont be done, but rather we would go over the units
-	-- but while i develop the modules, ill just create one of each
-	for _,module in pairs(gUF_Modules) do
-		print( "init module", module[1] )
-		local newModule = module[2].new( "player" )
-		newModule:RegisterCallbacks()
-		--local newModule2 = module[2].new( "player.target" )
-		--newModule2:RegisterCallbacks()
-	end
-	
-	-- TODO: Create everything :)
-end
-
 
 --
 -- Main update Loop:
@@ -68,7 +48,7 @@ end
 function Update ( )
 	--
 	-- calculate frame time difference
-	--[[
+	--
 	gUF.curTime = Inspect.Time.Frame()
 	gUF.updateDiff = gUF.curTime  - gUF.lastUpdate
 	gUF.animateDiff = gUF.curTime  - gUF.lastAnimate
@@ -79,37 +59,15 @@ function Update ( )
 		gUF.update = true
 		gUF.lastUpdate = gUF.curTime 
 		gUF.updateDiff = 0
+		FireEvent( REFRESH_UPDATE, nil )
 	end
 
 	if(gUF.animateDiff >= 0.01) then -- TODO: Configurable Item
 		gUF.animate = true
 		gUF.lastAnimationUpdate = gUF.curTime 
 		gUF.animateDiff = 0
+		FireEvent( ANIMATION_UPDATE, nil )
 	end
-
-	-- TODO: Loop through units and update/animate as required]]
-end
-
---
--- Variables Loaded
---
--- @params
--- 		addonIdentifier: the addon whose variables just loaded
---
-function VariablesLoaded( addonIdentifier )
-	if ( addonIdentifier == "gUF" ) then
-		print ("core: gUF saved variables loaded")
-		InitialiseUnits( )
-	end
-end
-
---
--- Open the gUF Options Window (if the module is enabled)
---
---
-function ToggleOptionsWindow ( ) 
-	print("core: toggling options")
-	gUF_Options:TogglegOptionsWindow()
 end
 
 --
@@ -132,7 +90,9 @@ end
 --		eventType: the name of the event the module is registering for, there are whole bunch defined in grUF_Events
 --		unitIDs table: a list of updated units, a list containing [unit id, value] from Rift's Event System
 --
-function FireEvents ( eventType, unitIDs )
+function FireEvent ( eventType, unitIDs )
+	-- dump (unitIDs)
+	
 	for _,eventHook in pairs(gUF_EventHooks)do
 		local hookEventType = eventHook[1]
 		
@@ -168,43 +128,50 @@ end
 -- unitIDs: list of units whose values have changed (unitID/value)
 --
 function HealthChanged ( unitIDs )
-	FireEvents( HEALTH_UPDATE, unitIDs )
+	FireEvent( HEALTH_UPDATE, unitIDs )
 end
 function ManaChanged ( unitIDs )
-	FireEvents( MANA_UPDATE, unitIDs )
+	FireEvent( MANA_UPDATE, unitIDs )
 end
 function PowerChanged ( unitIDs )
-	FireEvents( POWER_UPDATE, unitIDs )
+	FireEvent( POWER_UPDATE, unitIDs )
 end
 function EnergyChanged ( unitIDs )
-	FireEvents( ENERGY_UPDATE, unitIDs )
+	FireEvent( ENERGY_UPDATE, unitIDs )
 end
 function ComboChanged ( unitIDs )
-	FireEvents( COMBO_UPDATE, unitIDs )
+	FireEvent( COMBO_UPDATE, unitIDs )
 end
 function ChargeChanged ( unitIDs )
-	FireEvents( CHARGE_UPDATE, unitIDs )
+	FireEvent( CHARGE_UPDATE, unitIDs )
 end
 function PlanarChanged ( unitIDs )
-	FireEvents( PLANAR_UPDATE, unitIDs )
+	FireEvent( PLANAR_UPDATE, unitIDs )
 end
 function VitalityChanged ( unitIDs )
-	FireEvents( VITALITY_UPDATE, unitIDs )
+	FireEvent( VITALITY_UPDATE, unitIDs )
 end
 function LevelChanged ( unitIDs )
-	FireEvents( LEVEL_UPDATE, unitIDs )
+	FireEvent( LEVEL_UPDATE, unitIDs )
 end
 function GuildChanged ( unitIDs )
-	FireEvents( GUILD_UPDATE, unitIDs )
+	FireEvent( GUILD_UPDATE, unitIDs )
 end
 function RoleChanged ( unitIDs )
-	FireEvents( ROLE_UPDATE, unitIDs )
+	FireEvent( ROLE_UPDATE, unitIDs )
 end
 function CastbarChanged ( unitIDs )
-	FireEvents( CASTBAR_UPDATE, unitIDs )
+	FireEvent( CASTBAR_UPDATE, unitIDs )
 end
 function UnitAvailable ( unitIDs )
-	FireEvents( UNIT_AVAILABLE, unitIDs )
+	FireEvent( UNIT_AVAILABLE, unitIDs )
+end
+function UnitChanged ( unitID )
+	if ( unitID ) then
+		local unit = {}
+		unit[unitID] = true
+		FireEvent( UNIT_CHANGED, unit )
+	end
 end
 
 --
@@ -212,7 +179,7 @@ end
 --
 function EnterCombat ( )
 	print("+++ combat")
-	FireEvents( ENTER_COMBAT, nil )
+	FireEvent( ENTER_COMBAT, nil )
 end
 
 --
@@ -220,7 +187,7 @@ end
 --
 function LeaveCombat ( )
 	print("--- combat")
-	FireEvents( LEAVE_COMBAT, nil )
+	FireEvent( LEAVE_COMBAT, nil )
 end
 
 
@@ -231,16 +198,9 @@ function RegisterEvents()
 	--
 	-- Management Events
 	--
-
-	-- Saved Variables Loaded
-	table.insert(Event.Addon.SavedVariables.Load.End, { VariablesLoaded, "gUF", "gUF Variables Loaded" })
 	
 	-- Saved Variables Loaded
 	table.insert(Event.Addon.Load.End, { AddonLoaded, "gUF", "gUF Addon Loaded" })
-	
-	-- Handle User Customisation
-	table.insert(Command.Slash.Register("guf"), { ToggleOptionsWindow, "gUF", "gUF Slash Command"})
-
 
 	--
 	-- Unit Events
@@ -258,7 +218,16 @@ function RegisterEvents()
 	table.insert(Event.Unit.Available, { UnitAvailable, "gUF", "gUF unitAvailable"})
 	
 	--
-	-- Unit Changes
+	-- Unit Change
+	--
+	local units = {"player","player.target","player.target.target","player.pet","focus"} -- perhaps have one for group01-20?
+	for _,unit in pairs(units)do
+		local unitChangedEventTable = Library.LibUnitChange.Register( unit )
+		table.insert(unitChangedEventTable, { function ( unit ) UnitChanged( unit ) end, "gUF", "gUF UnitChanged"})
+	end
+	
+	--
+	-- Unit Updates
 	--
 	table.insert(Event.Unit.Detail.Health, { HealthChanged, "gUF", "gUF healthChanged"})
 	table.insert(Event.Unit.Detail.HealthMax, { HealthChanged, "gUF", "gUF healthChanged"})

@@ -51,12 +51,14 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 		text.shadow:SetFontSize(text.fontSize)
 		text.shadow:SetFontColor(0,0,0,1)
 		text.shadow:SetLayer(text.layer)
+		text.shadow:SetVisible(false)
 	elseif ( text.style == "outline" ) then
 		text.outline = UI.CreateFrame("Text", "Text", context)
 		text.outline:SetFont("gUF", text.font)
 		text.outline:SetFontSize(text.fontSize)
 		text.outline:SetFontColor(0,0,0,1)
 		text.outline:SetLayer(text.layer)
+		text.outline:SetVisible(false)
 	end
 	
 	-- Set max size or grow to fit a string of maxSize

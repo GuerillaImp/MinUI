@@ -17,7 +17,7 @@ Box.__index = Box
 --		direction string: up and down (vertical only), left or right (horizontal only)
 --		layer number: what layer of the context shall this be rendered in?
 --
-function Box.new( padding, bgColor, layout, direction, context, layer   )
+function Box.new( padding, bgColor, layout, direction, context, layer )
 	local box = {}             		-- our new object
 	setmetatable(box, Box)      	-- make Box handle lookup
 	
@@ -47,6 +47,11 @@ function Box.new( padding, bgColor, layout, direction, context, layer   )
 	
 	return box
 end
+
+
+
+
+
 
 --
 -- Get layer of this box
@@ -82,6 +87,8 @@ end
 -- Toggle the Box's visiblity
 --
 function Box:SetVisible( toggle )
+	print ( "box set visible", toggle )
+	
 	self.frame:SetVisible( toggle )
 
 	for _,item in pairs(self.items)do

@@ -34,9 +34,10 @@ ROLE_UPDATE = 18
 
 CASTBAR_UPDATE = 19
 
-
-
 --todo warfront, pvp, etc
+
+
+UNIT_CHANGED = 20
 
 
 --

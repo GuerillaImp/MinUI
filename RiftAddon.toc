@@ -20,22 +20,24 @@ Email = "grantus@gmail.com"
 -- Addons must include which version of Rift they're designed to work with. Right now, the only valid number is "1.3".
 Environment = "1.3"
 
+-- We require lib unit change
+Embed = {
+  ["Libs/LibUnitChange"] = true
+}
+
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
 	"gUF_Events.lua",
-	"gUF_Modules.lua",
 	"gUF.lua",
-	"gUF_Options.lua",
 	-- widgets, core components of the addon
 	"widgets/box.lua",
 	"widgets/panel.lua",
 	"widgets/bar.lua",
 	"widgets/text.lua",
 	-- modules, use widgets to represent values from the game
-	"modules/test.lua"
+	"modules/health.lua",
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
-	grUF_Settings = "character"
 }
