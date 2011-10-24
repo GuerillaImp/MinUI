@@ -17,18 +17,25 @@ gUF_Options.frame = UI.CreateFrame("RiftWindow", "gUF_Options", gUF.context)
 gUF_Options.frame:SetVisible(gUF_Options.visible)
 gUF_Options.frame:SetPoint("TOPLEFT", gUF.context, "TOPLEFT", 0, 0 )
 gUF_Options.frame:SetTitle("Grantus Unit Frames Config")
-gUF_Options.frame:SetHeight(500)
+gUF_Options.frame:SetHeight(900)
 gUF_Options.frame:SetWidth(900)
-gUF_Options.frame:SetLayer(5)
+gUF_Options.frame:SetLayer(4)
+
+gUF_Options.drag = UI.CreateFrame("Frame","gUF_Options_Drag", gUF.context) 
+gUF_Options.drag:SetVisible(gUF_Options.visible)
+gUF_Options.drag:SetPoint("TOPLEFT", gUF_Options.frame, "TOPLEFT", 0, 0 )
+gUF_Options.drag:SetHeight(900)
+gUF_Options.drag:SetWidth(900)
+gUF_Options.drag:SetLayer(5)
 
 gUF_Options.initialised = false
 
-gUF_Options.addonButtons = Box.new( 5, {r=0,g=0,b=0,a=0.3}, "vertical", "down", gUF.context, 6 )
+gUF_Options.addonButtons = Box.new( 5, {r=0,g=0,b=0,a=0.0}, "vertical", "down", gUF.context, 6 )
 gUF_Options.addonButtons:SetPoint("TOPLEFT", gUF_Options.frame, "TOPLEFT", 30, 60)
 								
-gUF_Options.configPane = Panel.new( 675, 400, {r=0,g=0,b=0,a=0.3}, gUF.context, 6 )
+gUF_Options.configPane = Panel.new( 675, 800, {r=0,g=0,b=0,a=0.0}, gUF.context, 6 )
 gUF_Options.configPane:SetPoint("TOPLEFT", gUF_Options.frame, "TOPLEFT", 200, 60)
-
+gUF_Options.configPane:SetTexture(gUF.backgrounds["backdrop"])
 
 
 gUF_Options.optionsPanes = {}
@@ -36,8 +43,7 @@ gUF_Options.optionsPanes = {}
 --
 -- Left Button Down
 --
-function gUF_Options.frame.Event:LeftDown()
-	print "hello1"
+function gUF_Options.drag.Event:LeftDown()
 	self.MouseDown = true
 	mouseData = Inspect.Mouse()
 	self.MyStartX = self:GetLeft()
@@ -52,7 +58,7 @@ end
 --
 -- Mouse Move
 --
-function gUF_Options.frame.Event:MouseMove()
+function gUF_Options.drag.Event:MouseMove()
 	if self.MouseDown then
 		local newX, newY
 		mouseData = Inspect.Mouse()
@@ -65,7 +71,7 @@ end
 --
 -- Left Up
 --
-function gUF_Options.frame.Event:LeftUp()
+function gUF_Options.drag.Event:LeftUp()
 	if self.MouseDown then
 		self.MouseDown = false
 	end
@@ -76,7 +82,6 @@ end
 --
 function gUF_Options:Initialise()
 	for name,f in pairs (gUF_AddOn_Config) do
-		
 		local optionsItems = f()
 		local triggerButton = optionsItems[1]
 		local optionsPane = optionsItems[2]
@@ -109,6 +114,7 @@ function  gUF_Options:ToggleOptionsWindow()
 	if ( gUF_Options.visible ) then
 		gUF_Options.visible = false
 		gUF_Options.frame:SetVisible(gUF_Options.visible)
+		gUF_Options.drag:SetVisible(gUF_Options.visible)
 		gUF_Options.addonButtons:SetVisible(gUF_Options.visible)
 		gUF_Options.configPane:SetVisible(gUF_Options.visible)
 	else
@@ -118,6 +124,7 @@ function  gUF_Options:ToggleOptionsWindow()
 		end
 		print(gUF_Options.visible)
 		gUF_Options.frame:SetVisible(gUF_Options.visible)
+		gUF_Options.drag:SetVisible(gUF_Options.visible)
 		gUF_Options.addonButtons:SetVisible(gUF_Options.visible)
 		gUF_Options.configPane:SetVisible(gUF_Options.visible)
 	end

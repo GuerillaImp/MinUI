@@ -13,7 +13,7 @@ HealthBar.__index = HealthBar
 -- @params
 --		unit string: player, player.target, etc
 --
-function HealthBar.new( unit )
+function HealthBar.new( unit, width, height )
 	local hBar = {}             		-- our new object
 	setmetatable(hBar, HealthBar)    	-- make HealthBar handle lookup
 	
@@ -23,18 +23,6 @@ function HealthBar.new( unit )
 	-- Store vars
 	--
 	hBar.unit = unit
-	
-	--
-	-- HealthBar Settings
-	--
-	hBar.settings = {
-		width = 200,
-		height = 30,
-		colorMode = "health",
-		leftText = "name",
-		rightText = "healthShort"
-	}
-	
 	hBar.enabled = true
 	
 	--
@@ -44,13 +32,41 @@ function HealthBar.new( unit )
 	hBar.hb_bgColor = {r=1,g=0,b=0,a=0.3}
 	hBar.hb_barColor = {r=1,g=0,b=0,a=0.6}
 	hBar.box = Box.new(  0, hBar.bgColor, "horizontal", "left", gUF.context, -1 )
-	hBar.bar = Bar.new( hBar.settings.width, hBar.settings.height, "horizontal", "right", hBar.hb_bgColor, hBar.hb_barColor, "media/bars/otravi.tga", gUF.context, (hBar.box:GetLayer()+1)  )
+	hBar.bar = Bar.new( width, height, "horizontal", "right", hBar.hb_bgColor, hBar.hb_barColor, "media/bars/otravi.tga", gUF.context, (hBar.box:GetLayer()+1)  )
 	
 	hBar.box:AddItem( hBar.bar )
 	hBar.box:SetVisible( false )
 
 
 	return hBar
+end
+
+--
+-- Get health colors for when the bar is in "health" deficit mode
+--
+-- @params
+--		percentLife numbeR: the percentage of the unit's health that is left
+--
+-- @returns
+--		colors table: contains two other tables, colors.backgroundColor and colors.foregroundColor for the background and solid components of the bar
+--
+function HealthBar:GetHealthBarColor ( percentLife )
+	local colors = {}
+	
+	if (percentLife >= 66) then
+		colors.backgroundColor = { r=0.0, g=0.7, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.0, g=0.7, b=0.0, a=0.6 }
+	elseif(percentLife >= 33 and percentage <= 66) then
+		colors.backgroundColor = { r=0.7, g=0.7, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.7, g=0.7, b=0.0, a=0.6 }
+	elseif(percentLife >= 1 and percentage <= 33) then
+		colors.backgroundColor = { r=0.7, g=0.0, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.7, g=0.0, b=0.0, a=0.6 }
+	else
+		colors.backgroundColor = { r=0.0, g=0.0, b=0.0, a=0.3 }
+	end
+	
+	return colors
 end
 
 
@@ -128,21 +144,6 @@ end
 --
 -- Required Functions for a Module
 --
-
---
--- A GUI that enables the settings of the module to be set
---
-function HealthBar:GetSettingsGUI()
-	return nil
-end
-
---
--- Get default settings for this module
---
-function HealthBar:GetDefaultSettings()
-	return self.settings
-end
-
 
 --
 -- On unit change, or unit available this method will be called 

@@ -24,6 +24,17 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	local bar = {}             	-- our new object
 	setmetatable(bar, Bar)    	-- make Bar handle lookup
 	
+	-- Create the frame itself - this part holds the other components
+	-- That constitute a "bar" and is the background
+	-- Does not SetPoint as all widgets in grUF should be placed in a container
+	-- Containers essentially act like Java Swing Panels woth horizontal and vertical box layouts
+	bar.frame = UI.CreateFrame("Frame", "BarFrame", context )
+	bar.frame:SetWidth(width)
+	bar.frame:SetHeight(height)
+	bar.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
+	bar.frame:SetLayer(layer)
+	bar.frame:SetVisible(false)
+	
 	-- Store vars
 	bar.width = width
 	bar.height = height
@@ -33,18 +44,6 @@ function Bar.new( width, height, orientation, direction, bgColor, barColor, text
 	bar.orientation = orientation
 	bar.direction = direction
 	bar.layer = layer
-	
-	
-	-- Create the frame itself - this part holds the other components
-	-- That constitute a "bar" and is the background
-	-- Does not SetPoint as all widgets in grUF should be placed in a container
-	-- Containers essentially act like Java Swing Panels woth horizontal and vertical box layouts
-	bar.frame = UI.CreateFrame("Frame", "BarFrame", context )
-	bar.frame:SetWidth(bar.width)
-	bar.frame:SetHeight(bar.height)
-	bar.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
-	bar.frame:SetLayer(bar.layer)
-	bar.frame:SetVisible(false)
 	
 	-- Create textured component that resizes
 	bar.texture = UI.CreateFrame("Texture", "BarTexture", bar.frame)

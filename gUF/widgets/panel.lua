@@ -17,32 +17,62 @@ function Panel.new( width, height, bgColor, context, layer  )
 	local panel = {}             		-- our new object
 	setmetatable(panel, Panel)      	-- make Panel handle lookup
 	
-
+	-- Create the frame
+	panel.frame = UI.CreateFrame("Frame", "Panel", context )
+	panel.frame:SetWidth(width )
+	panel.frame:SetHeight(height )
+	panel.frame:SetLayer(layer)
+	panel.frame:SetVisible(false)
+	panel.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
+	
+	panel.texture = UI.CreateFrame("Texture", "PanelTexture", context)
+	panel.texture:SetVisible(false)
+	panel.texture:SetLayer(layer+1)
+	
 	-- Store Values for the Panel
 	panel.width = width
 	panel.height = height
 	panel.layer = layer
+	panel.textured = false
 	
 	-- Items in this panel
 	panel.items = {}
 	panel.itemCount = 0 -- count
-	
-	-- Create the frame
-	panel.frame = UI.CreateFrame("Frame", "Panel", context )
-	panel.frame:SetWidth(panel.width )
-	panel.frame:SetHeight(panel.height )
-	panel.frame:SetLayer(panel.layer)
-	panel.frame:SetVisible(false)
-	panel.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
-	
+
 	return panel
+end
+
+--
+-- Set a Texture to fill the background of this Box
+--
+function Panel:SetTexture ( texturePath )
+	if(texturePath)then
+		self.texture:SetTexture("gUF", texturePath)
+		self.texture:SetWidth(self.width)
+		self.texture:SetHeight(self.height)
+		self.texture:SetPoint( "TOPLEFT", self.frame, "TOPLEFT", 0, 0 ) 
+		self.textured = true
+	end
+end
+
+
+
+--
+-- Get the RiftUI Frame the panel is based on
+--
+function Panel:GetFrame()
+	return self.frame
 end
 
 --
 -- Get layer of this box
 --
 function Panel:GetLayer()
-	return self.layer
+	if not self.textured then
+		return self.layer
+	else
+		return self.layer+1
+	end
 end
 
 --
@@ -61,18 +91,15 @@ function Panel:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
 end
 
 --
--- Get Frame
---
-function Panel:GetFrame()
-	return self.frame
-end
-
---
 --
 --
 function Panel:SetWidth ( width )
 	self.width = width
 	self.frame:SetWidth(self.width)
+	
+	if self.textured then
+		self.texture:SetWidth(self.width)
+	end
 end
 
 --
@@ -87,7 +114,11 @@ end
 --
 function Panel:SetHeight ( height )
 	self.height = height
-	self.frame:SetWidth(self.height)
+	self.frame:SetHeight(self.height)
+	
+	if self.textured then
+		self.texture:SetHeight(self.height)
+	end
 end
 
 --
@@ -114,6 +145,10 @@ end
 --
 function Panel:SetVisible( toggle )
 	self.frame:SetVisible( toggle )
+	
+	if self.textured then
+		self.texture:SetVisible( toggle )
+	end
 	
 	for _,item in pairs(self.items)do
 		item:SetVisible( toggle )

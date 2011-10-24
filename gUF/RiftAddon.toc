@@ -29,6 +29,7 @@ Embed = {
 RunOnStartup = {
 	"gUF_Events.lua",
 	"gUF.lua",
+	"gUF_Globals.lua",
 	-- widgets, core components of the addon
 	"widgets/box.lua",
 	"widgets/panel.lua",

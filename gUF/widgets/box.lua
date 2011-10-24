@@ -21,7 +21,19 @@ function Box.new( padding, bgColor, layout, direction, context, layer )
 	local box = {}             		-- our new object
 	setmetatable(box, Box)      	-- make Box handle lookup
 	
-
+	
+	-- Create the frame
+	box.frame = UI.CreateFrame("Frame", "Box", context )
+	box.frame:SetWidth(padding*2)
+	box.frame:SetHeight(padding*2)
+	box.frame:SetLayer(layer)
+	box.frame:SetVisible(false)
+	box.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
+	
+	box.texture = UI.CreateFrame("Texture", "BoxTexture", context)
+	box.texture:SetVisible(false)
+	box.texture:SetLayer(layer+1)
+	
 	-- Store Values for the Box
 	box.layout = layout
 	box.padding = padding
@@ -29,6 +41,7 @@ function Box.new( padding, bgColor, layout, direction, context, layer )
 	box.direction = direction
 	box.width = box.padding*2
 	box.height = box.padding*2
+	box.textured = false
 	
 	print("new box ", box.layout, box.direction)
 	
@@ -37,27 +50,40 @@ function Box.new( padding, bgColor, layout, direction, context, layer )
 	box.itemCount = 0 -- count
 	box.lastItem = nil -- the last item added (acts as the anchor for the next item)
 	
-	-- Create the frame
-	box.frame = UI.CreateFrame("Frame", "Box", context )
-	box.frame:SetWidth(box.width)
-	box.frame:SetHeight(box.height)
-	box.frame:SetLayer(box.layer)
-	box.frame:SetVisible(false)
-	box.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
-	
 	return box
 end
 
 
+--
+-- Set a Texture to fill the background of this Box
+--
+function Box:SetTexture ( texturePath )
+	if(texturePath)then
+		self.texture:SetTexture("gUF", texturePath)
+		self.texture:SetWidth(self.width)
+		self.texture:SetHeight(self.height)
+		self.texture:SetPoint( "TOPLEFT", self.frame, "TOPLEFT", 0, 0 ) 
+		self.textured = true
+	end
+end
 
 
-
+--
+-- Return the base RiftUI Frame for the box
+--
+function Box:GetFrame()
+	return self.frame
+end
 
 --
 -- Get layer of this box
 --
 function Box:GetLayer()
-	return self.layer
+	if not self.textured then
+		return self.layer
+	else
+		return self.layer+1
+	end
 end
 
 --
@@ -75,14 +101,6 @@ function Box:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
-
---
--- Get the RiftUI Frame
---
-function Box:GetFrame()
-	return self.frame
-end
-
 --
 -- Toggle the Box's visiblity
 --
@@ -90,6 +108,10 @@ function Box:SetVisible( toggle )
 	print ( "box set visible", toggle )
 	
 	self.frame:SetVisible( toggle )
+	
+	if self.textured then
+		self.texture:SetVisible( toggle )
+	end
 
 	for _,item in pairs(self.items)do
 		item:SetVisible( toggle )
@@ -181,10 +203,16 @@ function Box:ClearSize()
 		self.width = widthRequired + self.padding
 		self.height = maxHeight + self.padding*2
 	end
+	
+	-- set texture width if required
+	if self.textured then
+		self.texture:SetWidth(self.width)
+		self.texture:SetHeight(self.height)
+	end
 end
 
 --
--- Add an item to this Box
+-- Add an widget to this Box
 --
 -- @params
 --		itemToAdd table: The grUF Widget to add to this Box
@@ -226,5 +254,3 @@ function Box:AddItem( itemToAdd )
 	-- Resize to fit items boxained within
 	self:ClearSize()
 end
-
-

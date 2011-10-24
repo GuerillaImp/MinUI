@@ -26,6 +26,14 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 	local text = {}             	-- our new object
 	setmetatable(text, Text)    	-- make Text handle lookup
 	
+	-- Create text frame
+	text.frame = UI.CreateFrame("Text", "Text", context)
+	text.frame:SetFont("gUF", font)
+	text.frame:SetFontColor(fontColor.r,fontColor.g,fontColor.b,fontColor.a)
+	text.frame:SetFontSize(fontSize)
+	text.frame:SetLayer(layer+1)
+	text.frame:SetVisible(false)
+	
 	-- Store vars
 	text.font = font
 	text.fontSize = fontSize
@@ -35,14 +43,6 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 	text.curText = ""
 	text.fontColor = fontColor	
 	text.layer = layer
-
-	-- Create text frame
-	text.frame = UI.CreateFrame("Text", "Text", context)
-	text.frame:SetFont("gUF", text.font)
-	text.frame:SetFontColor(fontColor.r,fontColor.g,fontColor.b,fontColor.a)
-	text.frame:SetFontSize(text.fontSize)
-	text.frame:SetLayer(text.layer+1)
-	text.frame:SetVisible(false)
 	
 	-- Create shadow or outline text frame
 	if ( text.style == "shadow" ) then
@@ -67,9 +67,9 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 		for i=1,maxSize do
 			tempString = tempString .. "0"
 		end
-		text.frame:SetText(tempString)
-		text.frame:SetWidth(text.frame:GetFullWidth())
-		text.frame:SetHeight(text.frame:GetFullHeight())
+		text:SetText(tempString)
+		text:SetWidth(text.frame:GetFullWidth())
+		text:SetHeight(text.frame:GetFullHeight())
 
 		if ( text.style == "shadow" ) then
 			text.shadow:SetWidth(text.frame:GetFullWidth())
@@ -106,6 +106,12 @@ function Text:SetVisible(toggle)
 	self.frame:SetVisible(toggle)
 end
 
+--
+-- Get the RiftUI Frame this Widget is Based on
+--
+function Text:GetFrame()
+	return self.frame
+end
 
 --
 -- SetPoint of Text
@@ -134,15 +140,6 @@ end
 --
 function Text:GetLayer()
 	return (self.layer+1) -- accounting for shadows
-end
-
---
--- Return a handle to the RiftUI frame this bar is built upon
--- 
--- Used to layout items mostly
---
-function Text:GetFrame()
-	return self.frame
 end
 
 
