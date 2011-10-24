@@ -175,9 +175,10 @@ end
 -- @params
 --		bgColor table: the color of the background, expects a table with T.r, T.g, T.bar, T.a set to numbers
 --
-function Bar:SetBGColor( bgColor )
+function Bar:SetBGColor( bgColor )	
+	print(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
 	self.bgColor = bgColor
-	self.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.bar,bgColor.a)
+	self.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
 end
 
 --
@@ -187,8 +188,9 @@ end
 --		barColor table: the color of the bar, expects a table with T.r, T.g, T.bar, T.a set to numbers
 --
 function Bar:SetBarColor ( barColor )
+	print(barColor.r,barColor.g,barColor.b,barColor.a)
 	self.barColor = barColor
-	self.solid:SetBackgroundColor(barColor.r,barColor.g,barColor.bar,barColor.a)
+	self.solid:SetBackgroundColor(barColor.r,barColor.g,barColor.b,barColor.a)
 end
 
 --

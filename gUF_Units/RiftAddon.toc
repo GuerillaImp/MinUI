@@ -26,10 +26,11 @@ Dependencies = {
 
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
+	"gUF_Units_Config.lua",
 	"gUF_Units.lua"
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
-	gUF_Units_Settings = "character"
+	--gUF_Units_Settings = "character"
 }

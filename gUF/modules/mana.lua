@@ -1,50 +1,72 @@
 --
--- HealthBar Module by Grantus
+-- ManaBar Module by Grantus
 --
--- Registers for Health Updates and Displays it
+-- Registers for Mana Updates and Displays them using a Bar
 --
 
-local HealthBar = {}
-HealthBar.__index = HealthBar
+local ManaBar = {}
+ManaBar.__index = ManaBar
 
 --
--- HealthBar:new()
+-- ManaBar:new()
 --
 -- @params
 --		unit string: player, player.target, etc
 --
-function HealthBar.new( unit )
-	local hBar = {}             		-- our new object
-	setmetatable(hBar, HealthBar)    	-- make HealthBar handle lookup
+function ManaBar.new( unit, width, height )
+	local mBar = {}             		-- our new object
+	setmetatable(mBar, ManaBar)    	-- make HealthBar handle lookup
 	
-	-- the modules unit
-	hBar.unit = unit
-	-- the modules enabled status
-	hBar.enabled = true
 	
 	--
-	-- Every module must have a settings table, such that it can be configured by AddOns
+	-- Store vars
 	--
-	hBar.settings = {
-		["width"] = 0,
-		["height"] = 0,
-		["colorMode"] = 0,
-		["leftText"] = 0,
-		["rightText"] = 0,
-		["texturePath"] = 0,
-		["font"] = 0,
-		["fontSize"] = 0
-	}
+	mBar.unit = unit
+	mBar.enabled = true
+	
+	--
+	-- Create HealthBar Module Widgets
+	--
+	mBar.bgColor = {r=0,g=0,b=0,a=0}
+	mBar.hb_bgColor = {r=1,g=0,b=0,a=0.3}
+	mBar.hb_barColor = {r=1,g=0,b=0,a=0.6}
+	mBar.box = Box.new(  0, hBar.bgColor, "horizontal", "left", gUF.context, -1 )
+	mBar.bar = Bar.new( width, height, "horizontal", "right", hBar.hb_bgColor, hBar.hb_barColor, "media/bars/otravi.tga", gUF.context, (hBar.box:GetLayer()+1)  )
+	
+	mBar.box:AddItem( hBar.bar )
+	mBar.box:SetVisible( false )
 
-	
-	--
-	-- Note: nothing is actually created here, that occurs in the Initialise function, which
-	-- should be called after the settings above have been filled out by an AddOn
-	--
 
-	return hBar
+	return mBar
 end
 
+--
+-- Get health colors for when the bar is in "health" deficit mode
+--
+-- @params
+--		percentLife numbeR: the percentage of the unit's health that is left
+--
+-- @returns
+--		colors table: contains two other tables, colors.backgroundColor and colors.foregroundColor for the background and solid components of the bar
+--
+function HealthBar:GetHealthBarColor ( percentLife )
+	local colors = {}
+	
+	if (percentLife >= 66) then
+		colors.backgroundColor = { r=0.0, g=0.7, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.0, g=0.7, b=0.0, a=0.6 }
+	elseif(percentLife >= 33 and percentage <= 66) then
+		colors.backgroundColor = { r=0.7, g=0.7, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.7, g=0.7, b=0.0, a=0.6 }
+	elseif(percentLife >= 1 and percentage <= 33) then
+		colors.backgroundColor = { r=0.7, g=0.0, b=0.0, a=0.3 }
+		colors.foregroundColor = { r=0.7, g=0.0, b=0.0, a=0.6 }
+	else
+		colors.backgroundColor = { r=0.0, g=0.0, b=0.0, a=0.3 }
+	end
+	
+	return colors
+end
 
 
 --
@@ -111,31 +133,7 @@ function HealthBar:UpdateHealth( healthValue )
 	
 	if(details)then
 		local healthRatio = healthValue/details.healthMax
-		local healthPercent = healthRatio*100
-		
 		self.bar:SetCurrentValue(healthRatio)
-		
-		local calling = details.calling
-		local reaction = details.reaction
-		
-		-- colorise the bar based on current mode
-		if(self.settings["colorMode"] == "health") then
-			local colors = gUF_Utils:GetHealthPercentColor(healthPercent)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif (self.settings["colorMode"] == "calling") then
-			local colors = gUF_Utils:GetCallingColor(calling)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif(self.settings["colorMode"] == "reaction") then
-			local colors = gUF_Utils:GetReactionColor(reaction)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		else
-			local color = gUF.colors["black"]
-			self.bar:SetBarColor(color)
-			self.bar:SetBGColor(color)
-		end
 	else
 		self:SetVisible(false)
 	end
@@ -147,24 +145,6 @@ end
 --
 
 --
--- Get the Empty Settings Table for this Module
---
-function HealthBar:GetSettingsTable()
-	return self.settings
-end
-
---
--- Initialise the Module
---
-function HealthBar:Initialise( )
-	self.box = Box.new(  0, {r=0,g=0,b=0,a=0}, "horizontal", "right", gUF.context, -1 )
-	self.bar = Bar.new( self.settings["width"], self.settings["height"], "horizontal", "right", {r=0,g=0,b=0,a=0}, {r=0,g=0,b=0,a=0}, self.settings["texturePath"], gUF.context, (self.box:GetLayer()+1)  )
-	
-	self.box:AddItem( self.bar )
-	self.box:SetVisible( false )
-end
-
---
 -- On unit change, or unit available this method will be called 
 -- Or in a "timed" update this can be called with an event firing (if I choose to go the timer route rather than event based route)
 --
@@ -172,7 +152,8 @@ function HealthBar:Refresh()
 	local details = Inspect.Unit.Detail(self.unit)
 	
 	if(details)then
-		self:UpdateHealth( details.health )
+		local healthRatio = details.health/details.healthMax
+		self.bar:SetCurrentValue(healthRatio)
 	else
 		self:SetVisible(false)
 	end

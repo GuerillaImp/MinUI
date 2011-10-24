@@ -9,12 +9,15 @@ gUF.colors = {
 	["yellow_foreground"] = { r=0.7, g=0.7, b=0.0, a=0.6 },
 	["red_background"] = { r=0.7, g=0.0, b=0.0, a=0.3 },
 	["red_foreground"] = { r=0.7, g=0.0, b=0.0, a=0.6 },
-	["warrior"] = {r=1.0,g=0.0,b=0.0,a=0.6},
-	["mage"] = {r=1.0,g=0.0,b=0.7,a=0.6},
-	["rogue"] = {r=0.7,g=0.6,b=0.0,a=0.6},
-	["cleric"] = {r=0.0,g=0.7,b=0.3,a=0.6},
-	["black"] = { r=0.0, g=0.0, b=0.0, a=0.3 },
-	-- poisons/buffs here
+	["warrior_foreground"] = {r=1.0,g=0.0,b=0.0,a=0.6},
+	["mage_foreground"] = {r=1.0,g=0.0,b=0.7,a=0.6},
+	["rogue_foreground"] = {r=0.7,g=0.6,b=0.0,a=0.6},
+	["cleric_foreground"] = {r=0.0,g=0.7,b=0.3,a=0.6},
+	["warrior_background"] = {r=1.0,g=0.0,b=0.0,a=0.3},
+	["mage_background"] = {r=1.0,g=0.0,b=0.7,a=0.3},
+	["rogue_background"] = {r=0.7,g=0.6,b=0.0,a=0.3},
+	["cleric_background"] = {r=0.0,g=0.7,b=0.3,a=0.3},
+	["black"] = { r=0.0, g=0.0, b=0.0, a=0.3 }
 }
 
 gUF.fonts = {
