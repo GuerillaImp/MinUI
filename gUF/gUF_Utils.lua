@@ -22,8 +22,8 @@ function gUF_Utils:GetHealthPercentColor ( percentLife )
 		colors.backgroundColor = gUF_Colors["red_background"]
 		colors.foregroundColor = gUF_Colors["red_foreground"]
 	else
-		colors.backgroundColor = gUF_Colors["black"]
-		colors.foregroundColor = gUF_Colors["black"]
+		colors.backgroundColor = gUF_Colors["black_background"]
+		colors.foregroundColor = gUF_Colors["black_foreground"]
 	end
 	
 	return colors
@@ -54,8 +54,8 @@ function gUF_Utils:GetCallingColor ( calling )
 		colors.backgroundColor = gUF_Colors["rogue_background"]
 		colors.foregroundColor = gUF_Colors["rogue_foreground"]
 	else
-		colors.backgroundColor = gUF_Colors["black"]
-		colors.foregroundColor = gUF_Colors["black"]
+		colors.backgroundColor = gUF_Colors["black_background"]
+		colors.foregroundColor = gUF_Colors["black_foreground"]
 	end
 	
 	return colors

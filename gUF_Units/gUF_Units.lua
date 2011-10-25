@@ -55,7 +55,7 @@ gUF_Units_Defaults = {
 				},
 				[3] = { -- ResourcesBar Config
 					["width"] = 250,
-					["height"] = 30,
+					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "(resourcePercent%)",
 					["texturePath"] = gUF_Bars["smooth"],
@@ -114,7 +114,7 @@ gUF_Units_Defaults = {
 				[2] = { 
 					["width"] = 250,
 					["height"] = 30,
-					["colorMode"] = "calling",
+					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "(healthPercent%)",
 					["texturePath"] = gUF_Bars["smooth"],
@@ -129,7 +129,7 @@ gUF_Units_Defaults = {
 				},
 				[3] = { 
 					["width"] = 250,
-					["height"] = 30,
+					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "(resourcePercent%)",
 					["texturePath"] = gUF_Bars["smooth"],

@@ -147,9 +147,8 @@ function HealthBar:Update( details  )
 			self.bar:SetBarColor(colors.foregroundColor)
 			self.bar:SetBGColor(colors.backgroundColor)
 		else
-			local color = gUF_Colors["black"]
-			self.bar:SetBarColor(color)
-			self.bar:SetBGColor(color)
+			self.bar:SetBarColor(gUF_Colors["grey_foreground"])
+			self.bar:SetBGColor(gUF_Colors["grey_background"])
 		end
 		
 		--
