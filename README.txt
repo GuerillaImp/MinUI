@@ -1,14 +1,16 @@
-Plan:
+TODO:
 
-I really need to plan out my approach to implementing this, as it is currently a massive project, without any real goals or direction
+* modules *
+frame module - in combat / out of combat 'fade' mode
+frame module - in combat glow
 
+charge bar
+combo points
 
-first step should be getting decent modules completed 
-healthbar/manabar/powerbar/chargebar/etc
+pvp icon
+role icon
 
-then add these into the unit frame addon
-
-
-this way all the settings management for configuring the modules will be set and i can work on the config gui
-
-
+* addons to do *
+castbar addon
+buffbar addon
+bufficons addon
