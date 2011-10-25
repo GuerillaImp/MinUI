@@ -40,7 +40,7 @@ gUF_Units_Defaults = {
 				[2] = { -- HealthBar Config
 					["width"] = 250,
 					["height"] = 30,
-					["colorMode"] = "calling",
+					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "(healthPercent%)",
 					["texturePath"] = gUF_Bars["smooth"],
@@ -70,7 +70,7 @@ gUF_Units_Defaults = {
 				},
 				[4] = { -- TextItem Config
 					["text"] = "name level",
-					["colorMode"] = "calling", -- none, relation, difficulty, or calling
+					["colorMode"] = "none", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 12,
@@ -98,7 +98,7 @@ gUF_Units_Defaults = {
 		},
 		["player.target"] = {
 			modules =  {
-				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem"
+				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem", [6] = "TextItem"
 			},
 			moduleSettings = {
 				[1] = { 
@@ -166,6 +166,19 @@ gUF_Units_Defaults = {
 					["anchorPointThis"] = "BOTTOMRIGHT", 
 					["anchorPointParent"] = "TOPRIGHT", 
 					["anchorXOffset"] = 1, 
+					["anchorYOffset"] = 0 
+				},
+				[6] = { -- TextItemConfig
+					["text"] = "afk offline guild",
+					["colorMode"] = "calling", -- none, relation, difficulty, or calling
+					["color"] = gUF_Colors["white"],
+					["font"] = gUF_Fonts["groovy"],
+					["fontSize"] = 12,
+					["anchor"] = "frame", -- anchor to the player frame itself (above right)
+					["anchorUnit"] = "player.target", 
+					["anchorPointThis"] = "TOPCENTER", 
+					["anchorPointParent"] = "BOTTOMCENTER", 
+					["anchorXOffset"] = 0, 
 					["anchorYOffset"] = 0 
 				}
 			} 

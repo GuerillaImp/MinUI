@@ -264,7 +264,7 @@ function gUF_Utils:CreateUnitDetailsString( inputString, unitDetails )
 		
 		-- guild
 		if ( unitDetails.guild ) then
-			local newString, numSubs = string.gsub ( inputString, "guild",  unitDetails.guild )
+			local newString, numSubs = string.gsub ( inputString, "guild", "<".. unitDetails.guild ..">")
 			inputString = newString
 		else
 			local newString, numSubs = string.gsub ( inputString, "guild",  "" )

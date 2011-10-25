@@ -7,13 +7,13 @@ gUF_Colors = {
 	["green_foreground"] = { r=0.4, g=1.0, b=0.0, a=0.6 },
 	["yellow_background"] = { r=1.0, g=0.6, b=0.0, a=0.3 }, --FF9900
 	["yellow_foreground"] = { r=1.0, g=0.6, b=0.0, a=0.6 },
-	["red_background"] = { r=0.8, g=0.0, b=0.2, a=0.3 }, --CC0033
-	["red_foreground"] = { r=0.8, g=0.0, b=0.2, a=0.6 },
+	["red_background"] = { r=0.8, g=0.0, b=0.0, a=0.3 }, --CC0033
+	["red_foreground"] = { r=0.8, g=0.0, b=0.0, a=0.6 },
 	["mana_background"] = { r=0.2, g=0.2, b=1.0, a=0.3 }, --3333FF
 	["mana_foreground"] = { r=0.2, g=0.2, b=1.0, a=0.6 },
-	["power_background"] = { r=1.0, g=0.4, b=0.2, a=0.3 }, --FF6633
-	["power_foreground"] = { r=1.0, g=0.4, b=0.2, a=0.6 },
-	["energy_background"] = { r=1.0, g=0.0, b=0.4 a=0.3 }, --FF0066
+	["power_background"] = { r=1.0, g=0.6, b=0.2, a=0.3 }, --FF6633
+	["power_foreground"] = { r=1.0, g=0.6, b=0.2, a=0.6 },
+	["energy_background"] = { r=1.0, g=0.0, b=0.4, a=0.3 }, --FF0066
 	["energy_foreground"] = { r=1.0, g=0.0, b=0.4, a=0.6 },
 	["warrior_foreground"] = {r=0.8,g=0.2,b=0.2,a=0.6}, --CC3333
 	["mage_foreground"] = {r=0.6,g=0.2,b=0.8,a=0.6}, --9933CC
