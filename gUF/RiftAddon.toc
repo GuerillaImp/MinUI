@@ -8,7 +8,7 @@ Identifier = "gUF"
 Name = "gUF"
 
 -- It's recommended that you include a description, author, and website. These aren't required but they will be shown to users when enabling your addon.
-Description = "grUF Core UnitFrame Component"
+Description = "gUF Core Component: Central system for creating and updating of gUF_AddOns."
 Author = "Grantus"
 
 -- You may want to include a version string for your addon as well.
@@ -27,17 +27,20 @@ Embed = {
 
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
-	"gUF_Events.lua",
-	"gUF.lua",
-	"gUF_Globals.lua",
 	"gUF_Utils.lua",
-	-- widgets, core components of the addon
+	"gUF_Events.lua",
+	"gUF_Globals.lua",
+	"gUF.lua",
+	-- widgets, core components used to create modules
 	"widgets/box.lua",
 	"widgets/panel.lua",
 	"widgets/bar.lua",
 	"widgets/text.lua",
 	-- modules, use widgets to represent values from the game
+	"modules/frame.lua",
 	"modules/health.lua",
+	"modules/resources.lua",
+	"modules/text.lua"
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.

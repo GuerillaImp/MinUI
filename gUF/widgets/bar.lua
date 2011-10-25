@@ -95,7 +95,7 @@ end
 --		yOffset number: the y offset
 --
 function Bar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	print ( "bar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	--print ( "bar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
@@ -120,11 +120,11 @@ function Bar:SetCurrentValue( ratio )
 	local height =  self.height * ratio
 	
 	if ( self.orientation == "horizontal" ) then
-		print("new width", width)
+		--print("new width", width)
 		self.solid:SetWidth( width )
 		self.texture:SetWidth( width )
 	elseif ( self.orientation == "vertical" ) then
-		print("new width", width)
+		--print("new width", width)
 		self.solid:SetHeight( height )
 		self.texture:SetHeight( height )
 	end
@@ -176,7 +176,7 @@ end
 --		bgColor table: the color of the background, expects a table with T.r, T.g, T.bar, T.a set to numbers
 --
 function Bar:SetBGColor( bgColor )	
-	print(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
+	--print(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
 	self.bgColor = bgColor
 	self.frame:SetBackgroundColor(bgColor.r,bgColor.g,bgColor.b,bgColor.a)
 end
@@ -188,7 +188,7 @@ end
 --		barColor table: the color of the bar, expects a table with T.r, T.g, T.bar, T.a set to numbers
 --
 function Bar:SetBarColor ( barColor )
-	print(barColor.r,barColor.g,barColor.b,barColor.a)
+	--print(barColor.r,barColor.g,barColor.b,barColor.a)
 	self.barColor = barColor
 	self.solid:SetBackgroundColor(barColor.r,barColor.g,barColor.b,barColor.a)
 end

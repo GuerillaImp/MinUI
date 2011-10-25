@@ -43,7 +43,7 @@ function Box.new( padding, bgColor, layout, direction, context, layer )
 	box.height = box.padding*2
 	box.textured = false
 	
-	print("new box ", box.layout, box.direction)
+	--print("new box ", box.layout, box.direction)
 	
 	-- Store the items that the Box holds, used to layout the items
 	box.items = {} -- list of items in the Box
@@ -97,7 +97,7 @@ end
 --		yOffset number: the y offset
 --
 function Box:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	print ( "Box set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	--print ( "Box set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
@@ -105,7 +105,7 @@ end
 -- Toggle the Box's visiblity
 --
 function Box:SetVisible( toggle )
-	print ( "box set visible", toggle )
+	--print ( "box set visible", toggle )
 	
 	self.frame:SetVisible( toggle )
 	
@@ -220,7 +220,7 @@ end
 function Box:AddItem( itemToAdd )
 	-- If another item has been added attach to it
 	if(self.lastItem)then
-		print("attaching to previous item")
+		--print("attaching to previous item")
 		
 		if ( self.layout == "vertical" and self.direction == "up" ) then
 			itemToAdd:SetPoint( "BOTTOMLEFT", self.lastItem:GetFrame(), "TOPLEFT", 0, -self.padding )
@@ -233,7 +233,7 @@ function Box:AddItem( itemToAdd )
 		end
 	-- Attach to the frame itself
 	else
-		print("attaching to root item")
+		--print("attaching to root item")
 		
 		if ( self.layout == "vertical" and self.direction == "up" ) then
 			itemToAdd:SetPoint( "BOTTOMLEFT", self.frame, "BOTTOMLEFT", self.padding, -self.padding )

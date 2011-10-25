@@ -17,6 +17,8 @@ function Panel.new( width, height, bgColor, context, layer  )
 	local panel = {}             		-- our new object
 	setmetatable(panel, Panel)      	-- make Panel handle lookup
 	
+	--print("creating panel", width, height, bgColor, context, layer  )
+	
 	-- Create the frame
 	panel.frame = UI.CreateFrame("Frame", "Panel", context )
 	panel.frame:SetWidth(width )
@@ -86,7 +88,7 @@ end
 --		yOffset number: the y offset
 --
 function Panel:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	print ( "panel set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	--print ( "panel set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 

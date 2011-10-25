@@ -67,7 +67,7 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 		for i=1,maxSize do
 			tempString = tempString .. "0"
 		end
-		text:SetText(tempString)
+		text.frame:SetText(tempString)
 		text:SetWidth(text.frame:GetFullWidth())
 		text:SetHeight(text.frame:GetFullHeight())
 
@@ -102,8 +102,24 @@ end
 --
 -- Toggle the Text's Visibility
 --
-function Text:SetVisible(toggle)
+-- @params...
+--
+function Text:SetVisible( toggle )
 	self.frame:SetVisible(toggle)
+	if(self.style=="shadow")then
+		self.shadow:SetVisible(toggle)
+	elseif(self.style=="outline")then
+		self.outline:SetVisible(toggle)
+	end
+end
+
+--
+-- Set Color
+--
+-- @params...
+--
+function Text:SetColor ( color ) 
+	self.frame:SetFontColor(color.r,color.g,color.b,color.a)
 end
 
 --
@@ -124,13 +140,13 @@ end
 --		yOffset number: the y offset
 --
 function Text:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	print("text set point", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	--print("text set point", anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.frame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	
 	if(self.style=="shadow")then
-		self.shadow:SetPoint( anchorSelf, newParent, anchorParent, xOffset+1, yOffset+1 )
+		self.shadow:SetPoint( "TOPLEFT", self.frame,  "TOPLEFT", 1, 1 )
 	elseif(self.style=="outline")then
-		self.outline:SetPoint( anchorSelf, newParent, anchorParent, xOffset+1, yOffset+1 )
+		self.outline:SetPoint(  "TOPLEFT", self.frame,  "TOPLEFT", 1, 1 )
 	end
 end
 
@@ -163,6 +179,7 @@ function Text:SetText( text )
 	
 	-- check style and update if needed
 	if( self.style == "shadow" ) then
+		--print ("setting shadow text to --> " , text)
 		self.shadow:SetText(text)
 	elseif ( self.style == "outline" ) then
 		self.outline:SetText(text)

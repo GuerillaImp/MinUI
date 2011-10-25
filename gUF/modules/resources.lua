@@ -1,34 +1,33 @@
 --
--- HealthBar Module by Grantus
+-- ResourceBar Module by Grantus
 --
--- Registers for Health Updates and Displays them
+-- Registers for Mana, Energy or Power Updates and Displays them
 --
 
-local HealthBar = {}
-HealthBar.__index = HealthBar
+local ResourceBar = {}
+ResourceBar.__index = ResourceBar
 
 --
--- HealthBar:new()
+-- ResourceBar:new()
 --
 -- @params
 --		unit string: player, player.target, etc
 --
-function HealthBar.new( unit )
-	local hBar = {}             		-- our new object
-	setmetatable(hBar, HealthBar)    	-- make HealthBar handle lookup
+function ResourceBar.new( unit )
+	local rBar = {}             		-- our new object
+	setmetatable(rBar, ResourceBar)    	-- make ResourceBar handle lookup
 	
 	-- the modules unit
-	hBar.unit = unit
+	rBar.unit = unit
 	-- the modules enabled status
-	hBar.enabled = true
+	rBar.enabled = true
 	
 	--
 	-- Every module must have a settings table, such that it can be configured by AddOns
 	--
-	hBar.settings = {
+	rBar.settings = {
 		["width"] = 0,
 		["height"] = 0,
-		["colorMode"] = 0,
 		["leftText"] = 0,
 		["rightText"] = 0,
 		["texturePath"] = 0,
@@ -46,17 +45,17 @@ function HealthBar.new( unit )
 	--
 	-- main items of the bar
 	--
-	hBar.panel = nil
-	hBar.textPanel = nil
-	hBar.leftText = nil
-	hBar.rightText = nil
+	rBar.panel = nil
+	rBar.textPanel = nil
+	rBar.leftText = nil
+	rBar.rightText = nil
 	
 	--
 	-- Note: nothing is actually created here, that occurs in the Initialise function, which
 	-- should be called after the settings above have been filled out by an AddOn
 	--
 
-	return hBar
+	return rBar
 end
 
 
@@ -75,92 +74,92 @@ end
 --		xOffset number: the x offset
 --		yOffset number: the y offset
 --
-function HealthBar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	--print ( "HealthBar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	
+function ResourceBar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
+	--print ( "ResourceBar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.panel:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
 --
 -- SetVisibility
 --
-function HealthBar:SetVisible ( toggle )
+function ResourceBar:SetVisible ( toggle )
 	self.panel:SetVisible( toggle )
 end
 
 --
 -- GetFrame
 --
-function HealthBar:GetFrame()
+function ResourceBar:GetFrame()
 	return self.panel:GetFrame()
 end
 
 --
 -- GetHeight 
 --
-function HealthBar:GetHeight()
+function ResourceBar:GetHeight()
 	return self.settings.height
 end
 
 --
 -- Get Width
 --
-function HealthBar:GetWidth()
+function ResourceBar:GetWidth()
 	return self.settings.width
 end
 
 --
--- HealthBar Functions
+-- ResourceBar Functions
 --
 
 --
--- Update Health
+-- Update Mana
 --
-function HealthBar:Update( details  )
+function ResourceBar:Update( details  )
 	if(details)then
-		local healthRatio = details.health/details.healthMax
-		local healthPercent = healthRatio*100
-		
-		--
-		-- Update the bar
-		--
-		self.bar:SetCurrentValue(healthRatio)
+	
+		if (details.calling) then
+			local resource = 0
+			local resourceMax = 0
+			
+			if(details.calling == "mage" or details.calling == "cleric")then
+				resource = details.mana
+				resourceMax = details.manaMax
+			elseif(details.calling == "warrior")then
+				resource = details.power
+				resourceMax = 100
+			elseif(details.calling == "rogue")then
+				resource = details.energy
+				resourceMax = details.energyMax
+			end
+			
+			local resourcesRatio = resource/resourceMax
+			
+			--
+			-- Update the bar
+			--
+			self.bar:SetCurrentValue(resourcesRatio)
 
-		--
-		-- Colorise the bar based on current mode
-		--	
-		local calling = details.calling
-		local reaction = details.relation
+			--print (details.calling)
+			local colors = gUF_Utils:GetResourcesColor(details.calling)
 		
-		--print ( calling, reaction )
+			self.bar:SetBarColor(colors.foregroundColor)
+			self.bar:SetBGColor(colors.backgroundColor)
 		
-		if(self.settings["colorMode"] == "health") then
-			local colors = gUF_Utils:GetHealthPercentColor(healthPercent)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif (self.settings["colorMode"] == "calling") then
-			local colors = gUF_Utils:GetCallingColor(calling)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif(self.settings["colorMode"] == "relation") then
-			local colors = gUF_Utils:GetRelationColor(reaction)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
+			--
+			-- now update the left and right text values - this will double check the calling, but it's clean code
+			--
+			self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
+			self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
+		
+		-- no calling, no resources
 		else
-			local color = gUF_Colors["black"]
-			self.bar:SetBarColor(color)
-			self.bar:SetBGColor(color)
+			self:SetVisible(false) 
 		end
-		
-		--
-		-- now update the left and right text values
-		--
-		self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
-		self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
 	else
 		self:SetVisible(false)
 	end
 end
+
 
 
 --
@@ -170,14 +169,14 @@ end
 --
 -- Get the Empty Settings Table for this Module
 --
-function HealthBar:GetSettingsTable()
+function ResourceBar:GetSettingsTable()
 	return self.settings
 end
 
 --
 -- Initialise the Module
 --
-function HealthBar:Initialise( )
+function ResourceBar:Initialise( )
 	self.panel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, 1 )
 	self.bar = Bar.new( self.settings["width"], self.settings["height"], "horizontal", "right", {r=0,g=0,b=0,a=0}, {r=0,g=0,b=0,a=0}, self.settings["texturePath"], gUF.context, (self.panel:GetLayer()+1)  )
 	self.panel:AddItem( self.bar,  "TOPLEFT", "TOPLEFT", 0, 0 )
@@ -198,10 +197,10 @@ function HealthBar:Initialise( )
 end
 
 --
--- On unit change, or unit available this method will be called by a frame container, if the health bar is actually in one
+-- On unit change, or unit available this method will be called by a frame container
 -- Or in a "timed" update this should also be called (if I choose to go the timer route rather than event based route)
 --
-function HealthBar:Refresh()
+function ResourceBar:Refresh()
 	local details = Inspect.Unit.Detail(self.unit)
 	
 	if(details)then
@@ -212,9 +211,9 @@ function HealthBar:Refresh()
 end
 
 --
--- Simualte a Health Update
+-- Simualte a Mana Update
 --
-function HealthBar:Simulate()
+function ResourceBar:Simulate()
 	self:Update( gUF_Utils:GenerateSimulatedUnit() )
 end
 
@@ -222,21 +221,22 @@ end
 --
 -- For simplicity's sake a module must have a method called "CallBack" which can take a number of arguments
 --
-function HealthBar:CallBack( eventType, value )
+function ResourceBar:CallBack( eventType, value ) -- not using value for now ...
 	if ( self.enabled ) then
-		if ( eventType == HEALTH_UPDATE ) then
-			self:Refresh() -- funnily enough im not even using the value given (maybe dont bother sending it?)
+		if ( eventType == MANA_UPDATE ) then
+			self:Refresh()
+		elseif ( eventType == POWER_UPDATE ) then
+			self:Refresh()
+		elseif ( eventType == ENERGY_UPDATE ) then
+			self:Refresh()
 		-- we need this just in case the module isn't anchored in a UnitFrame XXX: Perhaps have a check or on initialise a value that says "embedded in unit frame" or not.
 		elseif ( eventType == UNIT_AVAILABLE ) then
 			self:Refresh() 
 		elseif ( eventType == UNIT_CHANGED ) then
-			self:Refresh() 	
+			self:Refresh() 				
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end
-		--[[if ( eventType == REFRESH_UPDATE ) then
-			self:Refresh()
-		end]]
 	end
 end
 
@@ -245,9 +245,11 @@ end
 --
 -- Register Callbacks with gUF
 --
-function HealthBar:RegisterCallbacks()
-	--print ("HealthBar:RegisterCallbacks() for unit ", self.unit, " registered events")
-	table.insert(gUF_EventHooks, { HEALTH_UPDATE, self.unit, self })
+function ResourceBar:RegisterCallbacks()
+	--print ("ResourceBar:RegisterCallbacks() for unit ", self.unit, " registered events")
+	table.insert(gUF_EventHooks, { MANA_UPDATE, self.unit, self })
+	table.insert(gUF_EventHooks, { POWER_UPDATE, self.unit, self })
+	table.insert(gUF_EventHooks, { ENERGY_UPDATE, self.unit, self })
 	--table.insert(gUF_EventHooks, { REFRESH_UPDATE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_AVAILABLE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_CHANGED, self.unit, self })
@@ -259,12 +261,11 @@ end
 --
 -- Starts/Stops this module from reacting to events
 --
-function HealthBar:SetEnabled( toggle )
+function ResourceBar:SetEnabled( toggle )
 	self.enabled = toggle
-	--print ("health bar setenabled -> ", toggle, self.unit)
 end
 
 --
 -- *** Register this Module with gUF ***
 --
-gUF_Modules["HealthBar"] = HealthBar
+gUF_Modules["ResourceBar"] = ResourceBar

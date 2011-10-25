@@ -35,7 +35,7 @@ gUF_Options.addonButtons:SetPoint("TOPLEFT", gUF_Options.frame, "TOPLEFT", 30, 6
 								
 gUF_Options.configPane = Panel.new( 675, 800, {r=0,g=0,b=0,a=0.0}, gUF.context, 6 )
 gUF_Options.configPane:SetPoint("TOPLEFT", gUF_Options.frame, "TOPLEFT", 200, 60)
-gUF_Options.configPane:SetTexture(gUF.backgrounds["backdrop"])
+gUF_Options.configPane:SetTexture(gUF_Backgrounds["backdrop"])
 
 
 gUF_Options.optionsPanes = {}
@@ -88,19 +88,19 @@ function gUF_Options:Initialise()
 		gUF_Options.optionsPanes[name] = optionsPane
 		
 		function triggerButton.Event:LeftPress()
-			print ("show options pane for ", name)
+			--print ("show options pane for ", name)
 			
 			gUF_Options.configPane:RemoveItem(1) -- remove any previous panels
-			print(optionsPane)
 			gUF_Options.configPane:AddItem( optionsPane, "TOPLEFT","TOPLEFT",5,5) -- add this one
 			optionsPane:SetVisible(true)
 		end
 		
-		self.addonButtons:AddItem(triggerButton)
+		local tempBox = Box.new( 0, {r=0,g=0,b=0,a=0.0}, "vertical", "down", gUF.context, self.addonButtons:GetLayer()+1 )
+		self.addonButtons:AddItem(tempBox)
 	end
 
-	--gUF_Options.addonButtons:SetVisible(true)
-	--gUF_Options.configPane:SetVisible(true)
+	gUF_Options.addonButtons:SetVisible(true)
+	gUF_Options.configPane:SetVisible(true)
 	gUF_Options.initialised = true
 end
 
@@ -109,7 +109,7 @@ end
 -- Show the gUF_Options Frame, create it if it has not been initialised
 --
 function  gUF_Options:ToggleOptionsWindow()
-	print("gUF_Options: ToggleOptionsWindow")
+	--print("gUF_Options: ToggleOptionsWindow")
 	
 	if ( gUF_Options.visible ) then
 		gUF_Options.visible = false
@@ -122,7 +122,7 @@ function  gUF_Options:ToggleOptionsWindow()
 		if not (gUF_Options.initialised) then
 			gUF_Options:Initialise()
 		end
-		print(gUF_Options.visible)
+		--print(gUF_Options.visible)
 		gUF_Options.frame:SetVisible(gUF_Options.visible)
 		gUF_Options.drag:SetVisible(gUF_Options.visible)
 		gUF_Options.addonButtons:SetVisible(gUF_Options.visible)

@@ -8,7 +8,7 @@ Identifier = "gUF_Units"
 Name = "gUF_Units"
 
 -- It's recommended that you include a description, author, and website. These aren't required but they will be shown to users when enabling your addon.
-Description = "grUF Core UnitFrame Component"
+Description = "gUF_Units UnitFrame AddOn, showing player, target, target of target, focus and pet units."
 Author = "Grantus"
 
 -- You may want to include a version string for your addon as well.
@@ -26,11 +26,11 @@ Dependencies = {
 
 -- Finally, addons must include a list of files that will be executed when the addon starts. These files must be packaged along with your addon and will be run in order.
 RunOnStartup = {
-	"gUF_Units_Config.lua",
-	"gUF_Units.lua"
+	"gUF_Units.lua",
+	"gUF_Units_Options.lua"
 }
 
 -- If you want to include more information here, go right ahead! Variables starting with capital letters are reserved for Trion's use, but anything else is available for the users.
 SavedVariables = {
-	--gUF_Units_Settings = "character"
+	--gUF_Units_Settings = "character" -- XXX uncomment this after testing is done and config gui is done :D XXX
 }
