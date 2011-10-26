@@ -63,13 +63,13 @@ function Text.new( font, fontSize, fontColor, mode, maxSize, style, context, lay
 	
 	-- Set max size or grow to fit a string of maxSize
 	if ( text.mode == "truncate" ) then
-		local tempString = "0"
+		local tempString = "A"
 		for i=1,maxSize do
 			tempString = tempString .. "0"
 		end
 		text.frame:SetText(tempString)
-		text:SetWidth(text.frame:GetFullWidth())
-		text:SetHeight(text.frame:GetFullHeight())
+		text.frame:SetWidth(text.frame:GetFullWidth())
+		text.frame:SetHeight(text.frame:GetFullHeight())
 
 		if ( text.style == "shadow" ) then
 			text.shadow:SetWidth(text.frame:GetFullWidth())
@@ -175,14 +175,23 @@ end
 --		text string: the new text
 --
 function Text:SetText( text )
-	self.frame:SetText(text)
+	local newText = text
+	if ( self.mode == "truncate" ) then
+		local strLen = string.len(text)
+		if ( strLen > self.maxSize-3 ) then
+			newText = string.sub(newText, 1, self.maxSize-3)
+			newText = newText .. "..."
+		end
+	end
+	
+	self.frame:SetText(newText)
 	
 	-- check style and update if needed
 	if( self.style == "shadow" ) then
 		--print ("setting shadow text to --> " , text)
-		self.shadow:SetText(text)
+		self.shadow:SetText(newText)
 	elseif ( self.style == "outline" ) then
-		self.outline:SetText(text)
+		self.outline:SetText(newText)
 	end
 	
 	-- grow to fit if needed

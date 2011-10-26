@@ -331,6 +331,9 @@ function gUF_Utils:CreateCastingDetailsString( inputString, castbar, abilityDeta
 				inputString = newString
 			end
 		end
+	else
+		local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
+		inputString = newString
 	end
 	
 	-- Substitute items extracted from castbar table

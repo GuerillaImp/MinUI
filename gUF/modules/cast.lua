@@ -36,6 +36,7 @@ function CastBar.new( unit )
 		["iconSize"] = 0,
 		["leftText"] = 0, -- as per gUF_Utils create ability details string paramaters
 		["rightText"] = 0,
+		--["leftTextTruncate"] -- TODO: options for this
 		["texturePath"] = 0,
 		["font"] = 0,
 		["fontSize"] = 0,
@@ -138,16 +139,19 @@ function CastBar:Update( castBar  )
 		self.channeled = castBar.channeled
 		
 		local ability = castBar.ability
-		self.abilityDetails = Inspect.Ability.Detail( ability )
 		
-		
-		-- set icon if we have one
-		if ( self.abilityDetails ) then
-			if ( self.abilityDetails.icon ) then
-				self.icon:SetTexture("Rift", self.abilityDetails.icon) -- use the inbuilt texture setting for this so we can specify a rift core icon
-			else
-				self.icon:SetTexture("Rift", "apple.dds")
+		if ( ability ) then
+			self.abilityDetails = Inspect.Ability.Detail( ability )
+			-- set icon if we have one
+			if ( self.abilityDetails ) then
+				if ( self.abilityDetails.icon ) then
+					self.icon:SetTexture("Rift", self.abilityDetails.icon) -- use the inbuilt texture setting for this so we can specify a rift core icon
+				else
+					self.icon:SetTexture("Rift", "apple.dds")
+				end
 			end
+		else
+			self.icon:SetTexture("Rift", "apple.dds") -- placeholder
 		end
 		
 		-- make grey if uninterruptible
@@ -158,6 +162,7 @@ function CastBar:Update( castBar  )
 			self.bar:SetBarColor(self.settings["barColor"])
 			self.bar:SetBGColor(self.settings["barBGColor"])
 		end
+		
 		--
 		-- now update the left and right text values
 		--
@@ -235,7 +240,7 @@ function CastBar:Initialise( )
 
 	-- create text items
 	self.textPanel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, (self.bar:GetLayer()+1) )
-	self.leftText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
+	self.leftText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "truncate", 20, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
 	self.rightText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
 	self.textPanel:AddItem( self.leftText,  "CENTERLEFT", "CENTERLEFT", 0, 0 )
 	self.textPanel:AddItem( self.rightText,  "CENTERRIGHT", "CENTERRIGHT", 0, 0 )
