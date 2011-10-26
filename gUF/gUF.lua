@@ -24,6 +24,9 @@ gUF_EventHooks = {}
 -- AddOn Config Registry (For Options and Configuration)
 gUF_AddOn_Config = {}
 
+-- Initialised Frame Registry (Such that other addons can anchor to other addon's frames)
+gUF.initialisedFrames = {}
+
 -- Context for Creation of Widgets
 gUF.context = UI.CreateContext("gUF_Context")
 

@@ -88,6 +88,39 @@ function gUF_Utils:GetRelationColor ( relation )
 end
 
 --
+-- Get "buff" color
+--
+-- @params
+--		buffType string: the buff type (debuff/poison/disease/curse/buff)
+--
+-- @returns
+--		colors table: contains two other tables, colors.backgroundColor and colors.foregroundColor for the background and solid components of the bar
+--
+function gUF_Utils:GetBuffColor( buffType )
+	local colors = {}
+	
+	if ( buffType == "buff" ) then
+		colors.backgroundColor = gUF_Colors["buff_background"]
+		colors.foregroundColor = gUF_Colors["buff_foreground"]
+	elseif( buffType == "debuff" ) then
+		colors.backgroundColor = gUF_Colors["debuff_background"]
+		colors.foregroundColor = gUF_Colors["debuff_foreground"]
+	elseif( buffType == "poison" ) then
+		colors.backgroundColor = gUF_Colors["poison_background"]
+		colors.foregroundColor = gUF_Colors["poison_foreground"]
+	elseif( buffType == "disease" ) then
+		colors.backgroundColor = gUF_Colors["disease_background"]
+		colors.foregroundColor = gUF_Colors["disease_foreground"]
+	elseif( buffType == "curse" ) then
+		colors.backgroundColor = gUF_Colors["curse_background"]
+		colors.foregroundColor = gUF_Colors["curse_foreground"]
+	end
+	
+	return colors
+end
+
+
+--
 -- Get "calling" resource color
 --
 -- @params
@@ -174,6 +207,38 @@ function gUF_Utils:GetDifficultyColor( unit )
 	return color
 end
 
+
+--
+-- Given a number of seconds, return a shortened version of that number. For instance, 60 seconds becomes 1m, 3600 becomes 1hr, etc.
+--
+-- @params
+--		inputNumber number: the number of seconds to be shortened
+--
+-- @returns
+--		shortenedTime string: the shortened time string (h:m:s)
+--
+function gUF_Utils:GetShortTime ( inputTime )
+	local shortenedTime = ""
+
+	local hours = math.floor(inputTime / 3600)
+	local minutes = math.floor(inputTime / 60)
+	local seconds = math.floor(inputTime) % 60
+
+	-- if we have hours
+	if ( inputTime >= 3600 ) then
+		shortenedTime = shortenedTime .. string.format("%.2f:", inputTime / 3600)
+	end
+	if  ( inputTime > 59 ) then
+		shortenedTime = shortenedTime .. string.format("%.2f:", inputTime / 60)
+	end
+	if ( inputTime > 0 ) then
+		shortenedTime = shortenedTime .. string.format("%.1f", inputTime % 60)
+	end
+	
+	return shortenedTime
+end
+
+
 --
 -- Given a number, return a string that shows that number in a shortened fashion if required.
 -- Examples: 1000000 comes 1m, 10000 becomes 10k, etc
@@ -226,6 +291,76 @@ function gUF_Utils:GetPercentage ( numberA, numberB )
 	return percentageString
 end
 
+
+--
+-- Given an input string with format items such as abilityName, timeRemainingShort, etc return a string formatted
+-- the actual castbar details given in castBar
+--
+-- @params
+--		inputString string: the string formatted with "detailName" components to be substituted the full list of supported substitutions is:
+--							abilityName - will be replaced by the ability's name
+--							casttimeShort - will be replaced by the ability's cast time short value
+--							casttimeAbs - will be replaced by the ability's absolute cast time value
+--							remainingShort - will be replaced by the ability's remaining time short value
+--							remainingAbs - will be replaced by the ability's remaining time absolute value
+--							casttarget - will be replaced by the ability's casttarget
+--
+--		castBar table: a castBar table provided by Inspect.Unit.Castbar( unitID )
+--		abilityDetails table: a castbarDetails table provided by Inspect.Ability.Detail( abilityID )
+--
+-- @return
+--		outputString string: a string with the components substituted for their actual values
+--
+function gUF_Utils:CreateCastingDetailsString( inputString, castbar, abilityDetails )
+	
+	-- Substitute items extracted from abilityDetails table
+	if ( abilityDetails ) then
+		-- targetName (only exists when you have the unit targeted)
+		if ( abilityDetails.target ) then
+			local targetDetails = Inspect.Unit.Detail(abilityDetails.target)
+			if( targetDetails ) then
+				if ( targetDetails.name ) then
+					local newString, numSubs = string.gsub ( inputString, "abilityTarget", targetDetails.name )
+					inputString = newString
+				else
+					local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
+					inputString = newString
+				end
+			else
+				local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
+				inputString = newString
+			end
+		end
+	end
+	
+	-- Substitute items extracted from castbar table
+	if ( castbar ) then
+		-- abilityName
+		if ( castbar.abilityName ) then
+			local newString, numSubs = string.gsub ( inputString, "abilityName", castbar.abilityName )
+			inputString = newString
+		end
+		-- remaining
+		if ( castbar.remaining ) then
+			local newString, numSubs = string.gsub ( inputString, "remainingShort", gUF_Utils:GetShortTime(castbar.remaining) )
+			inputString = newString
+			
+			local newString, numSubs = string.gsub ( inputString, "remainingAbs", castbar.remaining )
+			inputString = newString
+		end
+		-- duration
+		if ( castbar.duration ) then
+			local newString, numSubs = string.gsub ( inputString, "durationShort", gUF_Utils:GetShortTime(castbar.duration) )
+			inputString = newString
+			
+			local newString, numSubs = string.gsub ( inputString, "durationAbs", castbar.duration )
+			inputString = newString
+		end
+	end
+	
+	
+	return inputString
+end
 
 
 --

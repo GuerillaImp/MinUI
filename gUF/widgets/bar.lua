@@ -199,7 +199,7 @@ end
 -- @params
 --		texturePath string: the path of the texture
 --
-function Bar:SetTexture ( texturePath )
+function Bar:SetTexture ( resourceDir, texturePath )
 	self.texturePath = texturePath
-	self.texture:SetTexture("gUF", texturePath)
+	self.texture:SetTexture( resourceDir, texturePath)
 end

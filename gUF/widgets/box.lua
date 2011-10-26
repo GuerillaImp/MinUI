@@ -57,15 +57,16 @@ end
 --
 -- Set a Texture to fill the background of this Box
 --
-function Box:SetTexture ( texturePath )
+function Box:SetTexture ( resourceDir, texturePath )
 	if(texturePath)then
-		self.texture:SetTexture("gUF", texturePath)
+		self.texture:SetTexture(resourceDir, texturePath)
 		self.texture:SetWidth(self.width)
 		self.texture:SetHeight(self.height)
 		self.texture:SetPoint( "TOPLEFT", self.frame, "TOPLEFT", 0, 0 ) 
 		self.textured = true
 	end
 end
+
 
 
 --

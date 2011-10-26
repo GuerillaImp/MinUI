@@ -10,7 +10,7 @@ gUF_Colors = {
 	["red_background"] = { r=0.8, g=0.0, b=0.0, a=0.3 }, --CC0033
 	["red_foreground"] = { r=0.8, g=0.0, b=0.0, a=0.6 },
 	["mana_background"] = { r=0.2, g=0.2, b=1.0, a=0.3 }, --3333FF
-	["mana_foreground"] = { r=0.2, g=0.2, b=1.0, a=0.6 },
+	["mana_foreground"] = { r=0.2, g=0.2, b=1.0, a=0.6},
 	["power_background"] = { r=1.0, g=0.6, b=0.2, a=0.3 }, --FF6633
 	["power_foreground"] = { r=1.0, g=0.6, b=0.2, a=0.6 },
 	["energy_background"] = { r=1.0, g=0.0, b=0.4, a=0.3 }, --FF0066
@@ -28,7 +28,18 @@ gUF_Colors = {
 	["black_background"] = { r=0.0, g=0.0, b=0.0, a=0.3 },
 	["black_foreground"] = { r=0.0, g=0.0, b=0.0, a=0.6 },
 	["black"] = { r=0.0, g=0.0, b=0.0, a=1.0 },
-	["white"] = { r=1.0, g=1.0, b=1.0, a=1.0 }
+	["white"] = { r=1.0, g=1.0, b=1.0, a=1.0 },
+	-- castbar or buffbar colors (or buff icon borders)
+	["poison_foreground"] = {r=0.4, g=1.0, b=0.2, a=0.6},--66FF33
+	["poison_background"] = {r=0.4, g=1.0, b=0.2, a=0.3},
+	["disease_foreground"] = {r=0.6, g=0.4, b=0.4, a=0.6}, --996666
+	["disease_background"] = {r=0.6, g=0.4, b=0.4, a=0.3},
+	["curse_foreground"] = {r=0.8, g=0.4, b=0.8, a=0.6}, --CC66CC
+	["curse_background"] = {r=0.8, g=0.4, b=0.8, a=0.3},
+	["debuff_foreground"] = {r=0.7, g=0.2, b=0.2, a=0.6}, --FF3333
+	["debuff_background"] = {r=0.7, g=0.2, b=0.2, a=0.3},
+	["buff_foreground"] = {r=0.0, g=0.4, b=0.8, a=0.6}, --0066CC
+	["buff_background"] = {r=0.0, g=0.4, b=0.8, a=0.3}
 }
 
 gUF_Fonts = {

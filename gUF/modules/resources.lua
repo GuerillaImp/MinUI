@@ -151,6 +151,7 @@ function ResourceBar:Update( details  )
 			self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
 			self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
 		
+			self:SetVisible(true)
 		-- no calling, no resources
 		else
 			self:SetVisible(false) 

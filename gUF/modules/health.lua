@@ -47,6 +47,7 @@ function HealthBar.new( unit )
 	-- main items of the bar
 	--
 	hBar.panel = nil
+	hBar.bar = nil
 	hBar.textPanel = nil
 	hBar.leftText = nil
 	hBar.rightText = nil
@@ -156,6 +157,8 @@ function HealthBar:Update( details  )
 		--
 		self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
 		self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
+		
+		self:SetVisible(true)
 	else
 		self:SetVisible(false)
 	end

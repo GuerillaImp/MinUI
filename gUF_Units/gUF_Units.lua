@@ -1,5 +1,5 @@
 --
--- gUF_Units_Settings by Grantus
+-- gUF_Units by Grantus
 --
 -- This AddOn creates and manages the standard unit frames for gUF (player, target, focus, etc)
 --
@@ -19,7 +19,7 @@ gUF_Units_Defaults = {
 	unitSettings = {
 		["player"] = {
 			modules =  { -- unit frame must be first module (else things will break)
-				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem"
+				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem", [6] = "CastBar"
 			},
 			--
 			-- These config settings can be viewed in the [module].lua settings table, if you miss an option here it will be set to a default value 
@@ -43,7 +43,7 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "(healthPercent%)",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
@@ -58,7 +58,7 @@ gUF_Units_Defaults = {
 					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "(resourcePercent%)",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
@@ -93,6 +93,28 @@ gUF_Units_Defaults = {
 					["anchorPointParent"] = "TOPRIGHT", 
 					["anchorXOffset"] = 1, 
 					["anchorYOffset"] = 0 
+				},
+				[6] = { -- CastBar config
+					["width"] = 218,
+					["height"] = 30,
+					["padding"] = 1,
+					["frameBGColor" ] = gUF_Colors["black"],
+					["barColor"] = gUF_Colors["red_foreground"], -- user sets color
+					["barBGColor"] = gUF_Colors["red_background"], -- user sets color
+					["icon"] = "left", -- left, right, none
+					["iconPadding"] = 1,
+					["iconSize"] = 30,
+					["leftText"] = "abilityName (abilityTarget)", -- abilityName, abilityTarget, remainingShort/Abs, durationShort/Abs
+					["rightText"] = "remainingShort / durationShort",
+					["texturePath"] = gUF_Bars["lite"],
+					["font"] = gUF_Fonts["groovy"],
+					["fontSize"] = 12,
+					["anchor"] = "frame",
+					["anchorUnit"] = "player",
+					["anchorPointThis"] = "TOPRIGHT",
+					["anchorPointParent"] = "BOTTOMRIGHT",
+					["anchorXOffset"] = 0,
+					["anchorYOffset"] = 10
 				}
 			} 
 		},
@@ -117,7 +139,7 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "(healthPercent%)",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", --XXX FIX ME frame mode, requires an anchorUnit to be specified NOTE: Frame anchoring just isn't working at the moment for modules for some reason I cannot figure out
@@ -132,7 +154,7 @@ gUF_Units_Defaults = {
 					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "(resourcePercent%)",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
@@ -204,7 +226,7 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", 
@@ -237,7 +259,7 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame", 
@@ -270,7 +292,7 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["smooth"],
+					["texturePath"] = gUF_Bars["lite"],
 					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 14,
 					["anchor"] = "insideFrame",
@@ -290,7 +312,6 @@ gUF_Units_Defaults = {
 --
 
 Units = {}
-Units.initialisedUnits = {}
 
 --
 -- TODO: Update to final settings when complete
@@ -298,67 +319,7 @@ Units.initialisedUnits = {}
 function Units:CheckSettings()
 	if ( gUF_Units_Settings ) then
 		print "units settings exists"
-		-- check that the settings are valid
-		
-		-- do we have a units enabled field?
-		if not (gUF_Units_Settings.unitsEnabled) then
-			print ("unitsEnabled created from defaults")
-			gUF_Units_Settings.unitsEnabled = gUF_Units_Defaults.unitsEnabled
-		end
-		-- do we have a units settings field?
-		if not (gUF_Units_Settings.unitSettings) then
-			print ("unitSettings created from defaults")
-			gUF_Units_Settings.unitSettings = gUF_Units_Defaults.unitSettings
-		end
-		
-		-- for each unit check we have all the appropriate fields
-		for _,unitName in pairs(allUnits) do
-			if not (gUF_Units_Settings.unitSettings[unitName]) then
-				print ("unitSettings["..unitName.."] created from defaults")
-				gUF_Units_Settings.unitSettings[unitName] = gUF_Units_Defaults.unitSettings[unitName]
-			else
-				if not (gUF_Units_Settings.unitSettings[unitName].x) then
-					print ("unitSettings["..unitName.."].x created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].x = gUF_Units_Defaults.unitSettings[unitName].x
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].y) then
-					print ("unitSettings["..unitName.."].y created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].y = gUF_Units_Defaults.unitSettings[unitName].y
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].barHeight) then
-					print ("unitSettings["..unitName.."].barHeight created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].barHeight = gUF_Units_Defaults.unitSettings[unitName].barHeight
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].barWidth) then
-					print ("unitSettings["..unitName.."].barWidth created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].barWidth = gUF_Units_Defaults.unitSettings[unitName].barWidth
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].barTexture) then
-					print ("unitSettings["..unitName.."].barTexture created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].barTexture = gUF_Units_Defaults.unitSettings[unitName].barTexture
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].barFont) then
-					print ("unitSettings["..unitName.."].barFont created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].barFont = gUF_Units_Defaults.unitSettings[unitName].barFont
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].barFontSize) then
-					print ("unitSettings["..unitName.."].barFontSize created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].barFontSize = gUF_Units_Defaults.unitSettings[unitName].barFontSize
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].modulesEnabled) then
-					print ("unitSettings["..unitName.."].modulesEnabled created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].modulesEnabled = gUF_Units_Defaults.unitSettings[unitName].modulesEnabled
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].moduleSettings) then
-					print ("unitSettings["..unitName.."].moduleSettings created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].moduleSettings = gUF_Units_Defaults.unitSettings[unitName].moduleSettings
-				end
-				if not (gUF_Units_Settings.unitSettings[unitName].anchor) then
-					print ("unitSettings["..unitName.."].anchor created from defaults")
-					gUF_Units_Settings.unitSettings[unitName].anchor = gUF_Units_Defaults.unitSettings[unitName].anchor
-				end
-			end
-		end
+		print "TODO: Check Settings Has Values From Defaults"
 		
 	else
 		print "units settings does not exist, setting to default"
@@ -410,7 +371,7 @@ function Units:Initialise()
 						-- Store a reference to the unit frame such that we may add other items to it
 						unitFrame = moduleInstance
 						unitFrame.initialised = true
-						Units.initialisedUnits[unit] = unitFrame
+						gUF.initialisedFrames[unit] = unitFrame
 						--print ("storing frame instance for", unit, unitFrame, moduleInstance, Units.initialisedUnits[unit])
 					end
 				end
@@ -427,9 +388,9 @@ function Units:Initialise()
 		if ( enabled ) then
 			--print ( "anchoring frame for ", unit)
 			local uFrameSettings = gUF_Units_Settings.unitSettings[unit].moduleSettings[1] -- unit frame must always be first?!? XXX: This is a bit hacktacular
-			local uFrameInstance = Units.initialisedUnits[unit] 
+			local uFrameInstance = gUF.initialisedFrames[unit] 
 			if ( uFrameSettings["anchor"] == "frame" ) then
-				local frameAnchor = Units.initialisedUnits[uFrameSettings["anchorUnit"]]:GetFrame()
+				local frameAnchor = gUF.initialisedFrames[uFrameSettings["anchorUnit"]]:GetFrame()
 				uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], frameAnchor, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
 			elseif ( uFrameSettings["anchor"] == "screen" ) then
 				uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], gUF.context, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
@@ -444,7 +405,7 @@ function Units:Initialise()
 	for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
 		if ( enabled ) then
 			-- get the initialised unit frame instance
-			local uFrameInstance = Units.initialisedUnits[unit] 
+			local uFrameInstance = gUF.initialisedFrames[unit] 
 		
 			-- for each enabled module on the unit
 			for index,module in ipairs(gUF_Units_Settings.unitSettings[unit].modules) do
@@ -475,7 +436,7 @@ function Units:Initialise()
 							if ( moduleSettingsTable["anchor"] == "insideFrame" ) then
 								uFrameInstance:AddModule( moduleInstance )
 							elseif ( moduleSettingsTable["anchor"] == "frame" ) then
-								local frameAnchor = Units.initialisedUnits[moduleSettingsTable["anchorUnit"]]:GetFrame()
+								local frameAnchor = gUF.initialisedFrames[moduleSettingsTable["anchorUnit"]]:GetFrame()
 								--print ( "Module ", module, unit ," frame anchor ", frameAnchor )
 								moduleInstance:SetPoint( moduleSettingsTable["anchorPointThis"], frameAnchor, moduleSettingsTable["anchorPointParent"], moduleSettingsTable["anchorXOffset"], moduleSettingsTable["anchorYOffset"]  )
 							elseif ( moduleSettingsTable["anchor"] == "screen" ) then
@@ -504,7 +465,7 @@ function Units:ReInitialise()
 		if ( enabled ) then
 			local unitSettings = gUF_Units_Settings.unitSettings[unit]
 			
-			if not (Units.initialisedUnits[unit]) then
+			if not (gUF.initialisedFrames[unit]) then
 				-- if we haven't already create this frame this session, or we have disabled it in this session
 				--print ( "creating new enabled unit ", unit)
 				local unitFrame = Box.new( 5, {r=0,g=0,b=0,a=0.3}, "vertical", "down", gUF.context, -1 )
@@ -529,21 +490,21 @@ function Units:ReInitialise()
 				
 				-- store the fact that this unit has been initialised (such that if we change enabled units settings later, we know not to recreate this frame)
 				unitFrame.initialised = true
-				Units.initialisedUnits[unit] = unitFrame
+				gUF.initialisedFrames[unit] = unitFrame
 				unitFrame:SetPoint("TOPLEFT", gUF.context, "TOPLEFT", unitSettings.x, unitSettings.y )
 				unitFrame:SetVisible(true)
-			elseif (Units.initialisedUnits[unit] and Units.initialisedUnits[unit].initialised == false) then
+			elseif (gUF.initialisedFrames[unit] and gUF.initialisedFrames[unit].initialised == false) then
 				--print ("previously disabled, but will now reenable ",unit)
-				Units.initialisedUnits[unit].initialised = true
-				Units.initialisedUnits[unit]:SetPoint("TOPLEFT", gUF.context, "TOPLEFT", unitSettings.x, unitSettings.y )
-				Units.initialisedUnits[unit]:SetVisible(true)
+				gUF.initialisedFrames[unit].initialised = true
+				gUF.initialisedFrames[unit]:SetPoint("TOPLEFT", gUF.context, "TOPLEFT", unitSettings.x, unitSettings.y )
+				gUF.initialisedFrames[unit]:SetVisible(true)
 			end
 		else
 			-- was this frame previously enabled?
-			if(Units.initialisedUnits[unit])then
+			if(gUF.initialisedFrames[unit])then
 				--print ("previously enabled, but will now disable ",unit)
-				Units.initialisedUnits[unit]:SetVisible(false)
-				Units.initialisedUnits[unit].initialised = false
+				gUF.initialisedFrames[unit]:SetVisible(false)
+				gUF.initialisedFrames[unit].initialised = false
 				
 				--
 				-- TODO: Go through modules and stop them listening for callbacks
