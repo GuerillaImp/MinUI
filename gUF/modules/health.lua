@@ -236,9 +236,6 @@ function HealthBar:CallBack( eventType, value )
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end
-		--[[if ( eventType == REFRESH_UPDATE ) then
-			self:Refresh()
-		end]]
 	end
 end
 
@@ -248,9 +245,7 @@ end
 -- Register Callbacks with gUF
 --
 function HealthBar:RegisterCallbacks()
-	--print ("HealthBar:RegisterCallbacks() for unit ", self.unit, " registered events")
 	table.insert(gUF_EventHooks, { HEALTH_UPDATE, self.unit, self })
-	--table.insert(gUF_EventHooks, { REFRESH_UPDATE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_AVAILABLE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_CHANGED, self.unit, self })
 	table.insert(gUF_EventHooks, { SIMULATE_UPDATE, self.unit, self })
@@ -263,7 +258,6 @@ end
 --
 function HealthBar:SetEnabled( toggle )
 	self.enabled = toggle
-	--print ("health bar setenabled -> ", toggle, self.unit)
 end
 
 --

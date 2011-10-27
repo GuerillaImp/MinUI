@@ -25,6 +25,7 @@ gUF_EventHooks = {}
 gUF_AddOn_Config = {}
 
 -- Initialised Frame Registry (Such that other addons can anchor to other addon's frames)
+-- Addons must register there frames as a table = { "addonName", "unit", instanceReference }
 gUF.initialisedFrames = {}
 
 -- Context for Creation of Widgets
@@ -68,7 +69,7 @@ function Update ( )
 	end
 
 	if ( gUF.simulate ) then
-		if(gUF.simulateDiff >= 0.2)then -- TODO: Configuration Item
+		if(gUF.simulateDiff >= 0.01)then -- TODO: Configuration Item
 			gUF.lastSimulate = gUF.curTime 
 			gUF.simulateDiff = 0
 			FireEvent( SIMULATE_UPDATE, nil )
@@ -239,7 +240,6 @@ function NameChanged ( unitIDs )
 end
 
 function UnitChanged ( unitID, unitName )
-	--print ( "UnitChanged", unitName , " => ", unitID)
 	local unit = {}
 	unit[unitName] = unitID
 	FireUnitChangedEvent( unit )
@@ -249,7 +249,6 @@ end
 -- Signal that we are now in combat
 --
 function EnterCombat ( )
-	--print("+++ combat")
 	FireEvent( ENTER_COMBAT, nil )
 end
 
@@ -257,7 +256,6 @@ end
 -- Signal that we have now left combat
 --
 function LeaveCombat ( )
-	--print("--- combat")
 	FireEvent( LEAVE_COMBAT, nil )
 end
 
@@ -325,8 +323,8 @@ function RegisterEvents()
 	table.insert(Event.Unit.Detail.Warfront, { WarfrontChanged, "gUF", "gUF WarfontChanged" })
 	table.insert(Event.Unit.Detail.Offline, { OfflineChanged, "gUF", "gUF OfflineChanged" })
 	table.insert(Event.Unit.Detail.Mark, { MarkChanged, "gUF", "gUF MarkChanged" })
-	table.insert(Event.Unit.Detail.Afk, { AfkChange, "gUF", "gUF AfkChange" })
-	table.insert(Event.Unit.Detail.Name, { NameChange, "gUF", "gUF NameChange" })
+	table.insert(Event.Unit.Detail.Afk, { AfkChanged, "gUF", "gUF AfkChange" })
+	table.insert(Event.Unit.Detail.Name, { NameChanged, "gUF", "gUF NameChange" })
 
 	--
 	-- Icon Events 
@@ -339,16 +337,19 @@ function RegisterEvents()
 	--
 	table.insert(Event.Unit.Castbar, { CastbarChanged, "gUF", "gUF castbarChanged"})
 	
-	-- Handle User Customisation
+	-- Simulate Events
 	table.insert(Command.Slash.Register("gufsim"), { 
 	function ()
 		if ( gUF.simulate == true ) then 
 			gUF.simulate = false 
-			FireEvent( REFRESH_UPDATE, nil )
 		else
 			gUF.simulate = true 
 		end 
 	end, "gUF", "gUF simulate Command"})
+	
+	
+	-- Toggle frame locked/unlock
+	table.insert( Command.Slash.Register("gufconfig"), { function() FireEvent( TOGGLE_FRAME_LOCK, nil ) end, "gUF", "gUF toggleFramesLocked"})
 
 end
 

@@ -141,11 +141,11 @@ function CastBar:Update( castBar  )
 		local ability = castBar.ability
 		
 		if ( ability ) then
-			self.abilityDetails = Inspect.Ability.Detail( ability )
+			local abilityDetails = Inspect.Ability.Detail( ability )
 			-- set icon if we have one
-			if ( self.abilityDetails ) then
-				if ( self.abilityDetails.icon ) then
-					self.icon:SetTexture("Rift", self.abilityDetails.icon) -- use the inbuilt texture setting for this so we can specify a rift core icon
+			if ( abilityDetails ) then
+				if ( abilityDetails.icon ) then
+					self.icon:SetTexture("Rift", abilityDetails.icon) -- use the inbuilt texture setting for this so we can specify a rift core icon
 				else
 					self.icon:SetTexture("Rift", "apple.dds")
 				end
@@ -166,8 +166,8 @@ function CastBar:Update( castBar  )
 		--
 		-- now update the left and right text values
 		--
-		self.leftText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["leftText"], castBar, abilityDetails ))
-		self.rightText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["rightText"], castBar, abilityDetails ))
+		self.leftText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["leftText"], castBar ))
+		self.rightText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["rightText"], castBar ))
 		
 		self:SetVisible(true)
 		self.casting = true
@@ -183,12 +183,8 @@ end
 --
 function CastBar:Animate()
 	if( self.casting )then
-		if ( self.castBar and self.abilityDetails ) then
-			--print "animate castbar"
-			
-			-- we must update the castbar each loop, as otherwise the duration etc wont update :)
-			self.castBar = Inspect.Unit.Castbar( self.unit )
-			
+		self.castBar = Inspect.Unit.Castbar( self.unit )
+		if ( self.castBar ) then
 			local remaining = self.castBar.remaining
 			local duration = self.castBar.duration
 			
@@ -209,6 +205,8 @@ function CastBar:Animate()
 					self.bar:SetCurrentValue(widthMultiplier)
 				end
 			end
+		else
+			self.casting = false
 		end
 	end
 end
@@ -240,7 +238,8 @@ function CastBar:Initialise( )
 
 	-- create text items
 	self.textPanel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, (self.bar:GetLayer()+1) )
-	self.leftText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "truncate", 20, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
+	-- TODO: Truncate Options for Text
+	self.leftText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "truncate", 33, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
 	self.rightText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (self.textPanel:GetLayer()+2) )
 	self.textPanel:AddItem( self.leftText,  "CENTERLEFT", "CENTERLEFT", 0, 0 )
 	self.textPanel:AddItem( self.rightText,  "CENTERRIGHT", "CENTERRIGHT", 0, 0 )
@@ -269,8 +268,6 @@ end
 --
 function CastBar:Refresh()
 	local unitID = Inspect.Unit.Lookup(self.unit)
-	
-	--print ("castbar unitID -> ", unitID)
 
 	if ( unitID ) then
 		local castBar = Inspect.Unit.Castbar( unitID )
@@ -284,7 +281,7 @@ end
 -- Simualte a Health Update
 --
 function CastBar:Simulate()
-	self:Update( gUF_Utils:GenerateSimulateCastbar() )
+	self:Update( gUF_Utils:GenerateSimulatedCastbar() )
 end
 
 
@@ -297,6 +294,12 @@ function CastBar:CallBack( eventType, value )
 			self:Refresh() 
 		elseif ( eventType == ANIMATION_UPDATE ) then
 			self:Animate() 	
+		elseif ( eventType == UNIT_AVAILABLE ) then
+			self:Refresh() 
+		elseif ( eventType == UNIT_CHANGED ) then
+			self:Refresh() 		
+		elseif ( eventType == SIMULATE_UPDATE ) then
+			self:Simulate()
 		end
 	end
 end
@@ -309,6 +312,9 @@ end
 function CastBar:RegisterCallbacks()
 	table.insert(gUF_EventHooks, { CASTBAR_UPDATE, self.unit, self })
 	table.insert(gUF_EventHooks, { ANIMATION_UPDATE, self.unit, self })
+	table.insert(gUF_EventHooks, { UNIT_AVAILABLE, self.unit, self })
+	table.insert(gUF_EventHooks, { UNIT_CHANGED, self.unit, self })
+	table.insert(gUF_EventHooks, { SIMULATE_UPDATE, self.unit, self })
 end
 
 --

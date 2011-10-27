@@ -177,31 +177,16 @@ function gUF_Utils:GetDifficultyColor( unit )
 		local lvl = unit.level
 		
 		if type(lvl) ~= "number" or lvl >= redStart  then
-			color.r=1.0
-			color.g=0.0
-			color.b=0.0
-			color.a=1.0
+			return gUF_Colors["red_foreground"]
 		elseif lvl >= yellowStart and lvl <= yellowEnd then
-			color.r=1.0
-			color.g=1.0
-			color.b=0.0
-			color.a=1.0
+			return gUF_Colors["yellow_foreground"]
 		elseif lvl >= greenStart and lvl <= greenEnd then
-			color.r=0.0
-			color.g=1.0
-			color.b=0.0
-			color.a=1.0
+			return gUF_Colors["green_foreground"]
 		else
-			color.r=0.5
-			color.g=0.5
-			color.b=0.5
-			color.a=1.0
+			return gUF_Colors["grey_foreground"]
 		end
 	else
-		color.r=1.0
-		color.g=1.0
-		color.b=1.0
-		color.a=1.0
+		return gUF_Colors["white"]
 	end
 	
 	return color
@@ -303,38 +288,13 @@ end
 --							casttimeAbs - will be replaced by the ability's absolute cast time value
 --							remainingShort - will be replaced by the ability's remaining time short value
 --							remainingAbs - will be replaced by the ability's remaining time absolute value
---							casttarget - will be replaced by the ability's casttarget
 --
 --		castBar table: a castBar table provided by Inspect.Unit.Castbar( unitID )
---		abilityDetails table: a castbarDetails table provided by Inspect.Ability.Detail( abilityID )
 --
 -- @return
 --		outputString string: a string with the components substituted for their actual values
 --
-function gUF_Utils:CreateCastingDetailsString( inputString, castbar, abilityDetails )
-	
-	-- Substitute items extracted from abilityDetails table
-	if ( abilityDetails ) then
-		-- targetName (only exists when you have the unit targeted)
-		if ( abilityDetails.target ) then
-			local targetDetails = Inspect.Unit.Detail(abilityDetails.target)
-			if( targetDetails ) then
-				if ( targetDetails.name ) then
-					local newString, numSubs = string.gsub ( inputString, "abilityTarget", targetDetails.name )
-					inputString = newString
-				else
-					local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
-					inputString = newString
-				end
-			else
-				local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
-				inputString = newString
-			end
-		end
-	else
-		local newString, numSubs = string.gsub ( inputString, "abilityTarget", "" )
-		inputString = newString
-	end
+function gUF_Utils:CreateCastingDetailsString( inputString, castbar )
 	
 	-- Substitute items extracted from castbar table
 	if ( castbar ) then
@@ -572,21 +532,35 @@ function gUF_Utils:GenerateSimulatedUnit()
 	details.manaMax = manaMax
 	details.health = mana
 	details.healthMax = manaMax
-	details.planar = 3
-	details.vitality = 90
+	details.planar = math.random(1,3)
+	details.vitality = math.random(0,100)
 	details.guild = "awesome guild"
 	details.role = "tank"
 	details.offline = true
 	details.afk = true
 	details.warfont = true
 	details.pvp = true
-	details.level = 50
+	details.level = math.random(1,50)
 	
 	return details
 end
 
-
-
+-- @returns a fake Inspect.Unit.Castbat table
+function gUF_Utils:GenerateSimulatedCastbar()
+	local remaining = math.random(1,5)
+	local duration = math.random(5,10)
+	
+	-- castbar details
+	details = {}
+	details.abilityName = "Awesome Spell"
+	details.ability = nil
+	details.remaining = remaining
+	details.duration = duration
+	details.uninterruptible = false
+	details.channeled = false
+	
+	return details
+end
 
 
 

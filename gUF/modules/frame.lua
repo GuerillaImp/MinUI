@@ -19,13 +19,14 @@ UnitFrame.__index = UnitFrame
 -- @params
 --		unit string: player, player.target, etc
 --
-function UnitFrame.new( unit )
+function UnitFrame.new( unit, addOn )
 	local uFrame = {}             		-- our new object
 	setmetatable(uFrame, UnitFrame)    	-- make UnitFrame handle lookup
 	
 	-- the modules unit
 	uFrame.unit = unit
-	uFrame.unitID = nil
+	uFrame.addOn = addOn
+	uFrame.locked = true
 	
 	-- the modules enabled status
 	uFrame.enabled = true
@@ -47,12 +48,8 @@ function UnitFrame.new( unit )
 	-- box that will fill with items that are added to it
 	uFrame.box = nil
 	uFrame.modules = {}
-	
-	--
-	-- puts the frame in "simulation" mode where it will constantly call Simulate on the members it contains
-	-- based on UPDATE_EVENT timer for simulation
-	--
-	uFrame.simulate = false
+	uFrame.draggable = nil
+	uFrame.draggableText = nil
 	
 	--
 	-- Note: nothing is actually created here, that occurs in the Initialise function, which
@@ -78,9 +75,8 @@ end
 --		yOffset number: the y offset
 --
 function UnitFrame:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	--print ( "UnitFrame set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	
 	self.box:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
+	self.draggable:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
 --
@@ -94,7 +90,6 @@ end
 -- GetFrame
 --
 function UnitFrame:GetFrame()
-	--print ( "UnitFrame:GetFrame() box ", self.box)
 	return self.box:GetFrame()
 end
 
@@ -123,22 +118,34 @@ end
 function UnitFrame:AddModule( moduleToAdd )
 	self.box:AddItem( moduleToAdd )
 	table.insert(self.modules, moduleToAdd)
+	
+	self.draggable:SetWidth(self.box:GetWidth())
+	self.draggable:SetHeight(self.box:GetHeight())
 end
 
 --
--- Make all the modules in this frame Simualte
+-- Lock/Unlock the Draggable Frame
+--
+function UnitFrame:ToggleLocked ( )
+	if ( self.locked ) then
+		self.locked = false
+		self.draggable:SetVisible(true)
+	else
+		self.locked = true
+		self.draggable:SetVisible(false)
+	end
+end
+
+--
+-- The frame doesn't simualte anything (as it is just a smart container)
 --
 function UnitFrame:Simulate ( )
-	--[[for _,module in pairs (self.modules) do
-		module:Simulate()
-	end]]
 end
 
 --
 -- Enable/Disable Modules within this UnitFrame
 --
 function UnitFrame:EnableModules ( toggle )
-	--print ("UnitFrame:EnableModules", toggle)
 	for _,module in pairs (self.modules) do
 		module:SetEnabled( toggle )
 		-- if enabled, refresh the module
@@ -167,9 +174,58 @@ function UnitFrame:Initialise( )
 		self.settings["padding"] = 1
 	end
 	
-	--print ( "frame padding -> ", self.settings["padding"] )
-	
 	self.box = Box.new(  self.settings["padding"], self.settings["bgColor"], "vertical", "down", gUF.context, -1 )
+	self.draggable = Panel.new (  self.settings["padding"], self.settings["padding"], gUF_Colors["red_foreground"], gUF.context, 10 )
+	self.draggableText = Text.new ( gUF_Fonts["arial_round"], 16, {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (self.draggable:GetLayer()+1) )
+	self.draggableText:SetText ( "["..self.unit.."]".. " ".. self.addOn )
+	self.draggable:AddItem( self.draggableText,  "CENTER", "CENTER", 0, 0 )
+	
+	--
+	-- Setup Draggable Movement for Drag Frame when the frame is toggled unlocked
+	--
+	-- XXX - horrendously buggy, probably need to figure out a better way of handling this
+	-- or just make all layout via the config guis.
+	--
+	--[[
+	local draggableFrame = self.draggable:GetFrame()
+	local boxRef = self.box:GetFrame()
+	function draggableFrame.Event:LeftDown()
+		self.MouseDown = true
+		local mouseData = Inspect.Mouse()
+		self.MyStartX = boxRef:GetLeft()
+		self.MyStartY = boxRef:GetTop()
+		self.StartX = mouseData.x - self.MyStartX
+		self.StartY = mouseData.y - self.MyStartY
+		tempX = boxRef:GetLeft()
+		tempY = boxRef:GetTop()
+		boxRef:ClearAll()
+		
+		--
+		-- XXX: If the frame is anchored to another frame, this is going to not function 
+		-- as the user would intend, I need to do a similar looping over the gUF initialsed frames to check
+		-- for existing anchors here as I do in gUF_Units for frame creation
+		--
+		boxRef:SetPoint( "TOPLEFT", gUF.context, "TOPLEFT", tempX, tempY)
+		draggableFrame:SetPoint( "TOPLEFT", gUF.context, "TOPLEFT", tempX, tempY)
+	end
+	
+	function draggableFrame.Event:MouseMove()
+		if self.MouseDown then
+			local newX, newY
+			mouseData = Inspect.Mouse()
+			newX = mouseData.x - self.StartX
+			newY = mouseData.y - self.StartY
+			boxRef:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
+			draggableFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
+		end
+	end
+	
+	function draggableFrame.Event:LeftUp()
+		if self.MouseDown then
+			self.MouseDown = false
+		end
+	end]]
+	
 end
 
 --
@@ -180,11 +236,9 @@ function UnitFrame:Refresh()
 	local details = Inspect.Unit.Detail(self.unit)
 	
 	if ( details ) then
-		--print ("UnitFrame:Refresh - showing frame, have details")
 		self:SetVisible( true )
 		self:EnableModules( true )
 	else
-		--print ("UnitFrame:Refresh - hiding frame, no details")
 		self:SetVisible( false )
 		self:EnableModules( false )
 	end
@@ -196,23 +250,8 @@ end
 -- @params
 --		unitID table: a unitID number or false if the unit no longer exists, or there is no target for the self.unit value
 --
-function UnitFrame:UnitChanged( unitID )
-	if(unitID)then
-		local details = Inspect.Unit.Detail(unitID)
-		if ( details ) then
-			--print ("UnitFrame:Refresh - showing frame, have details")
-			self:SetVisible( true )
-			self:EnableModules( true )
-		else
-			--print ("UnitFrame:Refresh - hiding frame, no details")
-			self:SetVisible( false )
-			self:EnableModules( false )
-		end
-	else
-		--print ("UnitFrame:Refresh - hiding frame, no unitID for ", self.unit)
-		self:SetVisible( false )
-		self:EnableModules( false )
-	end
+function UnitFrame:UnitChanged( )
+	self:Refresh()
 end
 
 --
@@ -222,14 +261,13 @@ end
 function UnitFrame:CallBack( eventType, value )
 	if ( self.enabled ) then
 		if ( eventType == UNIT_AVAILABLE ) then
-			--print("UnitFrame unit available!", self.unit)
 			self:Refresh ( ) 
 		elseif ( eventType == UNIT_CHANGED ) then
-			--print("UnitFrame unit changed!", self.unit)
-			self:UnitChanged ( value ) 
+			self:UnitChanged ( ) 
 		elseif ( eventType == SIMULATE_UPDATE ) then
-			--print("Simulating")
-			self:Simulate()
+			self:Simulate( )
+		elseif ( eventType == TOGGLE_FRAME_LOCK ) then
+			self:ToggleLocked()
 		end
 	end
 end
@@ -240,10 +278,10 @@ end
 -- Register Callbacks with gUF
 --
 function UnitFrame:RegisterCallbacks()
-	--print ("UnitFrame:RegisterCallbacks() for unit ", self.unit, " registered events")
 	table.insert(gUF_EventHooks, { UNIT_AVAILABLE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_CHANGED, self.unit, self })
 	table.insert(gUF_EventHooks, { SIMULATE_UPDATE, self.unit, self })
+	table.insert(gUF_EventHooks, { TOGGLE_FRAME_LOCK, self.unit, self })
 end
 
 --

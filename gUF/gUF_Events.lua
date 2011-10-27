@@ -57,3 +57,7 @@ UNIT_CHANGED = 40
 ANIMATION_UPDATE = 50 -- Called by the main Update loop in gUF
 REFRESH_UPDATE = 51 -- Called by the main Update loop in gUF
 SIMULATE_UPDATE = 52 -- Called by the main Update loop in gUF
+
+
+-- Toggle lock any frames that have this event registerd
+TOGGLE_FRAME_LOCK = 100

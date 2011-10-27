@@ -216,9 +216,6 @@ function TextItem:CallBack( eventType, value )
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end
-		--[[if ( eventType == REFRESH_UPDATE ) then
-			self:Refresh() )
-		end]]
 	end
 end
 
