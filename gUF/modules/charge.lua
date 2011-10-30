@@ -1,31 +1,31 @@
 --
--- ResourceBar Module by Grantus
+-- ChargeBar Module by Grantus
 --
--- Registers for Mana, Energy or Power Updates and Displays them
+-- Registers for Mage Charge Updates
 --
 
-local ResourceBar = {}
-ResourceBar.__index = ResourceBar
+local ChargeBar = {}
+ChargeBar.__index = ChargeBar
 
 --
--- ResourceBar:new()
+-- ChargeBar:new()
 --
 -- @params
 --		unit string: player, player.target, etc
 --
-function ResourceBar.new( unit )
-	local rBar = {}             		-- our new object
-	setmetatable(rBar, ResourceBar)    	-- make ResourceBar handle lookup
+function ChargeBar.new( unit )
+	local cBar = {}             		-- our new object
+	setmetatable(cBar, ChargeBar)    	-- make ChargeBar handle lookup
 	
 	-- the modules unit
-	rBar.unit = unit
+	cBar.unit = unit -- Charge bar unit doesnt matter as it will always check "player"
 	-- the modules enabled status
-	rBar.enabled = true
+	cBar.enabled = true
 	
 	--
 	-- Every module must have a settings table, such that it can be configured by AddOns
 	--
-	rBar.settings = {
+	cBar.settings = {
 		["width"] = 0,
 		["height"] = 0,
 		["leftText"] = 0,
@@ -41,21 +41,22 @@ function ResourceBar.new( unit )
 		["anchorYOffset"] = 0
 	}
 
-	
 	--
 	-- main items of the bar
 	--
-	rBar.panel = nil
-	rBar.textPanel = nil
-	rBar.leftText = nil
-	rBar.rightText = nil
+	cBar.panel = nil
+	cBar.textPanel = nil
+	cBar.leftText = nil
+	cBar.rightText = nil
+	
+	cBar.simulating = false
 	
 	--
 	-- Note: nothing is actually created here, that occurs in the Initialise function, which
 	-- should be called after the settings above have been filled out by an AddOn
 	--
 
-	return rBar
+	return cBar
 end
 
 
@@ -74,94 +75,83 @@ end
 --		xOffset number: the x offset
 --		yOffset number: the y offset
 --
-function ResourceBar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
-	--print ( "ResourceBar set point ", anchorSelf, newParent, anchorParent, xOffset, yOffset )
+function ChargeBar:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset )
 	self.panel:SetPoint( anchorSelf, newParent, anchorParent, xOffset, yOffset ) 
 end
 
 --
 -- SetVisibility
 --
-function ResourceBar:SetVisible ( toggle )
+function ChargeBar:SetVisible ( toggle )
 	self.panel:SetVisible( toggle )
 end
 
 --
 -- GetFrame
 --
-function ResourceBar:GetFrame()
+function ChargeBar:GetFrame()
 	return self.panel:GetFrame()
 end
 
 --
 -- GetHeight 
 --
-function ResourceBar:GetHeight()
+function ChargeBar:GetHeight()
 	return self.settings.height
 end
 
 --
 -- Get Width
 --
-function ResourceBar:GetWidth()
+function ChargeBar:GetWidth()
 	return self.settings.width
 end
 
 --
--- ResourceBar Functions
+-- ChargeBar Functions
 --
 
 --
--- Update Mana
+-- Update Charge
 --
-function ResourceBar:Update( details  )
-	if(details)then
-	
-		if (details.calling) then
-			local resource = 0
-			local resourceMax = 0
-			
-			if(details.calling == "mage" or details.calling == "cleric")then
-				if ( details.mana and details.manaMax ) then
-					resource = details.mana		
-					resourceMax = details.manaMax
-				end
-			elseif(details.calling == "warrior")then
-				if ( details.power ) then
-					resource = details.power
+function ChargeBar:Update( details  )
+	if ( details ) then
+		if ( details.calling ) then
+			if ( details.calling == "mage" or self.simulating ) then
+				local resource = 0
+				local resourceMax = 0
+				
+
+				if ( details.charge ) then
+					resource = details.charge		
 					resourceMax = 100
 				end
-			elseif(details.calling == "rogue")then
-				if ( details.energy ) then
-					resource = details.energy
-					resourceMax = details.energyMax
-				end
-			end
-			
-			local resourcesRatio = resource/resourceMax
-			
-			--
-			-- Update the bar
-			--
-			self.bar:SetCurrentValue(resourcesRatio)
+				
+				
+				local resourcesRatio = resource/resourceMax
+				
+				--
+				-- Update the bar
+				--
+				self.bar:SetCurrentValue(resourcesRatio)
 
-			--print (details.calling)
-			local colors = gUF_Utils:GetResourcesColor(details.calling)
-		
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		
-			--
-			-- now update the left and right text values - this will double check the calling, but it's clean code
-			--
-			self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
-			self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
-		
-			self:SetVisible(true)
-		-- no calling, no resources
+			
+				--
+				-- now update the left and right text values - this will double check the calling, but it's clean code
+				--
+				self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
+				self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
+			
+				self:SetVisible(true)
+			else
+				-- not a mage
+				self:SetVisible(false) 
+			end
+		-- no calling
 		else
 			self:SetVisible(false) 
 		end
+	-- no details
 	else
 		self:SetVisible(false)
 	end
@@ -176,16 +166,16 @@ end
 --
 -- Get the Empty Settings Table for this Module
 --
-function ResourceBar:GetSettingsTable()
+function ChargeBar:GetSettingsTable()
 	return self.settings
 end
 
 --
 -- Initialise the Module
 --
-function ResourceBar:Initialise( )
+function ChargeBar:Initialise( )
 	self.panel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, 1 )
-	self.bar = Bar.new( self.settings["width"], self.settings["height"], "horizontal", "right", {r=0,g=0,b=0,a=0}, {r=0,g=0,b=0,a=0}, self.settings["texturePath"], gUF.context, (self.panel:GetLayer()+1)  )
+	self.bar = Bar.new( self.settings["width"], self.settings["height"], "horizontal", "right",gUF_Colors["mageCharge_background"], gUF_Colors["mageCharge_foreground"], self.settings["texturePath"], gUF.context, (self.panel:GetLayer()+1)  )
 	self.panel:AddItem( self.bar,  "TOPLEFT", "TOPLEFT", 0, 0 )
 	
 	
@@ -204,41 +194,38 @@ function ResourceBar:Initialise( )
 end
 
 --
--- On unit change, or unit available this method will be called by a frame container
--- Or in a "timed" update this should also be called (if I choose to go the timer route rather than event based route)
+-- Charge is only given to player, so we don't need to check self.unit
 --
-function ResourceBar:Refresh()
-	local details = Inspect.Unit.Detail(self.unit)
+function ChargeBar:Refresh()
+	local details = Inspect.Unit.Detail("player")
 	
+
 	if(details)then
 		self:Update( details )
 	else
 		self:SetVisible(false)
 	end
+	
 end
 
 --
--- Simualte a Mana Update
+-- Simualte a Charge Update
 --
-function ResourceBar:Simulate()
+function ChargeBar:Simulate()
+	self.simulating = true
 	self:Update( gUF_Utils:GenerateSimulatedUnit() )
 end
-
 
 --
 -- For simplicity's sake a module must have a method called "CallBack" which can take a number of arguments
 --
-function ResourceBar:CallBack( eventType, value ) -- not using value for now ...
+function ChargeBar:CallBack( eventType, value ) -- not using value for now ...
 	if ( self.enabled ) then
-		if ( eventType == MANA_UPDATE ) then
-			self:Refresh()
-		elseif ( eventType == POWER_UPDATE ) then
-			self:Refresh()
-		elseif ( eventType == ENERGY_UPDATE ) then
+		if ( eventType == CHARGE_UPDATE ) then
 			self:Refresh()
 		-- we need this just in case the module isn't anchored in a UnitFrame XXX: Perhaps have a check or on initialise a value that says "embedded in unit frame" or not.
 		elseif ( eventType == UNIT_AVAILABLE ) then
-			self:Refresh() 
+			self:Refresh() 	
 		elseif ( eventType == UNIT_CHANGED ) then
 			self:Refresh() 				
 		elseif ( eventType == SIMULATE_UPDATE ) then
@@ -252,11 +239,8 @@ end
 --
 -- Register Callbacks with gUF
 --
-function ResourceBar:RegisterCallbacks()
-	--print ("ResourceBar:RegisterCallbacks() for unit ", self.unit, " registered events")
-	table.insert(gUF_EventHooks, { MANA_UPDATE, self.unit, self })
-	table.insert(gUF_EventHooks, { POWER_UPDATE, self.unit, self })
-	table.insert(gUF_EventHooks, { ENERGY_UPDATE, self.unit, self })
+function ChargeBar:RegisterCallbacks()
+	table.insert(gUF_EventHooks, { CHARGE_UPDATE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_AVAILABLE, self.unit, self })
 	table.insert(gUF_EventHooks, { UNIT_CHANGED, self.unit, self })
 	table.insert(gUF_EventHooks, { SIMULATE_UPDATE, self.unit, self })
@@ -267,11 +251,11 @@ end
 --
 -- Starts/Stops this module from reacting to events
 --
-function ResourceBar:SetEnabled( toggle )
+function ChargeBar:SetEnabled( toggle )
 	self.enabled = toggle
 end
 
 --
 -- *** Register this Module with gUF ***
 --
-gUF_Modules["ResourceBar"] = ResourceBar
+gUF_Modules["ChargeBar"] = ChargeBar

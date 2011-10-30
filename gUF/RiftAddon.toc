@@ -40,6 +40,9 @@ RunOnStartup = {
 	"modules/frame.lua",
 	"modules/health.lua",
 	"modules/resources.lua",
+	"modules/charge.lua",
+	"modules/warriorCombo.lua",
+	"modules/rogueCombo.lua",
 	"modules/text.lua",
 	"modules/cast.lua"
 }

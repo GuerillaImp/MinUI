@@ -26,7 +26,6 @@ function TextItem.new( unit )
 	--
 	-- Every module must have a settings table, such that it can be configured by AddOns
 	--
-	-- XXX: is it worth having defaults?
 	--
 	tItem.settings = {
 		["text"] = 0,

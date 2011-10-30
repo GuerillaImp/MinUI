@@ -450,6 +450,18 @@ function gUF_Utils:CreateUnitDetailsString( inputString, unitDetails )
 			inputString = newString
 		end
 		
+		-- charge
+		if ( unitDetails.charge ) then
+			local newString, numSubs = string.gsub ( inputString, "currentCharge", unitDetails.charge )
+			inputString = newString
+			
+			local newString, numSubs = string.gsub ( inputString, "chargeMax", 100 )
+			inputString = newString
+			
+			local newString, numSubs = string.gsub ( inputString, "chargePercent", gUF_Utils:GetPercentage( unitDetails.charge, 100 ) )
+			inputString = newString
+		end
+		
 		-- if this details set has a calling, then update texts that are calling based
 		if ( unitDetails.calling ) then
 			local calling = unitDetails.calling
@@ -526,7 +538,7 @@ function gUF_Utils:GenerateSimulatedUnit()
 	-- eventually have EVERYTHING in here (casting, etc, etc, etc)
 	details = {}
 	details.name = "TestUnit"
-	details.calling = "mage"
+	details.calling = "rogue"
 	details.relation = "hostile"
 	details.mana = mana
 	details.manaMax = manaMax
@@ -541,6 +553,12 @@ function gUF_Utils:GenerateSimulatedUnit()
 	details.warfont = true
 	details.pvp = true
 	details.level = math.random(1,50)
+	details.charge = math.random(1,100)
+	details.energy = math.random(1,100)
+	details.energyMax = 100
+	details.power = math.random(1,100)
+	details.combo = math.random(1,5)
+	details.comboUnit = "player.target"
 	
 	return details
 end

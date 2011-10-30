@@ -18,8 +18,8 @@ gUF_Units_Defaults = {
 	unitsEnabled = {["player"] = true, ["player.pet"] = true, ["player.target"] = true, ["player.target.target"] = true, ["focus"] = true},
 	unitSettings = {
 		["player"] = {
-			modules =  { -- unit frame must be first module (else things will break)
-				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem", [6] = "CastBar"
+			modules =  { -- unit frame must be first module in the unit frames addon (else everythings will break)
+				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem"
 			},
 			--
 			-- These config settings can be viewed in the [module].lua settings table, if you miss an option here it will be set to a default value 
@@ -43,8 +43,8 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "healthPercent%",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" or "screen" mode
@@ -58,8 +58,8 @@ gUF_Units_Defaults = {
 					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "resourcePercent%",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" or "screen" mode
@@ -72,7 +72,7 @@ gUF_Units_Defaults = {
 					["text"] = "name",
 					["colorMode"] = "none", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 18,
 					["anchor"] = "frame", -- anchor to the player frame itself (above left)
 					["anchorUnit"] = "player", 
@@ -85,7 +85,7 @@ gUF_Units_Defaults = {
 					["text"] = "<planar> (vitality%) ",
 					["colorMode"] = "none", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 12,
 					["anchor"] = "frame", -- anchor to the player frame itself (above right)
 					["anchorUnit"] = "player", 
@@ -93,35 +93,12 @@ gUF_Units_Defaults = {
 					["anchorPointParent"] = "TOPRIGHT", 
 					["anchorXOffset"] = -1, 
 					["anchorYOffset"] = 0 
-				},
-				[6] = { -- CastBar config
-					["width"] = 222,
-					["height"] = 25,
-					["padding"] = 1,
-					["frameBGColor" ] = gUF_Colors["black"],
-					["barColor"] = gUF_Colors["red_foreground"], -- user sets color
-					["barBGColor"] = gUF_Colors["red_background"], -- user sets color
-					["icon"] = "left", -- left, right, none
-					["iconPadding"] = 1,
-					["iconSize"] = 25,
-					["leftText"] = "abilityName", -- abilityName, abilityTarget, remainingShort/Abs, durationShort/Abs
-					-- XXX: Ability Target is buggy
-					["rightText"] = "remainingShort / durationShort",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
-					["fontSize"] = 12,
-					["anchor"] = "frame",
-					["anchorUnit"] = "player",
-					["anchorPointThis"] = "TOPRIGHT",
-					["anchorPointParent"] = "BOTTOMRIGHT",
-					["anchorXOffset"] = 0,
-					["anchorYOffset"] = 10
 				}
 			} 
 		},
 		["player.target"] = {
 			modules =  {
-				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem", [6] = "TextItem", [7] = "CastBar"
+				[1] = "UnitFrame", [2] = "HealthBar", [3] = "ResourceBar", [4] = "TextItem", [5] = "TextItem", [6] = "TextItem"
 			},
 			moduleSettings = {
 				[1] = { 
@@ -140,8 +117,8 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "healthShort/healthMaxShort",
 					["rightText"] = "healthPercent%",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", --XXX FIX ME frame mode, requires an anchorUnit to be specified NOTE: Frame anchoring just isn't working at the moment for modules for some reason I cannot figure out
 					["anchorUnit"] = "player.target", -- anchor this outside the player.target frame (just testing for now)
@@ -155,8 +132,8 @@ gUF_Units_Defaults = {
 					["height"] = 20,
 					["leftText"] = "resourceShort/resourceMaxShort",
 					["rightText"] = "resourcePercent%",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" or "screen" mode
@@ -169,7 +146,7 @@ gUF_Units_Defaults = {
 					["text"] = "name",
 					["colorMode"] = "relation", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 18,
 					["anchor"] = "frame", -- anchor to the player frame itself (above left)
 					["anchorUnit"] = "player.target", 
@@ -182,7 +159,7 @@ gUF_Units_Defaults = {
 					["text"] = "level",
 					["colorMode"] = "difficulty", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 18,
 					["anchor"] = "frame", -- anchor to the player frame itself (above right)
 					["anchorUnit"] = "player.target", 
@@ -195,7 +172,7 @@ gUF_Units_Defaults = {
 					["text"] = "afk offline guild",
 					["colorMode"] = "calling", -- none, relation, difficulty, or calling
 					["color"] = gUF_Colors["white"],
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 18,
 					["anchor"] = "frame", -- anchor to the player frame itself (above right)
 					["anchorUnit"] = "player.target", 
@@ -203,29 +180,6 @@ gUF_Units_Defaults = {
 					["anchorPointParent"] = "BOTTOMCENTER", 
 					["anchorXOffset"] = 0, 
 					["anchorYOffset"] = 0 
-				},
-				[7] = { -- CastBar config
-					["width"] = 222,
-					["height"] = 25,
-					["padding"] = 1,
-					["frameBGColor" ] = gUF_Colors["black"],
-					["barColor"] = gUF_Colors["red_foreground"], -- user sets color
-					["barBGColor"] = gUF_Colors["red_background"], -- user sets color
-					["icon"] = "left", -- left, right, none
-					["iconPadding"] = 1,
-					["iconSize"] = 25,
-					["leftText"] = "abilityName", -- abilityName, abilityTarget, remainingShort/Abs, durationShort/Abs
-					-- XXX: Ability Target is buggy
-					["rightText"] = "remainingShort / durationShort",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
-					["fontSize"] = 12,
-					["anchor"] = "frame",
-					["anchorUnit"] = "player.target",
-					["anchorPointThis"] = "TOPRIGHT",
-					["anchorPointParent"] = "BOTTOMRIGHT",
-					["anchorXOffset"] = 0,
-					["anchorYOffset"] = 10
 				}
 			} 
 		},
@@ -250,8 +204,8 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", 
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" mode
@@ -283,8 +237,8 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame", 
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" mode
@@ -316,8 +270,8 @@ gUF_Units_Defaults = {
 					["colorMode"] = "health",
 					["leftText"] = "name",
 					["rightText"] = "healthShort/healthMaxShort",
-					["texturePath"] = gUF_Bars["aluminium"],
-					["font"] = gUF_Fonts["groovy"],
+					["texturePath"] = gUF_Bars["eya02"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 15,
 					["anchor"] = "insideFrame",
 					["anchorUnit"] = "ignored", -- not used in "insideFrame" mode
@@ -354,188 +308,191 @@ end
 --
 -- Initialise the Frames based on the Saved Settings
 --
-function Units:Initialise()
-	Units:CheckSettings()
-	
-	--
-	-- for each enabled unit - create the UnitFrame modules
-	--
-	for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
-		if ( enabled ) then
-		
-			local unitSettings = gUF_Units_Settings.unitSettings[unit]
-			local unitFrame = nil
-			
-			--
-			-- create the UnitFrame modules first, just to ensure that we have them created for modules that anchor to them frame, 
-			-- rather than being anchored internally
-			--
-			for index,module in ipairs(gUF_Units_Settings.unitSettings[unit].modules) do
-				if ( module == "UnitFrame" ) then
-					local moduleClass = gUF_Modules[module]
-					
-					if(moduleClass)then
-						local moduleInstance = moduleClass.new( unit, "gUF_Units" )
-						local settings = gUF_Units_Settings.unitSettings[unit].moduleSettings[index]
-						local moduleSettingsTable = moduleInstance:GetSettingsTable()
-						
-						-- initialise settings table from our Addon's saved variables
-						for settingName,_ in pairs(moduleSettingsTable) do
-							moduleSettingsTable[settingName] = settings[settingName]
-						end
-						
-						-- Initialise the Module
-						moduleInstance:Initialise( moduleSettingsTable )
-						
-						-- Register it's event callbacks
-						moduleInstance:RegisterCallbacks()
-						
-						-- Store a reference to the unit frame such that we may add other items to it
-						unitFrame = moduleInstance
-						unitFrame.initialised = true
-						
-						table.insert(gUF.initialisedFrames, { "gUF_Units", unit, unitFrame })
-					end
-				end
-			end
-		end
-	end	
-	
-	
-	--
-	-- anchor the unit frames appropriately - we do this after the creation loop as we want to make sure all the UnitFrames that are enabled have been created
-	-- this is because we dont know exactly the order the frames will be created and we want to ensure that frames anchored to frames work correctly
-	--
-	for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
-		if ( enabled ) then
-			--print ( "anchoring frame for ", unit)
-			local uFrameSettings = gUF_Units_Settings.unitSettings[unit].moduleSettings[1] -- unit frame must always be first?!? XXX: This is a bit hacktacular
-			
-			local uFrameInstance = nil
-			
-			-- get unit frame instance from the gUF registry
-			for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
-				-- check they belong to this addon
-				if ( unitFrameRegister[1] == "gUF_Units" ) then
-					-- check the frame belongs to this unit
-					if ( unitFrameRegister[2] == unit ) then
-						-- store the instance
-						uFrameInstance = unitFrameRegister[3]
-					end
-				end
-			end
-			
-			--print ("unit frame register --> ", uFrameInstance)
-		
-			
-			if ( uFrameInstance ) then
-				if ( uFrameSettings["anchor"] == "frame" ) then
-					local frameAnchor = nil
+function Units:Initialise( addOnIdentifier )
+	if ( addOnIdentifier == "gUF_Units" ) then
 
-					-- find anchor unit from the registry
-					for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
-						-- check they belong to this addon
-						if ( unitFrameRegister[1] == "gUF_Units" ) then
-							-- check the frame belongs to this modules "anchorUnit"
-							if ( unitFrameRegister[2] == uFrameSettings["anchorUnit"] ) then
-								-- store the instance of the Rift Frame stored by this frame :P
-								frameAnchor = unitFrameRegister[3]:GetFrame()
-							end
-						end
-					end	
-					
-					--print ("unit frame from registry for frame to anchor on --> ", frameAnchor)
-							
-					if ( frameAnchor ) then										
-						uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], frameAnchor, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
-					else
-						print ("error: no frame instance to anchor this frame to -> ", unit, " to ", uFrameSettings["anchorUnit"])
-					end
-				elseif ( uFrameSettings["anchor"] == "screen" ) then
-					uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], gUF.context, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
-				end	
-			end
-		end
-	end
-
-	
-	--
-	-- now create the modules
-	--
-	for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
-		if ( enabled ) then
-		
-			-- get unit frame instance from the gUF registry
-			local uFrameInstance = nil
-			for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
-				-- check they belong to this addon
-				if ( unitFrameRegister[1] == "gUF_Units" ) then
-					-- check the frame belongs to this unit
-					if ( unitFrameRegister[2] == unit ) then
-						-- store the instance
-						uFrameInstance = unitFrameRegister[3]
-					end
-				end
-			end
+		Units:CheckSettings()
+		--
+		-- for each enabled unit - create the UnitFrame modules
+		--
+		for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
+			if ( enabled ) then
 			
-			--print ("unit frame register --> ", uFrameInstance)
-		
-			-- for each enabled module on the unit
-			for index,module in ipairs(gUF_Units_Settings.unitSettings[unit].modules) do
+				local unitSettings = gUF_Units_Settings.unitSettings[unit]
+				local unitFrame = nil
 				
-				-- we've already done the UnitFrame's so just create the other modules
-				if not (module == "UnitFrame") then
-					local moduleClass = gUF_Modules[module]
-					
-					if(moduleClass)then
-						local moduleInstance = moduleClass.new( unit )
-						local settings = gUF_Units_Settings.unitSettings[unit].moduleSettings[index]
-						local moduleSettingsTable = moduleInstance:GetSettingsTable()
+				--
+				-- create the UnitFrame modules first, just to ensure that we have them created for modules that anchor to them frame, 
+				-- rather than being anchored internally
+				--
+				for index,module in ipairs(gUF_Units_Settings.unitSettings[unit].modules) do
+					if ( module == "UnitFrame" ) then
+						local moduleClass = gUF_Modules[module]
 						
-						-- initialise settings table from our Addon's saved variables
-						for settingName,_ in pairs(moduleSettingsTable) do
-							moduleSettingsTable[settingName] = settings[settingName]
-						end
-						
-						moduleInstance:Initialise( moduleSettingsTable )
-						moduleInstance:RegisterCallbacks()
+						if(moduleClass)then
+							local moduleInstance = moduleClass.new( unit, "gUF_Units" )
+							local settings = gUF_Units_Settings.unitSettings[unit].moduleSettings[index]
+							local moduleSettingsTable = moduleInstance:GetSettingsTable()
 							
-						-- Add Module at it's anchor location
-						if ( moduleSettingsTable["anchor"] == "insideFrame" ) then
-							if ( uFrameInstance ) then
-								uFrameInstance:AddModule( moduleInstance )
-							else
-								print ("error: no frame instance to insert module inside ", unit,  module)
+							-- initialise settings table from our Addon's saved variables
+							for settingName,_ in pairs(moduleSettingsTable) do
+								moduleSettingsTable[settingName] = settings[settingName]
 							end
-						elseif ( moduleSettingsTable["anchor"] == "frame" ) then
-							local frameAnchor = nil
+							
+							-- Initialise the Module
+							moduleInstance:Initialise( )
+							
+							-- Register it's event callbacks
+							moduleInstance:RegisterCallbacks()
+							
+							-- Store a reference to the unit frame such that we may add other items to it
+							unitFrame = moduleInstance
+							unitFrame.initialised = true
+							
+							table.insert(gUF.initialisedFrames, { "gUF_Units", unit, unitFrame })
+						end
+					end
+				end
+			end
+		end	
+		
+		
+		--
+		-- anchor the unit frames appropriately - we do this after the creation loop as we want to make sure all the UnitFrames that are enabled have been created
+		-- this is because we dont know exactly the order the frames will be created and we want to ensure that frames anchored to frames work correctly
+		--
+		for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
+			if ( enabled ) then
+				--print ( "anchoring frame for ", unit)
+				local uFrameSettings = gUF_Units_Settings.unitSettings[unit].moduleSettings[1] -- unit frame must always be first?!? XXX: This is a bit hacktacular
+				
+				local uFrameInstance = nil
+				
+				-- get unit frame instance from the gUF registry
+				for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
+					-- check they belong to this addon
+					if ( unitFrameRegister[1] == "gUF_Units" ) then
+						-- check the frame belongs to this unit
+						if ( unitFrameRegister[2] == unit ) then
+							-- store the instance
+							uFrameInstance = unitFrameRegister[3]
+						end
+					end
+				end
+				
+				--print ("unit frame register --> ", uFrameInstance)
+			
+				
+				if ( uFrameInstance ) then
+					if ( uFrameSettings["anchor"] == "frame" ) then
+						local frameAnchor = nil
 
-							-- find anchor unit from the registry
-							for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
-								-- check they belong to this addon
-								if ( unitFrameRegister[1] == "gUF_Units" ) then
-									-- check the frame belongs to this modules "anchorUnit"
-									if ( unitFrameRegister[2] == moduleSettingsTable["anchorUnit"] ) then
-										-- store the instance of the Rift Frame stored by this frame :P
-										frameAnchor = unitFrameRegister[3]:GetFrame()
-									end
+						-- find anchor unit from the registry
+						for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
+							-- check they belong to this addon
+							if ( unitFrameRegister[1] == "gUF_Units" ) then
+								-- check the frame belongs to this modules "anchorUnit"
+								if ( unitFrameRegister[2] == uFrameSettings["anchorUnit"] ) then
+									-- store the instance of the Rift Frame stored by this frame :P
+									frameAnchor = unitFrameRegister[3]:GetFrame()
 								end
 							end
-							
-							
-							if ( frameAnchor ) then
-								moduleInstance:SetPoint( moduleSettingsTable["anchorPointThis"], frameAnchor, moduleSettingsTable["anchorPointParent"], moduleSettingsTable["anchorXOffset"], moduleSettingsTable["anchorYOffset"]  )
-							else
-								print ("error: no frame instance to anchor this frame to -> ", unit, " to ", moduleSettingsTable["anchorUnit"])
-							end
-						elseif ( moduleSettingsTable["anchor"] == "screen" ) then
-							moduleInstance:SetPoint( moduleSettingsTable["anchorPointThis"], gUF.context, moduleSettingsTable["anchorPointParent"], moduleSettingsTable["anchorXOffset"], moduleSettingsTable["anchorYOffset"]  )
-						end
+						end	
 						
+						--print ("unit frame from registry for frame to anchor on --> ", frameAnchor)
+								
+						if ( frameAnchor ) then										
+							uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], frameAnchor, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
+						else
+							print ("error: no frame instance to anchor this frame to -> ", unit, " to ", uFrameSettings["anchorUnit"])
+						end
+					elseif ( uFrameSettings["anchor"] == "screen" ) then
+						uFrameInstance:SetPoint( uFrameSettings["anchorPointThis"], gUF.context, uFrameSettings["anchorPointParent"], uFrameSettings["anchorXOffset"], uFrameSettings["anchorYOffset"]  )
+					end	
+				end
+			end
+		end
+
+		
+		--
+		-- now create the modules, now that we know that the unit frames should have all been created
+		--
+		for unit,enabled in pairs(gUF_Units_Settings.unitsEnabled) do
+			if ( enabled ) then
+			
+				-- get unit frame instance from the gUF registry
+				local uFrameInstance = nil
+				for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
+					-- check they belong to this addon
+					if ( unitFrameRegister[1] == "gUF_Units" ) then
+						-- check the frame belongs to this unit
+						if ( unitFrameRegister[2] == unit ) then
+							-- store the instance
+							uFrameInstance = unitFrameRegister[3]
+						end
+					end
+				end
+				
+				--print ("unit frame register --> ", uFrameInstance)
+			
+				-- for each enabled module on the unit
+				for index,module in ipairs(gUF_Units_Settings.unitSettings[unit].modules) do
+					
+					-- we've already done the UnitFrame's so just create the other modules
+					if not (module == "UnitFrame") then
+						local moduleClass = gUF_Modules[module]
+						
+						if(moduleClass)then
+							local moduleInstance = moduleClass.new( unit )
+							local settings = gUF_Units_Settings.unitSettings[unit].moduleSettings[index]
+							local moduleSettingsTable = moduleInstance:GetSettingsTable()
+							
+							-- initialise settings table from our Addon's saved variables
+							for settingName,_ in pairs(moduleSettingsTable) do
+								moduleSettingsTable[settingName] = settings[settingName]
+							end
+							
+							moduleInstance:Initialise( moduleSettingsTable )
+							moduleInstance:RegisterCallbacks()
+								
+							-- Add Module at it's anchor location
+							if ( moduleSettingsTable["anchor"] == "insideFrame" ) then
+								if ( uFrameInstance ) then
+									uFrameInstance:AddModule( moduleInstance )
+								else
+									print ("error: no frame instance to insert module inside ", unit,  module)
+								end
+							elseif ( moduleSettingsTable["anchor"] == "frame" ) then
+								local frameAnchor = nil
+
+								-- find anchor unit from the registry
+								for _,unitFrameRegister in pairs ( gUF.initialisedFrames ) do
+									-- check they belong to this addon
+									if ( unitFrameRegister[1] == "gUF_Units" ) then
+										-- check the frame belongs to this modules "anchorUnit"
+										if ( unitFrameRegister[2] == moduleSettingsTable["anchorUnit"] ) then
+											-- store the instance of the Rift Frame stored by this frame :P
+											frameAnchor = unitFrameRegister[3]:GetFrame()
+										end
+									end
+								end
+								
+								
+								if ( frameAnchor ) then
+									moduleInstance:SetPoint( moduleSettingsTable["anchorPointThis"], frameAnchor, moduleSettingsTable["anchorPointParent"], moduleSettingsTable["anchorXOffset"], moduleSettingsTable["anchorYOffset"]  )
+								else
+									print ("error: no frame instance to anchor this frame to -> ", unit, " to ", moduleSettingsTable["anchorUnit"])
+								end
+							elseif ( moduleSettingsTable["anchor"] == "screen" ) then
+								moduleInstance:SetPoint( moduleSettingsTable["anchorPointThis"], gUF.context, moduleSettingsTable["anchorPointParent"], moduleSettingsTable["anchorXOffset"], moduleSettingsTable["anchorYOffset"]  )
+							end
+							
+						end
 					end
 				end
 			end
 		end
+	
 	end
 end
 
@@ -547,6 +504,5 @@ function Units:ReInitialise()
 	print "NYI: Units Reinitialise"
 end
 
-
 -- Create the UnitFrames
-table.insert(Event.Addon.SavedVariables.Load.End, { Units.Initialise, "gUF_Units", "gUF_Units Variables Loaded" })
+table.insert(Event.Addon.SavedVariables.Load.End, { function( addOnIdentifier ) Units:Initialise(addOnIdentifier) end, "gUF_Units", "gUF_Units Variables Loaded" })

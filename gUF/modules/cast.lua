@@ -164,10 +164,24 @@ function CastBar:Update( castBar  )
 		end
 		
 		--
-		-- now update the left and right text values
+		-- Do a visual update (as per animation) (in case we get a castbar half way through a cast)
 		--
-		self.leftText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["leftText"], castBar ))
-		self.rightText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["rightText"], castBar ))
+		local remaining = self.castBar.remaining
+		local duration = self.castBar.duration
+		
+		if( remaining and duration )then
+			self.leftText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["leftText"], self.castBar, self.abilityDetails ))
+			self.rightText:SetText(gUF_Utils:CreateCastingDetailsString( self.settings["rightText"], self.castBar, self.abilityDetails ))
+			
+			-- FILL 
+			if not self.channeled then
+				local widthMultiplier = (1 - (remaining / duration))
+				self.bar:SetCurrentValue(widthMultiplier)
+			else
+				local widthMultiplier = ((remaining / duration))
+				self.bar:SetCurrentValue(widthMultiplier)
+			end
+		end
 		
 		self:SetVisible(true)
 		self.casting = true

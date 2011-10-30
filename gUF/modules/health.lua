@@ -119,46 +119,49 @@ end
 --
 function HealthBar:Update( details  )
 	if(details)then
-		local healthRatio = details.health/details.healthMax
-		local healthPercent = healthRatio*100
-		
-		--
-		-- Update the bar
-		--
-		self.bar:SetCurrentValue(healthRatio)
+		-- guard against nill health/max on load
+		if ( details.health and details.healthMax ) then
+			local healthRatio = details.health/details.healthMax
+			local healthPercent = healthRatio*100
+			
+			--
+			-- Update the bar
+			--
+			self.bar:SetCurrentValue(healthRatio)
 
-		--
-		-- Colorise the bar based on current mode
-		--	
-		local calling = details.calling
-		local reaction = details.relation
-		
-		--print ( calling, reaction )
-		
-		if(self.settings["colorMode"] == "health") then
-			local colors = gUF_Utils:GetHealthPercentColor(healthPercent)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif (self.settings["colorMode"] == "calling") then
-			local colors = gUF_Utils:GetCallingColor(calling)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		elseif(self.settings["colorMode"] == "relation") then
-			local colors = gUF_Utils:GetRelationColor(reaction)
-			self.bar:SetBarColor(colors.foregroundColor)
-			self.bar:SetBGColor(colors.backgroundColor)
-		else
-			self.bar:SetBarColor(gUF_Colors["grey_foreground"])
-			self.bar:SetBGColor(gUF_Colors["grey_background"])
+			--
+			-- Colorise the bar based on current mode
+			--	
+			local calling = details.calling
+			local reaction = details.relation
+			
+			--print ( calling, reaction )
+			
+			if(self.settings["colorMode"] == "health") then
+				local colors = gUF_Utils:GetHealthPercentColor(healthPercent)
+				self.bar:SetBarColor(colors.foregroundColor)
+				self.bar:SetBGColor(colors.backgroundColor)
+			elseif (self.settings["colorMode"] == "calling") then
+				local colors = gUF_Utils:GetCallingColor(calling)
+				self.bar:SetBarColor(colors.foregroundColor)
+				self.bar:SetBGColor(colors.backgroundColor)
+			elseif(self.settings["colorMode"] == "relation") then
+				local colors = gUF_Utils:GetRelationColor(reaction)
+				self.bar:SetBarColor(colors.foregroundColor)
+				self.bar:SetBGColor(colors.backgroundColor)
+			else
+				self.bar:SetBarColor(gUF_Colors["grey_foreground"])
+				self.bar:SetBGColor(gUF_Colors["grey_background"])
+			end
+			
+			--
+			-- now update the left and right text values
+			--
+			self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
+			self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
+			
+			self:SetVisible(true)
 		end
-		
-		--
-		-- now update the left and right text values
-		--
-		self.leftText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["leftText"], details ))
-		self.rightText:SetText(gUF_Utils:CreateUnitDetailsString( self.settings["rightText"], details ))
-		
-		self:SetVisible(true)
 	else
 		self:SetVisible(false)
 	end

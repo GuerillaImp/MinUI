@@ -69,7 +69,7 @@ function Update ( )
 	end
 
 	if ( gUF.simulate ) then
-		if(gUF.simulateDiff >= 0.01)then -- TODO: Configuration Item
+		if(gUF.simulateDiff >= 0.2)then -- TODO: Configuration Item
 			gUF.lastSimulate = gUF.curTime 
 			gUF.simulateDiff = 0
 			FireEvent( SIMULATE_UPDATE, nil )
@@ -128,7 +128,7 @@ function FireEvent ( eventType, unitIDs )
 						moduleInstance:CallBack(eventType, value) -- give the function the value for the update and the event type it came from (just to double check)
 					end
 				end
-			-- no unitIDs, just fire the CallBack
+			-- no unitIDs, just fire the CallBack to anything listening (for charge/combo points and other player items)
 			else
 				local moduleInstance = eventHook[3]
 				local moduleCallback = eventHook[4]
@@ -194,10 +194,15 @@ function EnergyChanged ( unitIDs )
 	FireEvent( ENERGY_UPDATE, unitIDs )
 end
 function ComboChanged ( unitIDs )
-	FireEvent( COMBO_UPDATE, unitIDs )
+	print ( "comboChanged!" )
+	FireEvent( COMBO_UPDATE, nil )
+end
+function ComboUnitChanged ( unitIDs )
+	print ( "comboUnitChanged!" )
+	FireEvent( COMBO_UNIT_UPDATE, nil )
 end
 function ChargeChanged ( unitIDs )
-	FireEvent( CHARGE_UPDATE, unitIDs )
+	FireEvent( CHARGE_UPDATE, nil )
 end
 function PlanarChanged ( unitIDs )
 	FireEvent( PLANAR_UPDATE, unitIDs )
@@ -310,7 +315,7 @@ function RegisterEvents()
 	-- Player Only Events
 	--
 	table.insert(Event.Unit.Detail.Combo, { ComboChanged, "gUF", "gUF comboChanged"})
-	table.insert(Event.Unit.Detail.ComboUnit, { ComboChanged, "gUF", "gUF comboChanged"})
+	table.insert(Event.Unit.Detail.ComboUnit, { ComboUnitChanged, "gUF", "gUF comboChanged"})
 	table.insert(Event.Unit.Detail.Charge, { ChargeChanged, "gUF", "gUF chargeChanged"})
 	table.insert(Event.Unit.Detail.Planar, { PlanarChanged, "gUF", "gUF planarChanged"}) 
 	table.insert(Event.Unit.Detail.Vitality, { VitalityChanged, "gUF", "gUF vitalityChanged"})  
