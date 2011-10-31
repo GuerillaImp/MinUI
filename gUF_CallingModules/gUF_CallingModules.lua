@@ -28,7 +28,7 @@ gUF_CallingModules_Defaults = {
 					["leftText"] = "currentCharge/chargeMax",
 					["rightText"] = "chargePercent%",
 					["texturePath"] = gUF_Bars["eya02"],
-					["font"] = gUF_Fonts["arial_round"],
+					["font"] = gUF_Fonts["groovy"],
 					["fontSize"] = 12,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "player", -- not used in "screen" mode
@@ -42,8 +42,6 @@ gUF_CallingModules_Defaults = {
 					["height"] = 5,
 					["padding"] = 3, -- this is divided by 3 for the warrior bar ( so 3 == 1 pixel between combo points )
 					["texturePath"] = gUF_Bars["eya02"],
-					["font"] = gUF_Fonts["arial_round"],
-					["fontSize"] = 12,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "player",
 					["anchorPointThis"] = "ignored", -- not used in "insideFrame" mode
@@ -63,8 +61,6 @@ gUF_CallingModules_Defaults = {
 					["height"] = 5,
 					["padding"] = 5, -- this is divided by 5 for the rogue bar ( so 5 == 1 pixel between combo points )
 					["texturePath"] = gUF_Bars["eya02"],
-					["font"] = gUF_Fonts["arial_round"],
-					["fontSize"] = 12,
 					["anchor"] = "insideFrame", -- screen, frame or insideFrame: if the anchor is insideFrame the module just get's inserted inside as part of the UnitFrame modules vertical box, if the anchor is outsideFrame, the anchors points are used
 					["anchorUnit"] = "player.target",
 					["anchorPointThis"] = "ignored", -- not used in "insideFrame" mode

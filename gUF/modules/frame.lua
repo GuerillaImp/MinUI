@@ -51,6 +51,9 @@ function UnitFrame.new( unit, addOn )
 	uFrame.draggable = nil
 	uFrame.draggableText = nil
 	
+	
+	uFrame.simulating = false
+	
 	--
 	-- Note: nothing is actually created here, that occurs in the Initialise function, which
 	-- should be called after the settings above have been filled out by an AddOn
@@ -140,6 +143,7 @@ end
 -- The frame doesn't simualte anything (as it is just a smart container)
 --
 function UnitFrame:Simulate ( )
+	self.simulating = true
 end
 
 --
@@ -178,54 +182,7 @@ function UnitFrame:Initialise( )
 	self.draggable = Panel.new (  self.settings["padding"], self.settings["padding"], gUF_Colors["red_foreground"], gUF.context, 10 )
 	self.draggableText = Text.new ( gUF_Fonts["arial_round"], 16, {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (self.draggable:GetLayer()+1) )
 	self.draggableText:SetText ( "["..self.unit.."]".. " ".. self.addOn )
-	self.draggable:AddItem( self.draggableText,  "CENTER", "CENTER", 0, 0 )
-	
-	--
-	-- Setup Draggable Movement for Drag Frame when the frame is toggled unlocked
-	--
-	-- XXX - horrendously buggy, probably need to figure out a better way of handling this
-	-- or just make all layout via the config guis.
-	--
-	--[[
-	local draggableFrame = self.draggable:GetFrame()
-	local boxRef = self.box:GetFrame()
-	function draggableFrame.Event:LeftDown()
-		self.MouseDown = true
-		local mouseData = Inspect.Mouse()
-		self.MyStartX = boxRef:GetLeft()
-		self.MyStartY = boxRef:GetTop()
-		self.StartX = mouseData.x - self.MyStartX
-		self.StartY = mouseData.y - self.MyStartY
-		tempX = boxRef:GetLeft()
-		tempY = boxRef:GetTop()
-		boxRef:ClearAll()
-		
-		--
-		-- XXX: If the frame is anchored to another frame, this is going to not function 
-		-- as the user would intend, I need to do a similar looping over the gUF initialsed frames to check
-		-- for existing anchors here as I do in gUF_Units for frame creation
-		--
-		boxRef:SetPoint( "TOPLEFT", gUF.context, "TOPLEFT", tempX, tempY)
-		draggableFrame:SetPoint( "TOPLEFT", gUF.context, "TOPLEFT", tempX, tempY)
-	end
-	
-	function draggableFrame.Event:MouseMove()
-		if self.MouseDown then
-			local newX, newY
-			mouseData = Inspect.Mouse()
-			newX = mouseData.x - self.StartX
-			newY = mouseData.y - self.StartY
-			boxRef:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
-			draggableFrame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", newX, newY)
-		end
-	end
-	
-	function draggableFrame.Event:LeftUp()
-		if self.MouseDown then
-			self.MouseDown = false
-		end
-	end]]
-	
+	self.draggable:AddItem( self.draggableText,  "CENTER", "CENTER", 0, 0 )	
 end
 
 --
@@ -261,13 +218,19 @@ end
 function UnitFrame:CallBack( eventType, value )
 	if ( self.enabled ) then
 		if ( eventType == UNIT_AVAILABLE ) then
-			self:Refresh ( ) 
+			if not self.simulating then
+				self:Refresh()
+			end
 		elseif ( eventType == UNIT_CHANGED ) then
-			self:UnitChanged ( ) 
+			if not self.simulating then
+				self:UnitChanged() 	
+			end
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate( )
 		elseif ( eventType == TOGGLE_FRAME_LOCK ) then
-			self:ToggleLocked()
+			if not self.simulating then
+				self:ToggleLocked()
+			end
 		end
 	end
 end

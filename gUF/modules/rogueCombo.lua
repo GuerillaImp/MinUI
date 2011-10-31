@@ -30,8 +30,6 @@ function RogueComboBar.new( unit )
 		["height"] = 0,
 		["texturePath"] = 0,
 		["padding"] = 0,
-		["font"] = 0,
-		["fontSize"] = 0,
 		["anchor"] = 0,
 		["anchorUnit"] = 0,
 		["anchorPointThis"] = 0,
@@ -116,23 +114,15 @@ function RogueComboBar:Update( details  )
 		if ( details.calling or self.simulating ) then -- guard against this sometime being nil
 			if ( details.calling == "rogue" or self.simulating ) then
 				if ( details.comboUnit or self.simulating ) then
-					local unit = "player.target"
-					
-					if not self.simulating then
-						local unit =  Inspect.Unit.Lookup(details.comboUnit)
-					end
-					
-					if ( unit == "player.target" ) then
+					local unit = Inspect.Unit.Lookup(details.comboUnit)
+					print ( "unit -> ", unit )			
+					if ( unit == "player.target" or self.simulating ) then
 						local points = details.combo
 						
 						-- set bars invisible
-						for i=1,5 do
-							self.comboPointsBars[i]:SetVisible(false)
-						end
+						self:HideBars()
 						-- for 1->currentPoints make bars visible
-						for i=1,points do
-							self.comboPointsBars[i]:SetVisible(true)
-						end
+						self:ShowBars(points)
 						
 						--self:SetVisible(true)
 					else
@@ -140,7 +130,7 @@ function RogueComboBar:Update( details  )
 					end
 				else
 					-- no combo unit
-					self:SetVisible(false) 
+					self:SetVisible(false)
 				end
 			else
 				-- not a rogue
@@ -153,6 +143,18 @@ function RogueComboBar:Update( details  )
 	-- no details
 	else
 		self:SetVisible(false)
+	end
+end
+
+
+function RogueComboBar:HideBars()
+	for i=1,5 do
+		self.comboPointsBars[i]:SetVisible(false)
+	end
+end
+function RogueComboBar:ShowBars(points)
+	for i=1,points do
+		self.comboPointsBars[i]:SetVisible(true)
 	end
 end
 
@@ -212,14 +214,21 @@ end
 function RogueComboBar:CallBack( eventType, value ) -- not using value for now ...
 	if ( self.enabled ) then
 		if ( eventType == COMBO_UPDATE ) then
-			self:Refresh()			
+			if not self.simulating then
+				self:Refresh()			
+			end
 		elseif ( eventType == COMBO_UNIT_UPDATE ) then
-			self:Refresh()	
-		-- we need this just in case the module isn't anchored in a UnitFrame XXX: Perhaps have a check or on initialise a value that says "embedded in unit frame" or not.
+			if not self.simulating then
+				self:Refresh()			
+			end
 		elseif ( eventType == UNIT_AVAILABLE ) then
-			self:Refresh() 
+			if not self.simulating then
+				self:Refresh()			
+			end 
 		elseif ( eventType == UNIT_CHANGED ) then
-			self:Refresh() 				
+			if not self.simulating then
+				self:Refresh()			
+			end				
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end

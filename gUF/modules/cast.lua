@@ -69,6 +69,8 @@ function CastBar.new( unit )
 	cBar.channeled = nil
 	cBar.abilityName = nil
 	
+	cBar.simulating = false
+	
 	--
 	-- Note: nothing is actually created here, that occurs in the Initialise function, which
 	-- should be called after the settings above have been filled out by an AddOn
@@ -147,11 +149,13 @@ function CastBar:Update( castBar  )
 				if ( abilityDetails.icon ) then
 					self.icon:SetTexture("Rift", abilityDetails.icon) -- use the inbuilt texture setting for this so we can specify a rift core icon
 				else
-					self.icon:SetTexture("Rift", "apple.dds")
+					self.icon:SetTexture("Rift", "banana.dds")
 				end
+			else
+				self.icon:SetTexture("Rift", "banana.dds")
 			end
 		else
-			self.icon:SetTexture("Rift", "apple.dds") -- placeholder
+			self.icon:SetTexture("Rift", "banana.dds")
 		end
 		
 		-- make grey if uninterruptible
@@ -263,7 +267,7 @@ function CastBar:Initialise( )
 	
 	-- create icon
 	self.iconBox = Box.new ( self.settings["iconPadding"], self.settings["frameBGColor"], "horizontal", "right", gUF.context, (self.bar:GetLayer()+1)) 
-	self.icon = Panel.new (  self.settings["iconSize"], self.settings["iconSize"], {r=0,g=0,b=0,a=2}, gUF.context, (self.iconBox:GetLayer()+1)) -- todo icon size
+	self.icon = Panel.new (  self.settings["iconSize"], self.settings["iconSize"], {r=0,g=0,b=0,a=0}, gUF.context, (self.iconBox:GetLayer()+1)) -- todo icon size
 	self.iconBox:AddItem(self.icon)
 	
 	-- attach icon if required
@@ -295,6 +299,7 @@ end
 -- Simualte a Health Update
 --
 function CastBar:Simulate()
+	self.simulating = true
 	self:Update( gUF_Utils:GenerateSimulatedCastbar() )
 end
 
@@ -305,13 +310,21 @@ end
 function CastBar:CallBack( eventType, value )
 	if ( self.enabled ) then
 		if ( eventType == CASTBAR_UPDATE ) then
-			self:Refresh() 
+			if not ( self.simulating ) then
+				self:Refresh() 
+			end
 		elseif ( eventType == ANIMATION_UPDATE ) then
-			self:Animate() 	
+			if not ( self.simulating ) then
+				self:Animate() 	
+			end
 		elseif ( eventType == UNIT_AVAILABLE ) then
-			self:Refresh() 
+			if not ( self.simulating ) then
+				self:Refresh() 
+			end
 		elseif ( eventType == UNIT_CHANGED ) then
-			self:Refresh() 		
+			if not ( self.simulating ) then
+				self:Refresh() 		
+			end
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end

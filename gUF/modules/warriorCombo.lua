@@ -30,8 +30,6 @@ function WarriorComboBar.new( unit )
 		["height"] = 0,
 		["texturePath"] = 0,
 		["padding"] = 0,
-		["font"] = 0,
-		["fontSize"] = 0,
 		["anchor"] = 0,
 		["anchorUnit"] = 0,
 		["anchorPointThis"] = 0,
@@ -194,12 +192,17 @@ end
 function WarriorComboBar:CallBack( eventType, value ) -- not using value for now ...
 	if ( self.enabled ) then
 		if ( eventType == COMBO_UPDATE ) then
-			self:Refresh()			
-		-- we need this just in case the module isn't anchored in a UnitFrame XXX: Perhaps have a check or on initialise a value that says "embedded in unit frame" or not.
+			if not ( self.simulating ) then
+				self:Refresh()			
+			end
 		elseif ( eventType == UNIT_AVAILABLE ) then
-			self:Refresh() 
+			if not ( self.simulating ) then
+				self:Refresh() 
+			end
 		elseif ( eventType == UNIT_CHANGED ) then
-			self:Refresh() 				
+			if not ( self.simulating ) then
+				self:Refresh() 				
+			end
 		elseif ( eventType == SIMULATE_UPDATE ) then
 			self:Simulate()
 		end

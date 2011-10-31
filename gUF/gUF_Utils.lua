@@ -205,19 +205,15 @@ end
 function gUF_Utils:GetShortTime ( inputTime )
 	local shortenedTime = ""
 
-	local hours = math.floor(inputTime / 3600)
-	local minutes = math.floor(inputTime / 60)
-	local seconds = math.floor(inputTime) % 60
-
 	-- if we have hours
-	if ( inputTime >= 3600 ) then
-		shortenedTime = shortenedTime .. string.format("%.2f:", inputTime / 3600)
+	if ( inputTime > 3600 ) then
+		shortenedTime = shortenedTime .. string.format("%dhr ", math.floor(inputTime / 3600))
 	end
-	if  ( inputTime > 59 ) then
-		shortenedTime = shortenedTime .. string.format("%.2f:", inputTime / 60)
+	if  ( inputTime > 60 ) then
+		shortenedTime = shortenedTime .. string.format("%dm ", math.floor(inputTime / 60))
 	end
 	if ( inputTime > 0 ) then
-		shortenedTime = shortenedTime .. string.format("%.1f", inputTime % 60)
+		shortenedTime = shortenedTime .. string.format("%ds", math.floor(inputTime % 60))
 	end
 	
 	return shortenedTime
@@ -321,6 +317,45 @@ function gUF_Utils:CreateCastingDetailsString( inputString, castbar )
 		end
 	end
 	
+	
+	return inputString
+end
+
+--
+-- Given an input string regarding a buff and it's duration, return a formatted string with actual values substituted in place
+--
+-- @params
+--		inputString string: the string formatted with "detailName" components to be substituted the full list of supported substitutions is:
+--							buffName - will be repaced by the buffs's name
+--							remainingShort - shortened version of the buffs remaining time
+--							remainingAbs - absolute value of the buffs remaining time
+--							durationShort - shortened version of the buffs total duration
+--							durationAbs - absolute version of the buffs total duration
+--
+--		buffDetails table: a buffDetails table provided by Inspect.Buff.Detail(buffID)
+--
+-- @return
+--		outputString string: a string with the components substituted for their actual values
+--
+function gUF_Utils:CreateBuffDetailsString( inputString, buffDetails )
+	if ( buffDetails ) then
+		if ( buffDetails.name ) then	
+			local newString, numSubs = string.gsub ( inputString, "buffName", buffDetails.name )
+			inputString = newString
+		end
+		if ( buffDetails.remaining ) then	
+			local newString, numSubs = string.gsub ( inputString, "remainingShort", gUF_Utils:GetShortTime(buffDetails.remaining) )
+			inputString = newString
+			local newString, numSubs = string.gsub ( inputString, "remainingAbs", buffDetails.remaining )
+			inputString = newString
+		end
+		if ( buffDetails.duration ) then	
+			local newString, numSubs = string.gsub ( inputString, "durationShort", gUF_Utils:GetShortTime(buffDetails.duration) )
+			inputString = newString
+			local newString, numSubs = string.gsub ( inputString, "durationAbs", buffDetails.duration )
+			inputString = newString
+		end
+	end
 	
 	return inputString
 end
@@ -557,7 +592,7 @@ function gUF_Utils:GenerateSimulatedUnit()
 	details.energy = math.random(1,100)
 	details.energyMax = 100
 	details.power = math.random(1,100)
-	details.combo = math.random(1,5)
+	details.combo = math.random(1,3)
 	details.comboUnit = "player.target"
 	
 	return details
@@ -580,7 +615,29 @@ function gUF_Utils:GenerateSimulatedCastbar()
 	return details
 end
 
+function gUF_Utils:GenerateSimulatedBuffDetailsTable()
+	local numberOfBuffs = math.random(1,50)
+	
+	-- castbar details
+	buffList = {}
+	
+	for i=1,numberOfBuffs do
+		local duration = math.random(4000,9000)
+		local remaining = math.random(1,4000)
+	
+		buff = {}
+		buff.name = "Awesome Buff"
+		buff.duration = duration
+		buff.remaining = remaining
+		buff.debuff = true
+		
+		table.insert(buffList, buff)
+	end
+	
 
+	
+	return buffList
+end
 
 
 
