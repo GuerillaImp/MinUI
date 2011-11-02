@@ -174,9 +174,9 @@ end
 -- Initialise the Module
 --
 function UnitFrame:Initialise( )
-	if( self.settings["padding"] == 0 )then
-		self.settings["padding"] = 1
-	end
+	--if( self.settings["padding"] == 0 )then
+	--	self.settings["padding"] = 1
+	--end
 	
 	self.box = Box.new(  self.settings["padding"], self.settings["bgColor"], "vertical", "down", gUF.context, -1 )
 	self.draggable = Panel.new (  self.settings["padding"], self.settings["padding"], gUF_Colors["red_foreground"], gUF.context, 10 )

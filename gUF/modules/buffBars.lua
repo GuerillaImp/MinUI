@@ -36,6 +36,9 @@ function BuffBar.new( unit )
 		["whitelist"] = 0,
 		["blacklist"] = 0,
 		["maxBuffs"] = 0,
+		["frameBGColor"] = 0,
+		["icon"] = 0, -- left, right, none
+		["iconSize"] = 0,
 		["growthDirection"] = 0, --up/down
 		["filterMode"] = 0, -- whitelist/blacklist
 		["buffMode"] = 0, -- buff/debuff/all
@@ -185,21 +188,49 @@ function BuffBar:Update( buffList  )
 				local bar = buffBar["bar"]
 				local leftText = buffBar["leftText"]
 				local rightText = buffBar["rightText"]
+				local icon = buffBar["icon"]
 				
-				bar:SetBarColor(gUF_Colors["red_foreground"])
-				bar:SetBGColor(gUF_Colors["red_background"])
-				
-				leftText:SetText(gUF_Utils:CreateBuffDetailsString(self.settings["leftText"], buffDetails))
-				
-				if(buffDetails.remaining and buffDetails.duration) then
-					local remainingRatio = buffDetails.remaining/buffDetails.duration
-					bar:SetCurrentValue(remainingRatio)
-					rightText:SetText(gUF_Utils:CreateBuffDetailsString(self.settings["rightText"], buffDetails))
+				--
+				-- Set Bar Color
+				--
+				if ( buffDetails.debuff ) then
+					if ( buffDetails.poison ) then
+						bar:SetBarColor(gUF_Colors["poison_foreground"])
+						bar:SetBGColor(gUF_Colors["poison_background"])
+					elseif ( buffDetails.curse ) then
+						bar:SetBarColor(gUF_Colors["curse_foreground"])
+						bar:SetBGColor(gUF_Colors["curse_background"])
+					elseif ( buffDetails.disease ) then	
+						bar:SetBarColor(gUF_Colors["disease_foreground"])
+						bar:SetBGColor(gUF_Colors["disease_background"])
+					else
+						bar:SetBarColor(gUF_Colors["debuff_foreground"])
+						bar:SetBGColor(gUF_Colors["debuff_background"])
+					end
+				else
+					bar:SetBarColor(gUF_Colors["buff_foreground"])
+					bar:SetBGColor(gUF_Colors["buff_background"])
 				end
+				
+				--
+				-- Set Icon
+				--
+				if ( buffDetails.icon ) then
+					icon:SetTexture( "Rift", buffDetails.icon )
+				end
+				
+				--
+				-- Set Text
+				--
+				leftText:SetText(gUF_Utils:CreateBuffDetailsString(self.settings["leftText"], buffDetails))
+				if(buffDetails.remaining and buffDetails.duration) then
+					rightText:SetText(gUF_Utils:CreateBuffDetailsString(self.settings["rightText"], buffDetails))
+				end					
 				
 				bar:SetVisible(true)
 				leftText:SetVisible(true)
 				rightText:SetVisible(true)
+				icon:SetVisible(true)
 				index = index+1
 			end
 		end
@@ -212,6 +243,8 @@ end
 -- Animate the buff's duration
 --
 function BuffBar:Animate()
+	local buffList = Inspect.Buff.List(self.unit)
+	
 	local index = 1
 	for _, buffDetails in pairs( self.buffList ) do
 		if ( index <= self.settings["maxBuffs"] ) then
@@ -219,12 +252,14 @@ function BuffBar:Animate()
 			local bar = buffBar["bar"]
 			local rightText = buffBar["rightText"]
 
-			if(buffDetails.remaining and buffDetails.duration) then
-				local remainingRatio = buffDetails.remaining/buffDetails.duration
-				bar:SetCurrentValue(remainingRatio)
-				rightText:SetText(gUF_Utils:CreateBuffDetailsString(self.settings["rightText"], buffDetails))
-			end
 			
+			local tempBuffDetails = Inspect.Buff.Detail(self.unit, buffDetails.buffID)
+			if ( tempBuffDetails ) then
+				if(tempBuffDetails.remaining and tempBuffDetails.duration) then
+					local remainingRatio = tempBuffDetails.remaining/tempBuffDetails.duration
+					bar:SetCurrentValue(remainingRatio)
+				end
+			end
 			index = index + 1
 		end
 	end
@@ -245,16 +280,17 @@ end
 -- Initialise the Module
 --
 function BuffBar:Initialise( )
+
 	-- buff box
-	self.box = Box.new( self.settings["padding"], {r=0,g=0,b=0,a=0}, "vertical", self.settings["growthDirection"], gUF.context, 1 )
+	self.box = Box.new( self.settings["padding"], self.settings["frameBGColor"], "vertical", self.settings["growthDirection"], gUF.context, 1 )
 	self.box:SetVisible( false )
 
 	for i=1,self.settings["maxBuffs"] do
-		local barPanel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, (self.box:GetLayer()+1) )
+		local barPanel = Panel.new( self.settings["width"] - (self.settings["padding"]*2), self.settings["height"], self.settings["frameBGColor"], gUF.context, (self.box:GetLayer()+1) )
 		
-		local bar = Bar.new( self.settings["width"], self.settings["height"], "horizontal", "right", {r=0,g=0,b=0,a=0}, {r=0,g=0,b=0,a=0}, self.settings["texturePath"], gUF.context, (barPanel:GetLayer()+1)  )
+		local bar = Bar.new( self.settings["width"] - (self.settings["padding"]*2), self.settings["height"], "horizontal", "right", {r=0,g=0,b=0,a=0}, {r=0,g=0,b=0,a=0}, self.settings["texturePath"], gUF.context, (barPanel:GetLayer()+1)  )
 		
-		local barTextPanel = Panel.new( self.settings["width"], self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, (bar:GetLayer()+1) )
+		local barTextPanel = Panel.new( self.settings["width"] - (self.settings["padding"]*2), self.settings["height"], {r=0,g=0,b=0,a=0}, gUF.context, (bar:GetLayer()+1) )
 		local leftText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (barTextPanel:GetLayer()+2) )
 		local rightText = Text.new ( self.settings["font"], self.settings["fontSize"], {r=1,g=1,b=1,a=1}, "grow", 0, "shadow", gUF.context, (barTextPanel:GetLayer()+2) )
 		
@@ -264,8 +300,20 @@ function BuffBar:Initialise( )
 		barPanel:AddItem( bar, "TOPLEFT", "TOPLEFT", 0, 0 )
 		barPanel:AddItem( barTextPanel, "TOPLEFT", "TOPLEFT", 0, 0 )
 		
+		-- create icon
+		local iconBox = Box.new ( self.settings["padding"], self.settings["frameBGColor"], "horizontal", "right", gUF.context, (bar:GetLayer()+1)) 
+		local icon = Panel.new (  self.settings["iconSize"], self.settings["iconSize"], {r=0,g=0,b=0,a=0}, gUF.context, (iconBox:GetLayer()+1))
+		iconBox:AddItem(icon)
+		
+		-- attach icon if required
+		if ( self.settings["icon"] == "left" ) then
+			barPanel:AddItem( iconBox, "CENTERRIGHT", "CENTERLEFT", 0, 0 )
+		elseif ( self.settings["icon"] == "right" ) then
+			barPanel:AddItem( iconBox, "CENTERLEFT", "CENTERRIGHT", 0, 0 )
+		end
+		
 		-- store bar and add to vertical box
-		self.bars[i] = { ["barPanel"] = barPanel, ["barTextPanel"] = barTextPanel, ["bar"] = bar, ["leftText"] = leftText, ["rightText"] = rightText }
+		self.bars[i] = { ["barPanel"] = barPanel, ["barTextPanel"] = barTextPanel, ["bar"] = bar, ["leftText"] = leftText, ["rightText"] = rightText, ["icon"] = icon }
 		self.box:AddItem( barPanel )
 	end
 end

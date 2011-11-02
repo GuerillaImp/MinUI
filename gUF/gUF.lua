@@ -58,26 +58,26 @@ function Update ( )
 	-- calculate frame time difference
 	--
 	gUF.curTime = Inspect.Time.Frame()
-	gUF.updateDiff = gUF.curTime  - gUF.lastUpdate
-	gUF.animateDiff = gUF.curTime  - gUF.lastAnimate
-	gUF.simulateDiff = gUF.curTime  - gUF.lastSimulate
+	gUF.updateDiff = gUF.curTime - gUF.lastUpdate
+	gUF.animateDiff = gUF.curTime - gUF.lastAnimate
+	gUF.simulateDiff = gUF.curTime - gUF.lastSimulate
 	
-	if(gUF.updateDiff >= 0.5) then -- TODO: Configurable Item
+	if(gUF.updateDiff >= 0.8) then -- TODO: Configurable Item
 		gUF.lastUpdate = gUF.curTime 
 		gUF.updateDiff = 0
 		FireEvent( REFRESH_UPDATE, nil )
 	end
 
 	if ( gUF.simulate ) then
-		if(gUF.simulateDiff >= 0.05)then -- TODO: Configuration Item
+		if(gUF.simulateDiff >= 0.8)then -- TODO: Configuration Item
 			gUF.lastSimulate = gUF.curTime 
 			gUF.simulateDiff = 0
 			FireEvent( SIMULATE_UPDATE, nil )
 		end
 	end
 	
-	if(gUF.animateDiff >= 0.01) then -- TODO: Configurable Item
-		gUF.lastAnimationUpdate = gUF.curTime 
+	if(gUF.animateDiff >= 0.02) then -- TODO: Configurable Item
+		gUF.lastAnimate = gUF.curTime 
 		gUF.animateDiff = 0
 		FireEvent( ANIMATION_UPDATE, nil )
 	end

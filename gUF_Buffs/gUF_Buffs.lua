@@ -23,28 +23,31 @@ gUF_Buffs_Defaults = {
 			},
 			moduleSettings = {
 				[1] = { -- buffbar config
-					["width"] = 250,
-					["height"] = 20,
-					["padding"] = 0,
+					["width"] = 252,
+					["height"] = 15,
+					["padding"] = 1,
 					["leftText"] = "buffName",
 					["rightText"] = "remainingShort",
 					["texturePath"] = gUF_Bars["eya02"],
 					["whitelist"] = {},
 					["blacklist"] = {},
+					["frameBGColor"] = {r=1,g=1,b=1,a=1},
+					["icon"] = "left", -- left, right, none
+					["iconSize"] = 15,
 					["maxBuffs"] = 20,
-					["growthDirection"] = "up", --up/down
+					["growthDirection"] = "down", --up/down
 					["filterMode"] = "blacklist", -- whitelist/blacklist
 					["buffMode"] = "all", -- buff/debuff/all
 					["visibilityOptions"] = "all", -- player/all
 					["timeThreshold"] = 9000, -- max seconds of buff to show
 					["font"] = gUF_Fonts["groovy"],
-					["fontSize"] = 14,
+					["fontSize"] = 12,
 					["anchor"] = "frame",
 					["anchorUnit"] = "player",
-					["anchorPointThis"] = "BOTTOMLEFT",
+					["anchorPointThis"] = "TOPRIGHT",
 					["anchorPointParent"] = "TOPLEFT",
-					["anchorXOffset"] = 0,
-					["anchorYOffset"] = -30
+					["anchorXOffset"] = -10,
+					["anchorYOffset"] = -5
 				}
 			}
 		},
@@ -54,14 +57,17 @@ gUF_Buffs_Defaults = {
 			},
 			moduleSettings = {
 				[1] = { -- buffbar config
-					["width"] = 250,
-					["height"] = 20,
-					["padding"] = 0,
+					["width"] = 252,
+					["height"] = 15,
+					["padding"] = 1,
 					["leftText"] = "buffName",
 					["rightText"] = "remainingShort",
 					["texturePath"] = gUF_Bars["eya02"],
 					["whitelist"] = {},
 					["blacklist"] = {},
+					["frameBGColor"] = gUF_Colors["black"],
+					["icon"] = "right", -- left, right, none
+					["iconSize"] = 15,
 					["maxBuffs"] = 20,
 					["growthDirection"] = "up", --up/down
 					["filterMode"] = "blacklist", -- whitelist/blacklist
@@ -69,12 +75,12 @@ gUF_Buffs_Defaults = {
 					["visibilityOptions"] = "all", -- player/all
 					["timeThreshold"] = 9000, -- max seconds of buff to show
 					["font"] = gUF_Fonts["groovy"],
-					["fontSize"] = 14,
+					["fontSize"] = 12,
 					["anchor"] = "frame",
 					["anchorUnit"] = "player.target",
 					["anchorPointThis"] = "BOTTOMLEFT",
 					["anchorPointParent"] = "TOPLEFT",
-					["anchorXOffset"] = 0,
+					["anchorXOffset"] = -5,
 					["anchorYOffset"] = -30
 				}
 			}

@@ -213,7 +213,7 @@ function gUF_Utils:GetShortTime ( inputTime )
 		shortenedTime = shortenedTime .. string.format("%dm ", math.floor(inputTime / 60))
 	end
 	if ( inputTime > 0 ) then
-		shortenedTime = shortenedTime .. string.format("%ds", math.floor(inputTime % 60))
+		shortenedTime = shortenedTime .. string.format("%ds", inputTime % 60)
 	end
 	
 	return shortenedTime
@@ -630,6 +630,7 @@ function gUF_Utils:GenerateSimulatedBuffDetailsTable()
 		buff.duration = duration
 		buff.remaining = remaining
 		buff.debuff = true
+		buff.icon = "banana.dds"
 		
 		table.insert(buffList, buff)
 	end
