@@ -40,14 +40,14 @@ gUF_Buffs_Defaults = {
 					["buffMode"] = "all", -- buff/debuff/all
 					["visibilityOptions"] = "all", -- player/all
 					["timeThreshold"] = 9000, -- max seconds of buff to show
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 12,
 					["anchor"] = "frame",
 					["anchorUnit"] = "player",
 					["anchorPointThis"] = "TOPRIGHT",
 					["anchorPointParent"] = "TOPLEFT",
 					["anchorXOffset"] = -10,
-					["anchorYOffset"] = -5
+					["anchorYOffset"] = 0
 				}
 			}
 		},
@@ -57,7 +57,7 @@ gUF_Buffs_Defaults = {
 			},
 			moduleSettings = {
 				[1] = { -- buffbar config
-					["width"] = 252,
+					["width"] = 236,
 					["height"] = 15,
 					["padding"] = 1,
 					["leftText"] = "buffName",
@@ -74,13 +74,13 @@ gUF_Buffs_Defaults = {
 					["buffMode"] = "all", -- buff/debuff/all
 					["visibilityOptions"] = "all", -- player/all
 					["timeThreshold"] = 9000, -- max seconds of buff to show
-					["font"] = gUF_Fonts["groovy"],
+					["font"] = gUF_Fonts["arial_round"],
 					["fontSize"] = 12,
 					["anchor"] = "frame",
 					["anchorUnit"] = "player.target",
 					["anchorPointThis"] = "BOTTOMLEFT",
 					["anchorPointParent"] = "TOPLEFT",
-					["anchorXOffset"] = -5,
+					["anchorXOffset"] = 0,
 					["anchorYOffset"] = -30
 				}
 			}
